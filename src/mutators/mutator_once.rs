@@ -138,7 +138,9 @@
 //! Haixing Hu
 
 use crate::mutators::macros::{
+    impl_box_conditional_mutator,
     impl_box_mutator_methods,
+    impl_conditional_mutator_debug_display,
     impl_mutator_common_methods,
     impl_mutator_debug_display,
 };
@@ -402,16 +404,13 @@ where
         |f| Box::new(f)
     );
 
-// Generate box mutator methods (when, and_then, or_else, etc.)
-impl_box_mutator_methods!(
-    BoxMutatorOnce<T>,
-    BoxConditionalMutatorOnce,
-    MutatorOnce
-);
+    // Generate box mutator methods (when, and_then, or_else, etc.)
+    impl_box_mutator_methods!(
+        BoxMutatorOnce<T>,
+        BoxConditionalMutatorOnce,
+        MutatorOnce
+    );
 }
-
-// Generate Debug and Display trait implementations
-impl_mutator_debug_display!(BoxMutatorOnce<T>);
 
 impl<T> MutatorOnce<T> for BoxMutatorOnce<T> {
     fn apply(self, value: &mut T) {
@@ -431,257 +430,16 @@ impl<T> MutatorOnce<T> for BoxMutatorOnce<T> {
     {
         move |t| (self.function)(t)
     }
+
+    // do NOT override MutatorOnce::to_xxxx() because BoxMutatorOnce is not Clone
+    // and calling BoxMutatorOnce::to_xxxx() will cause a compile error
 }
+
+// Generate Debug and Display trait implementations
+impl_mutator_debug_display!(BoxMutatorOnce<T>);
 
 // ============================================================================
-// 3. BoxConditionalMutatorOnce - Box-based Conditional Mutator
-// ============================================================================
-
-/// BoxConditionalMutatorOnce struct
-///
-/// A conditional one-time mutator that only executes when a predicate is satisfied.
-/// Uses `BoxMutatorOnce` and `BoxPredicate` for single ownership semantics.
-///
-/// This type is typically created by calling `BoxMutatorOnce::when()` and is
-/// designed to work with the `or_else()` method to create if-then-else logic.
-///
-/// # Features
-///
-/// - **Single Ownership**: Not cloneable, consumes `self` on use
-/// - **Conditional Execution**: Only mutates when predicate returns `true`
-/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
-/// - **Implements MutatorOnce**: Can be used anywhere a `MutatorOnce` is expected
-///
-/// # Examples
-///
-/// ## Basic Conditional Execution
-///
-/// ```rust
-/// use prism3_function::{MutatorOnce, BoxMutatorOnce};
-///
-/// let data = vec![1, 2, 3];
-/// let mutator = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-///     x.extend(data);
-/// });
-/// let conditional = mutator.when(|x: &Vec<i32>| !x.is_empty());
-///
-/// let mut target = vec![0];
-/// conditional.apply(&mut target);
-/// assert_eq!(target, vec![0, 1, 2, 3]); // Executed
-///
-/// let mut empty = Vec::new();
-/// let data2 = vec![4, 5];
-/// let mutator2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-///     x.extend(data2);
-/// });
-/// let conditional2 = mutator2.when(|x: &Vec<i32>| x.len() > 5);
-/// conditional2.apply(&mut empty);
-/// assert_eq!(empty, Vec::<i32>::new()); // Not executed
-/// ```
-///
-/// ## With or_else Branch
-///
-/// ```rust
-/// use prism3_function::{MutatorOnce, BoxMutatorOnce};
-///
-/// let data1 = vec![1, 2, 3];
-/// let data2 = vec![99];
-/// let mutator = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-///     x.extend(data1);
-/// })
-/// .when(|x: &Vec<i32>| !x.is_empty())
-/// .or_else(move |x: &mut Vec<i32>| {
-///     x.extend(data2);
-/// });
-///
-/// let mut target = vec![0];
-/// mutator.apply(&mut target);
-/// assert_eq!(target, vec![0, 1, 2, 3]); // when branch executed
-///
-/// let data3 = vec![4, 5];
-/// let data4 = vec![99];
-/// let mutator2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-///     x.extend(data3);
-/// })
-/// .when(|x: &Vec<i32>| x.is_empty())
-/// .or_else(move |x: &mut Vec<i32>| {
-///     x.extend(data4);
-/// });
-///
-/// let mut target2 = vec![0];
-/// mutator2.apply(&mut target2);
-/// assert_eq!(target2, vec![0, 99]); // or_else branch executed
-/// ```
-///
-/// # Author
-///
-/// Haixing Hu
-pub struct BoxConditionalMutatorOnce<T> {
-    mutator: BoxMutatorOnce<T>,
-    predicate: BoxPredicate<T>,
-}
-
-impl<T> MutatorOnce<T> for BoxConditionalMutatorOnce<T>
-where
-    T: 'static,
-{
-    fn apply(self, value: &mut T) {
-        if self.predicate.test(value) {
-            self.mutator.apply(value);
-        }
-    }
-
-    fn into_box(self) -> BoxMutatorOnce<T> {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        BoxMutatorOnce::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_fn(self) -> impl FnOnce(&mut T) {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        move |t: &mut T| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        }
-    }
-}
-
-impl<T> BoxConditionalMutatorOnce<T>
-where
-    T: 'static,
-{
-    /// Chains another mutator in sequence
-    ///
-    /// Combines the current conditional mutator with another mutator into a new
-    /// mutator. The current conditional mutator executes first, followed by the
-    /// next mutator.
-    ///
-    /// # Parameters
-    ///
-    /// * `next` - The next mutator to execute. **Note: This parameter is passed
-    ///   by value and will transfer ownership.** Since `BoxMutatorOnce` cannot
-    ///   be cloned, the parameter will be consumed. Can be:
-    ///   - A closure: `|x: &mut T|`
-    ///   - A `BoxMutatorOnce<T>`
-    ///   - Any type implementing `MutatorOnce<T>`
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `BoxMutatorOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatorOnce, BoxMutatorOnce};
-    ///
-    /// let data1 = vec![1, 2];
-    /// let cond1 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-    ///     x.extend(data1);
-    /// }).when(|x: &Vec<i32>| !x.is_empty());
-    ///
-    /// let data2 = vec![3, 4];
-    /// let cond2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-    ///     x.extend(data2);
-    /// }).when(|x: &Vec<i32>| x.len() < 10);
-    ///
-    /// // Both cond1 and cond2 are moved and consumed
-    /// let chained = cond1.and_then(cond2);
-    ///
-    /// let mut target = vec![0];
-    /// chained.apply(&mut target);
-    /// assert_eq!(target, vec![0, 1, 2, 3, 4]);
-    /// // cond1.apply(&mut target); // Would not compile - moved
-    /// // cond2.apply(&mut target); // Would not compile - moved
-    /// ```
-    pub fn and_then<C>(self, next: C) -> BoxMutatorOnce<T>
-    where
-        C: MutatorOnce<T> + 'static,
-        T: 'static,
-    {
-        let first = self;
-        BoxMutatorOnce::new(move |t| {
-            first.apply(t);
-            next.apply(t);
-        })
-    }
-
-    /// Adds an else branch
-    ///
-    /// Executes the original mutator when the condition is satisfied, otherwise
-    /// executes else_mutator.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_mutator` - The mutator for the else branch. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** Since `BoxMutatorOnce`
-    ///   cannot be cloned, the parameter will be consumed. Can be:
-    ///   - A closure: `|x: &mut T|`
-    ///   - A `BoxMutatorOnce<T>`
-    ///   - Any type implementing `MutatorOnce<T>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `BoxMutatorOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatorOnce, BoxMutatorOnce};
-    ///
-    /// let data1 = vec![1, 2, 3];
-    /// let data2 = vec![99];
-    /// let mutator = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-    ///     x.extend(data1);
-    /// })
-    /// .when(|x: &Vec<i32>| !x.is_empty())
-    /// .or_else(move |x: &mut Vec<i32>| {
-    ///     x.extend(data2);
-    /// });
-    ///
-    /// let mut target = vec![0];
-    /// mutator.apply(&mut target);
-    /// assert_eq!(target, vec![0, 1, 2, 3]); // Condition satisfied, execute when branch
-    ///
-    /// let data3 = vec![4, 5];
-    /// let data4 = vec![99];
-    /// let mutator2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
-    ///     x.extend(data3);
-    /// })
-    /// .when(|x: &Vec<i32>| x.is_empty())
-    /// .or_else(move |x: &mut Vec<i32>| {
-    ///     x.extend(data4);
-    /// });
-    ///
-    /// let mut target2 = vec![0];
-    /// mutator2.apply(&mut target2);
-    /// assert_eq!(target2, vec![0, 99]); // Condition not satisfied, execute or_else branch
-    /// ```
-    pub fn or_else<C>(self, else_mutator: C) -> BoxMutatorOnce<T>
-    where
-        C: MutatorOnce<T> + 'static,
-    {
-        let pred = self.predicate;
-        let then_mut = self.mutator;
-        BoxMutatorOnce::new(move |t| {
-            if pred.test(t) {
-                then_mut.apply(t);
-            } else {
-                else_mutator.apply(t);
-            }
-        })
-    }
-}
-
-// ============================================================================
-// 4. Implement MutatorOnce trait for closures
+// 3. Implement MutatorOnce trait for closures
 // ============================================================================
 
 impl<T, F> MutatorOnce<T> for F
@@ -820,3 +578,132 @@ pub trait FnMutatorOnceOps<T>: FnOnce(&mut T) + Sized {
 
 /// Implements FnMutatorOnceOps for all closure types
 impl<T, F> FnMutatorOnceOps<T> for F where F: FnOnce(&mut T) {}
+
+// ============================================================================
+// 5. BoxConditionalMutatorOnce - Box-based Conditional Mutator
+// ============================================================================
+
+/// BoxConditionalMutatorOnce struct
+///
+/// A conditional one-time mutator that only executes when a predicate is satisfied.
+/// Uses `BoxMutatorOnce` and `BoxPredicate` for single ownership semantics.
+///
+/// This type is typically created by calling `BoxMutatorOnce::when()` and is
+/// designed to work with the `or_else()` method to create if-then-else logic.
+///
+/// # Features
+///
+/// - **Single Ownership**: Not cloneable, consumes `self` on use
+/// - **Conditional Execution**: Only mutates when predicate returns `true`
+/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
+/// - **Implements MutatorOnce**: Can be used anywhere a `MutatorOnce` is expected
+///
+/// # Examples
+///
+/// ## Basic Conditional Execution
+///
+/// ```rust
+/// use prism3_function::{MutatorOnce, BoxMutatorOnce};
+///
+/// let data = vec![1, 2, 3];
+/// let mutator = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
+///     x.extend(data);
+/// });
+/// let conditional = mutator.when(|x: &Vec<i32>| !x.is_empty());
+///
+/// let mut target = vec![0];
+/// conditional.apply(&mut target);
+/// assert_eq!(target, vec![0, 1, 2, 3]); // Executed
+///
+/// let mut empty = Vec::new();
+/// let data2 = vec![4, 5];
+/// let mutator2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
+///     x.extend(data2);
+/// });
+/// let conditional2 = mutator2.when(|x: &Vec<i32>| x.len() > 5);
+/// conditional2.apply(&mut empty);
+/// assert_eq!(empty, Vec::<i32>::new()); // Not executed
+/// ```
+///
+/// ## With or_else Branch
+///
+/// ```rust
+/// use prism3_function::{MutatorOnce, BoxMutatorOnce};
+///
+/// let data1 = vec![1, 2, 3];
+/// let data2 = vec![99];
+/// let mutator = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
+///     x.extend(data1);
+/// })
+/// .when(|x: &Vec<i32>| !x.is_empty())
+/// .or_else(move |x: &mut Vec<i32>| {
+///     x.extend(data2);
+/// });
+///
+/// let mut target = vec![0];
+/// mutator.apply(&mut target);
+/// assert_eq!(target, vec![0, 1, 2, 3]); // when branch executed
+///
+/// let data3 = vec![4, 5];
+/// let data4 = vec![99];
+/// let mutator2 = BoxMutatorOnce::new(move |x: &mut Vec<i32>| {
+///     x.extend(data3);
+/// })
+/// .when(|x: &Vec<i32>| x.is_empty())
+/// .or_else(move |x: &mut Vec<i32>| {
+///     x.extend(data4);
+/// });
+///
+/// let mut target2 = vec![0];
+/// mutator2.apply(&mut target2);
+/// assert_eq!(target2, vec![0, 99]); // or_else branch executed
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct BoxConditionalMutatorOnce<T> {
+    mutator: BoxMutatorOnce<T>,
+    predicate: BoxPredicate<T>,
+}
+
+// Generate and_then and or_else methods using macro
+impl_box_conditional_mutator!(
+    BoxConditionalMutatorOnce<T>,
+    BoxMutatorOnce,
+    MutatorOnce
+);
+
+impl<T> MutatorOnce<T> for BoxConditionalMutatorOnce<T>
+where
+    T: 'static,
+{
+    fn apply(self, value: &mut T) {
+        if self.predicate.test(value) {
+            self.mutator.apply(value);
+        }
+    }
+
+    fn into_box(self) -> BoxMutatorOnce<T> {
+        let pred = self.predicate;
+        let mutator = self.mutator;
+        BoxMutatorOnce::new(move |t| {
+            if pred.test(t) {
+                mutator.apply(t);
+            }
+        })
+    }
+
+    fn into_fn(self) -> impl FnOnce(&mut T) {
+        let pred = self.predicate;
+        let mutator = self.mutator;
+        move |t: &mut T| {
+            if pred.test(t) {
+                mutator.apply(t);
+            }
+        }
+    }
+}
+
+// Use macro to generate Debug and Display implementations
+impl_conditional_mutator_debug_display!(BoxConditionalMutatorOnce<T>);
