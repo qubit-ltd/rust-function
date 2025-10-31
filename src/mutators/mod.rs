@@ -15,10 +15,6 @@
 //!
 //! Haixing Hu
 
-// 模块内部宏定义（不对外导出）
-#[macro_use]
-mod macros;
-
 pub mod mutator;
 pub mod mutator_once;
 pub mod stateful_mutator;
