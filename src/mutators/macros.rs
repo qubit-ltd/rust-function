@@ -134,9 +134,3 @@ macro_rules! impl_conditional_mutator_clone {
 // Export macros for internal module use
 ////////////////////////////////////////////////////////////////////////////////
 
-pub(crate) use impl_box_mutator_when;
-pub(crate) use impl_conditional_mutator_clone;
-pub(crate) use impl_mutator_clone;
-pub(crate) use impl_mutator_constant;
-pub(crate) use impl_mutator_noop;
-pub(crate) use impl_shared_mutator_when;
