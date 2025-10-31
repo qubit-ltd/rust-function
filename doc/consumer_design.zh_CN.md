@@ -655,7 +655,7 @@ pub trait Mutator<T> {
 
 /// 一次性修改器：消费自己，可修改输入（暂未实现）
 pub trait MutatorOnce<T> {
-    fn mutate_once(self, value: &mut T);
+    fn apply(self, value: &mut T);
 }
 ```
 

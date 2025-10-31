@@ -178,7 +178,7 @@ assert_eq!(value, 20);
 Modifies a value in-place once.
 
 **Trait**: `MutatorOnce<T>`
-**Core Method**: `mutate_once(self, value: &mut T)`
+**Core Method**: `apply(self, value: &mut T)`
 **Closure Equivalent**: `FnOnce(&mut T)`
 
 **Implementations**:
@@ -463,7 +463,7 @@ assert!(!tester.test());
 | `BiConsumerOnce<T, U>` | `accept_once(self, first: &T, second: &U)` | `FnOnce(&T, &U)` |
 | `StatefulBiConsumer<T, U>` | `accept(&mut self, first: &T, second: &U)` | `FnMut(&T, &U)` |
 | `Mutator<T>` | `mutate(&mut self, value: &mut T)` | `FnMut(&mut T)` |
-| `MutatorOnce<T>` | `mutate_once(self, value: &mut T)` | `FnOnce(&mut T)` |
+| `MutatorOnce<T>` | `apply(self, value: &mut T)` | `FnOnce(&mut T)` |
 | `Supplier<T>` | `get(&self) -> T` | `Fn() -> T` |
 | `SupplierOnce<T>` | `get_once(self) -> T` | `FnOnce() -> T` |
 | `StatefulSupplier<T>` | `get(&mut self) -> T` | `FnMut() -> T` |

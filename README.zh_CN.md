@@ -178,7 +178,7 @@ assert_eq!(value, 20);
 就地修改值一次。
 
 **Trait**: `MutatorOnce<T>`
-**核心方法**: `mutate_once(self, value: &mut T)`
+**核心方法**: `apply(self, value: &mut T)`
 **等价闭包**: `FnOnce(&mut T)`
 
 **实现类型**:
@@ -463,7 +463,7 @@ assert!(!tester.test());
 | `BiConsumerOnce<T, U>` | `accept_once(self, first: &T, second: &U)` | `FnOnce(&T, &U)` |
 | `StatefulBiConsumer<T, U>` | `accept(&mut self, first: &T, second: &U)` | `FnMut(&T, &U)` |
 | `Mutator<T>` | `mutate(&mut self, value: &mut T)` | `FnMut(&mut T)` |
-| `MutatorOnce<T>` | `mutate_once(self, value: &mut T)` | `FnOnce(&mut T)` |
+| `MutatorOnce<T>` | `apply(self, value: &mut T)` | `FnOnce(&mut T)` |
 | `Supplier<T>` | `get(&self) -> T` | `Fn() -> T` |
 | `SupplierOnce<T>` | `get_once(self) -> T` | `FnOnce() -> T` |
 | `StatefulSupplier<T>` | `get(&mut self) -> T` | `FnMut() -> T` |

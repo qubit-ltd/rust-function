@@ -655,7 +655,7 @@ pub trait Mutator<T> {
 
 /// One-time mutator: consumes self, can modify input (not yet implemented)
 pub trait MutatorOnce<T> {
-    fn mutate_once(self, value: &mut T);
+    fn apply(self, value: &mut T);
 }
 ```
 
