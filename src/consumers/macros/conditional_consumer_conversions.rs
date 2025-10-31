@@ -168,10 +168,9 @@ macro_rules! impl_conditional_consumer_conversions {
         fn into_rc(self) -> $rc_type<$t> {
             let pred = self.predicate.into_rc();
             let mut consumer = self.consumer.into_rc();
-            let mut consumer_fn = consumer;
             $rc_type::new(move |t| {
                 if pred.test(t) {
-                    consumer_fn.accept(t);
+                    consumer.accept(t);
                 }
             })
         }
@@ -209,10 +208,9 @@ macro_rules! impl_conditional_consumer_conversions {
         fn into_rc(self) -> $rc_type<$t, $u> {
             let pred = self.predicate.into_rc();
             let mut consumer = self.consumer.into_rc();
-            let mut consumer_fn = consumer;
             $rc_type::new(move |t, u| {
                 if pred.test(t, u) {
-                    consumer_fn.accept(t, u);
+                    consumer.accept(t, u);
                 }
             })
         }

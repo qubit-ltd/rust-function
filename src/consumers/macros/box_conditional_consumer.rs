@@ -143,11 +143,11 @@ macro_rules! impl_box_conditional_consumer {
             where
                 C: $consumer_trait<$t> + 'static,
             {
-                let first_predicate = self.predicate;
-                let mut first_consumer = self.consumer;
+                let predicate = self.predicate;
+                let mut consumer = self.consumer;
                 $consumer_type::new(move |t| {
-                    if first_predicate.test(t) {
-                        first_consumer.accept(t);
+                    if predicate.test(t) {
+                        consumer.accept(t);
                     }
                     next.accept(t);
                 })
@@ -248,11 +248,11 @@ macro_rules! impl_box_conditional_consumer {
             where
                 C: $consumer_trait<$t, $u> + 'static,
             {
-                let first_predicate = self.predicate;
-                let mut first_consumer = self.consumer;
+                let predicate = self.predicate;
+                let mut consumer = self.consumer;
                 $consumer_type::new(move |t, u| {
-                    if first_predicate.test(t, u) {
-                        first_consumer.accept(t, u);
+                    if predicate.test(t, u) {
+                        consumer.accept(t, u);
                     }
                     next.accept(t, u);
                 })

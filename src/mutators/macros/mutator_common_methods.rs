@@ -185,8 +185,8 @@ macro_rules! impl_mutator_common_methods {
         /// # Parameters
         ///
         #[doc = concat!("* `name` - The name to set for this ", $type_desc)]
-        pub fn set_name(&mut self, name: impl Into<String>) {
-            self.name = Some(name.into());
+        pub fn set_name(&mut self, name: &str) {
+            self.name = Some(name.to_string());
         }
     };
 
