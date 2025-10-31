@@ -202,6 +202,7 @@ use std::sync::Arc;
 use crate::mutators::macros::{
     impl_box_conditional_mutator,
     impl_box_mutator_methods,
+    impl_conditional_mutator_conversions,
     impl_conditional_mutator_clone,
     impl_conditional_mutator_debug_display,
     impl_mutator_clone,
@@ -872,7 +873,7 @@ pub struct ArcMutator<T> {
 
 impl<T> ArcMutator<T>
 where
-    T: Send + 'static,
+    T: 'static,
 {
     // Generate common mutator methods (new, new_with_name, name, set_name, noop)
     impl_mutator_common_methods!(
@@ -1215,48 +1216,19 @@ where
         }
     }
 
-    fn into_box(self) -> BoxMutator<T> {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        BoxMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_rc(self) -> RcMutator<T> {
-        let pred = self.predicate.into_rc();
-        let mutator = self.mutator.into_rc();
-        RcMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    // do NOT override Mutator::into_arc() because BoxConditionalMutator is not Send + Sync
-    // and calling BoxConditionalMutator::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl Fn(&mut T) {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        move |t: &mut T| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        }
-    }
-
-    // do NOT override Mutator::to_xxx() because BoxConditionalMutator is not Clone
-    // and calling BoxConditionalMutator::to_xxx() will cause a compile error
+    // Generates: into_box(), into_rc(), into_fn()
+    impl_conditional_mutator_conversions!(
+        BoxMutator<T>,
+        RcMutator,
+        Fn
+    );
 }
 
 // Generate Debug and Display trait implementations for conditional mutator
 impl_conditional_mutator_debug_display!(BoxConditionalMutator<T>);
 
 // ============================================================================
-// 10. RcConditionalMutator - Rc-based Conditional Mutator
+// 9. RcConditionalMutator - Rc-based Conditional Mutator
 // ============================================================================
 
 /// RcConditionalMutator struct
@@ -1299,6 +1271,15 @@ pub struct RcConditionalMutator<T> {
     predicate: RcPredicate<T>,
 }
 
+// Generate shared conditional mutator methods (and_then, or_else)
+impl_shared_conditional_mutator!(
+    RcConditionalMutator<T>,
+    RcMutator,
+    Mutator,
+    into_rc,
+    'static
+);
+
 impl<T> Mutator<T> for RcConditionalMutator<T>
 where
     T: 'static,
@@ -1309,126 +1290,12 @@ where
         }
     }
 
-    fn into_box(self) -> BoxMutator<T> {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        BoxMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_rc(self) -> RcMutator<T> {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        RcMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    // do NOT override Mutator::into_arc() because RcConditionalMutator is not Send + Sync
-    // and calling RcConditionalMutator::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl Fn(&mut T) {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        move |t: &mut T| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        }
-    }
-
-    fn to_box(&self) -> BoxMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_box()
-    }
-
-    fn to_rc(&self) -> RcMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_rc()
-    }
-
-    // do NOT override Mutator::to_arc() because RcMutator is not Send + Sync
-    // and calling RcMutator::to_arc() will cause a compile error
-
-    fn to_fn(&self) -> impl Fn(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_fn()
-    }
-}
-
-impl<T> RcConditionalMutator<T>
-where
-    T: 'static,
-{
-    /// Adds an else branch (single-threaded shared version)
-    ///
-    /// Executes the original mutator when the condition is satisfied, otherwise
-    /// executes else_mutator.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_mutator` - The mutator for the else branch. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to preserve
-    ///   the original mutator, clone it first (if it implements `Clone`). Can be:
-    ///   - A closure: `|x: &mut T|`
-    ///   - An `RcMutator<T>`
-    ///   - A `BoxMutator<T>`
-    ///   - Any type implementing `Mutator<T>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `RcMutator<T>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{Mutator, RcMutator};
-    ///
-    /// let mut mutator = RcMutator::new(|x: &mut i32| *x *= 2)
-    ///     .when(|x: &i32| *x > 0)
-    ///     .or_else(|x: &mut i32| *x -= 1);
-    ///
-    /// let mut positive = 5;
-    /// mutator.apply(&mut positive);
-    /// assert_eq!(positive, 10);
-    ///
-    /// let mut negative = -5;
-    /// mutator.apply(&mut negative);
-    /// assert_eq!(negative, -6);
-    /// ```
-    pub fn or_else<M>(self, else_mutator: M) -> RcMutator<T>
-    where
-        M: Mutator<T> + 'static,
-        T: 'static,
-    {
-        let pred = self.predicate;
-        let then_mut = self.mutator;
-        let else_mut = else_mutator;
-
-        RcMutator::new(move |t: &mut T| {
-            if pred.test(t) {
-                then_mut.apply(t);
-            } else {
-                else_mut.apply(t);
-            }
-        })
-    }
+    // Generates: into_box(), into_rc(), into_fn()
+    impl_conditional_mutator_conversions!(
+        BoxMutator<T>,
+        RcMutator,
+        Fn
+    );
 }
 
 // Generate Clone trait implementation for conditional mutator
@@ -1438,7 +1305,7 @@ impl_conditional_mutator_clone!(RcConditionalMutator<T>);
 impl_conditional_mutator_debug_display!(RcConditionalMutator<T>);
 
 // ============================================================================
-// 11. ArcConditionalMutator - Arc-based Conditional Mutator
+// 10. ArcConditionalMutator - Arc-based Conditional Mutator
 // ============================================================================
 
 /// ArcConditionalMutator struct
@@ -1480,6 +1347,16 @@ pub struct ArcConditionalMutator<T> {
     mutator: ArcMutator<T>,
     predicate: ArcPredicate<T>,
 }
+
+// Generate shared conditional mutator methods (and_then, or_else, conversions)
+impl_shared_conditional_mutator!(
+    ArcConditionalMutator<T>,
+    ArcMutator,
+    Mutator,
+    into_arc,
+    Send + Sync + 'static
+);
+
 impl<T> Mutator<T> for ArcConditionalMutator<T>
 where
     T: Send + 'static,
@@ -1490,103 +1367,16 @@ where
         }
     }
 
-    fn into_box(self) -> BoxMutator<T>
-    where
-        T: 'static,
-    {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        BoxMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_rc(self) -> RcMutator<T>
-    where
-        T: 'static,
-    {
-        let pred = self.predicate.to_rc();
-        let mutator = self.mutator.into_rc();
-        RcMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_arc(self) -> ArcMutator<T>
-    where
-        T: Send + 'static,
-    {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        ArcMutator::new(move |t| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        })
-    }
-
-    fn into_fn(self) -> impl Fn(&mut T)
-    where
-        T: 'static,
-    {
-        let pred = self.predicate;
-        let mutator = self.mutator;
-        move |t: &mut T| {
-            if pred.test(t) {
-                mutator.apply(t);
-            }
-        }
-    }
-
-    fn to_box(&self) -> BoxMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_box()
-    }
-
-    fn to_rc(&self) -> RcMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_rc()
-    }
-
-    fn to_arc(&self) -> ArcMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_arc()
-    }
-
-    fn to_fn(&self) -> impl Fn(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_fn()
-    }
+    // Generates: into_box(), into_rc(), into_fn()
+    impl_conditional_mutator_conversions!(
+        BoxMutator<T>,
+        RcMutator,
+        Fn
+    );
 }
-
 
 // Generate Clone trait implementation for conditional mutator
 impl_conditional_mutator_clone!(ArcConditionalMutator<T>);
 
 // Generate Debug and Display trait implementations for conditional mutator
 impl_conditional_mutator_debug_display!(ArcConditionalMutator<T>);
-
-// Generate shared conditional mutator methods (and_then, or_else, conversions)
-impl_shared_conditional_mutator!(
-    ArcConditionalMutator<T>,
-    ArcMutator,
-    Mutator,
-    into_arc,
-    Send + Sync + 'static
-);
