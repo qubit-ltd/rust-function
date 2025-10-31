@@ -257,6 +257,39 @@ pub trait StatefulConsumer<T> {
         move |t| consumer.accept(t)
     }
 
+    /// Convert to ConsumerOnce
+    ///
+    /// **⚠️ Consumes `self`**: The original consumer will be unavailable after calling this method.
+    ///
+    /// Converts a reusable stateful consumer to a one-time consumer that consumes itself on use.
+    /// This enables passing `StatefulConsumer` to functions that require `ConsumerOnce`.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `BoxConsumerOnce<T>`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    ///
+    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
+    ///     consumer.accept(value);
+    /// }
+    ///
+    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
+    /// takes_once(consumer.into_once(), &5);
+    /// ```
+    fn into_once(self) -> BoxConsumerOnce<T>
+    where
+        Self: Sized + 'static,
+        T: 'static,
+    {
+        BoxConsumerOnce::new(move |t| {
+            let mut consumer = self;
+            consumer.accept(t);
+        })
+    }
+
     /// Convert to BoxStatefulConsumer
     ///
     /// **⚠️ Requires Clone**: The original consumer must implement Clone.
@@ -426,39 +459,6 @@ pub trait StatefulConsumer<T> {
         T: 'static,
     {
         self.clone().into_fn()
-    }
-
-    /// Convert to ConsumerOnce
-    ///
-    /// **⚠️ Consumes `self`**: The original consumer will be unavailable after calling this method.
-    ///
-    /// Converts a reusable stateful consumer to a one-time consumer that consumes itself on use.
-    /// This enables passing `StatefulConsumer` to functions that require `ConsumerOnce`.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `BoxConsumerOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    ///
-    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
-    ///     consumer.accept(value);
-    /// }
-    ///
-    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
-    /// takes_once(consumer.into_once(), &5);
-    /// ```
-    fn into_once(self) -> BoxConsumerOnce<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxConsumerOnce::new(move |t| {
-            let mut consumer = self;
-            consumer.accept(t);
-        })
     }
 
     /// Convert to ConsumerOnce without consuming self
@@ -747,67 +747,6 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
         let self_fn = self.function.clone();
         move |t| self_fn.lock().unwrap()(t)
     }
-
-    /// Convert to ConsumerOnce
-    ///
-    /// **⚠️ Consumes `self`**: The original consumer will be unavailable after calling this method.
-    ///
-    /// Converts a reusable stateful consumer to a one-time consumer that consumes itself on use.
-    /// This enables passing `StatefulConsumer` to functions that require `ConsumerOnce`.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `BoxConsumerOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    ///
-    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
-    ///     consumer.accept(value);
-    /// }
-    ///
-    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
-    /// takes_once(consumer.into_once(), &5);
-    /// ```
-    fn into_once(self) -> BoxConsumerOnce<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxConsumerOnce::new(move |t| {
-            let mut consumer = self;
-            consumer.accept(t);
-        })
-    }
-
-    /// Convert to ConsumerOnce without consuming self
-    ///
-    /// **⚠️ Requires Clone**: This method requires `Self` to implement `Clone`.
-    /// Clones the current consumer and converts the clone to a one-time consumer.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `BoxConsumerOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    ///
-    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
-    ///     consumer.accept(value);
-    /// }
-    ///
-    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
-    /// takes_once(consumer.to_once(), &5);
-    /// ```
-    fn to_once(&self) -> BoxConsumerOnce<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        self.clone().into_once()
-    }
 }
 
 // Use macro to generate Clone implementation
@@ -894,9 +833,11 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(RcStatefulConsumer<T>, (FnMut(&T) + 'static), |f| Rc::new(
-        RefCell::new(f)
-    ));
+    impl_consumer_common_methods!(
+        RcStatefulConsumer<T>,
+        (FnMut(&T) + 'static),
+        |f| Rc::new(RefCell::new(f))
+    );
 
     // Generates: when() and and_then() methods that borrow &self (Rc can clone)
     impl_shared_consumer_methods!(
@@ -960,67 +901,6 @@ impl<T> StatefulConsumer<T> for RcStatefulConsumer<T> {
     fn to_fn(&self) -> impl FnMut(&T) {
         let self_fn = self.function.clone();
         move |t| self_fn.borrow_mut()(t)
-    }
-
-    /// Convert to ConsumerOnce
-    ///
-    /// **⚠️ Consumes `self`**: The original consumer will be unavailable after calling this method.
-    ///
-    /// Converts a reusable stateful consumer to a one-time consumer that consumes itself on use.
-    /// This enables passing `StatefulConsumer` to functions that require `ConsumerOnce`.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `BoxConsumerOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    ///
-    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
-    ///     consumer.accept(value);
-    /// }
-    ///
-    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
-    /// takes_once(consumer.into_once(), &5);
-    /// ```
-    fn into_once(self) -> BoxConsumerOnce<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxConsumerOnce::new(move |t| {
-            let mut consumer = self;
-            consumer.accept(t);
-        })
-    }
-
-    /// Convert to ConsumerOnce without consuming self
-    ///
-    /// **⚠️ Requires Clone**: This method requires `Self` to implement `Clone`.
-    /// Clones the current consumer and converts the clone to a one-time consumer.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `BoxConsumerOnce<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    ///
-    /// fn takes_once<C: ConsumerOnce<i32>>(consumer: C, value: &i32) {
-    ///     consumer.accept(value);
-    /// }
-    ///
-    /// let consumer = BoxStatefulConsumer::new(|x: &i32| println!("{}", x));
-    /// takes_once(consumer.to_once(), &5);
-    /// ```
-    fn to_once(&self) -> BoxConsumerOnce<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        self.clone().into_once()
     }
 }
 
