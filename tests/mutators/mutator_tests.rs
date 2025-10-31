@@ -392,7 +392,7 @@ mod test_arc_mutator {
         let first = ArcMutator::new(|x: &mut i32| *x *= 2);
         let second = ArcMutator::new(|x: &mut i32| *x += 10);
 
-        let chained = first.and_then(&second);
+        let chained = first.and_then(second);
 
         let mut value = 5;
         chained.apply(&mut value);
@@ -477,7 +477,7 @@ mod test_arc_mutator {
         let noop = ArcMutator::<i32>::noop();
         let double = ArcMutator::new(|x: &mut i32| *x *= 2);
 
-        let chained = noop.and_then(&double);
+        let chained = noop.and_then(double);
 
         let mut value = 5;
         chained.apply(&mut value);

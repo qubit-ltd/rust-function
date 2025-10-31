@@ -216,7 +216,7 @@ mod test_arc_mutator {
         let first = ArcStatefulMutator::new(|x: &mut i32| *x *= 2);
         let second = ArcStatefulMutator::new(|x: &mut i32| *x += 10);
 
-        let chained = first.and_then(&second);
+        let chained = first.and_then(second);
 
         let mut value = 5;
         let mut c = chained;
@@ -308,7 +308,7 @@ mod test_arc_mutator {
         let noop = ArcStatefulMutator::<i32>::noop();
         let double = ArcStatefulMutator::new(|x: &mut i32| *x *= 2);
 
-        let chained = noop.and_then(&double);
+        let chained = noop.and_then(double);
 
         let mut value = 5;
         let mut c = chained;
@@ -924,8 +924,8 @@ mod test_complex_scenarios {
         let double = ArcStatefulMutator::new(|x: &mut i32| *x *= 2);
         let add_ten = ArcStatefulMutator::new(|x: &mut i32| *x += 10);
 
-        let pipeline1 = double.and_then(&add_ten.clone());
-        let pipeline2 = add_ten.and_then(&double.clone());
+        let pipeline1 = double.and_then(add_ten.clone());
+        let pipeline2 = add_ten.and_then(double.clone());
 
         let mut value1 = 5;
         let mut p1 = pipeline1;
@@ -1498,7 +1498,7 @@ mod test_into_fn {
             }
         });
         let double = ArcStatefulMutator::new(|x: &mut i32| *x *= 2);
-        let combined = is_positive.and_then(&double);
+        let combined = is_positive.and_then(double);
 
         let mut values = vec![-5, 1, 3, -2, 4];
         values.iter_mut().for_each(combined.into_fn());
