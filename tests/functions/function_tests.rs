@@ -258,46 +258,46 @@ fn test_box_function_into_fn() {
 // ============================================================================
 
 #[test]
-fn test_box_function_apply_once() {
-    // Test FunctionOnce::apply_once for BoxFunction
+fn test_box_function_apply() {
+    // Test FunctionOnce::apply for BoxFunction
     let double = BoxFunction::new(|x: &i32| x * 2);
-    let result = double.apply_once(&21);
+    let result = double.apply(&21);
     assert_eq!(result, 42);
 }
 
 #[test]
-fn test_box_function_into_box_once() {
-    // Test FunctionOnce::into_box_once
+fn test_box_function_into_box() {
+    // Test FunctionOnce::into_box
     let double = BoxFunction::new(|x: &i32| x * 2);
-    let boxed_once = double.into_box_once();
-    assert_eq!(boxed_once.apply_once(&21), 42);
+    let boxed_once = double.into_box();
+    assert_eq!(boxed_once.apply(&21), 42);
 }
 
 #[test]
-fn test_box_function_into_fn_once() {
-    // Test FunctionOnce::into_fn_once
+fn test_box_function_into_fn() {
+    // Test FunctionOnce::into_fn
     let double = BoxFunction::new(|x: &i32| x * 2);
-    let func_once = double.into_fn_once();
+    let func_once = double.into_fn();
     assert_eq!(func_once(&21), 42);
 }
 
-// Note: BoxFunction doesn't implement Clone, so to_box_once() and
-// to_fn_once() are not available for BoxFunction. These tests are
+// Note: BoxFunction doesn't implement Clone, so to_box() and
+// to_fn() are not available for BoxFunction. These tests are
 // intentionally commented out.
 
 // #[test]
-// fn test_box_function_to_box_once() {
-//     // BoxFunction doesn't implement Clone, so to_box_once() is not available
+// fn test_box_function_to_box() {
+//     // BoxFunction doesn't implement Clone, so to_box() is not available
 //     let double = BoxFunction::new(|x: &i32| x * 2);
-//     let boxed_once = double.to_box_once();
-//     assert_eq!(boxed_once.apply_once(&21), 42);
+//     let boxed_once = double.to_box();
+//     assert_eq!(boxed_once.apply(&21), 42);
 // }
 
 // #[test]
-// fn test_box_function_to_fn_once() {
-//     // BoxFunction doesn't implement Clone, so to_fn_once() is not available
+// fn test_box_function_to_fn() {
+//     // BoxFunction doesn't implement Clone, so to_fn() is not available
 //     let double = BoxFunction::new(|x: &i32| x * 2);
-//     let func_once = double.to_fn_once();
+//     let func_once = double.to_fn();
 //     assert_eq!(func_once(&21), 42);
 // }
 
@@ -490,43 +490,43 @@ fn test_arc_function_to_fn() {
 // ============================================================================
 
 #[test]
-fn test_arc_function_apply_once() {
-    // Test FunctionOnce::apply_once for ArcFunction
+fn test_arc_function_apply() {
+    // Test FunctionOnce::apply for ArcFunction
     let double = ArcFunction::new(|x: &i32| x * 2);
-    let result = double.apply_once(&21);
+    let result = double.apply(&21);
     assert_eq!(result, 42);
 }
 
 #[test]
-fn test_arc_function_into_box_once() {
-    // Test FunctionOnce::into_box_once
+fn test_arc_function_into_box() {
+    // Test FunctionOnce::into_box
     let double = ArcFunction::new(|x: &i32| x * 2);
-    let boxed_once = double.into_box_once();
-    assert_eq!(boxed_once.apply_once(&21), 42);
+    let boxed_once = double.into_box();
+    assert_eq!(boxed_once.apply(&21), 42);
 }
 
 #[test]
-fn test_arc_function_into_fn_once() {
-    // Test FunctionOnce::into_fn_once
+fn test_arc_function_into_fn() {
+    // Test FunctionOnce::into_fn
     let double = ArcFunction::new(|x: &i32| x * 2);
-    let func_once = double.into_fn_once();
+    let func_once = double.into_fn();
     assert_eq!(func_once(&21), 42);
 }
 
 #[test]
-fn test_arc_function_to_box_once() {
-    // Test FunctionOnce::to_box_once (non-consuming)
+fn test_arc_function_to_box() {
+    // Test FunctionOnce::to_box (non-consuming)
     let double = ArcFunction::new(|x: &i32| x * 2);
-    let boxed_once = double.to_box_once();
-    assert_eq!(boxed_once.apply_once(&21), 42);
+    let boxed_once = double.to_box();
+    assert_eq!(boxed_once.apply(&21), 42);
     assert_eq!(double.apply(&21), 42);
 }
 
 #[test]
-fn test_arc_function_to_fn_once() {
-    // Test FunctionOnce::to_fn_once (non-consuming)
+fn test_arc_function_to_fn() {
+    // Test FunctionOnce::to_fn (non-consuming)
     let double = ArcFunction::new(|x: &i32| x * 2);
-    let func_once = double.to_fn_once();
+    let func_once = double.to_fn();
     assert_eq!(func_once(&21), 42);
     assert_eq!(double.apply(&21), 42);
 }
@@ -719,43 +719,43 @@ fn test_rc_function_to_fn() {
 // ============================================================================
 
 #[test]
-fn test_rc_function_apply_once() {
-    // Test FunctionOnce::apply_once for RcFunction
+fn test_rc_function_apply() {
+    // Test FunctionOnce::apply for RcFunction
     let double = RcFunction::new(|x: &i32| x * 2);
-    let result = double.apply_once(&21);
+    let result = double.apply(&21);
     assert_eq!(result, 42);
 }
 
 #[test]
-fn test_rc_function_into_box_once() {
-    // Test FunctionOnce::into_box_once
+fn test_rc_function_into_box() {
+    // Test FunctionOnce::into_box
     let double = RcFunction::new(|x: &i32| x * 2);
-    let boxed_once = double.into_box_once();
-    assert_eq!(boxed_once.apply_once(&21), 42);
+    let boxed_once = double.into_box();
+    assert_eq!(boxed_once.apply(&21), 42);
 }
 
 #[test]
-fn test_rc_function_into_fn_once() {
-    // Test FunctionOnce::into_fn_once
+fn test_rc_function_into_fn() {
+    // Test FunctionOnce::into_fn
     let double = RcFunction::new(|x: &i32| x * 2);
-    let func_once = double.into_fn_once();
+    let func_once = double.into_fn();
     assert_eq!(func_once(&21), 42);
 }
 
 #[test]
-fn test_rc_function_to_box_once() {
-    // Test FunctionOnce::to_box_once (non-consuming)
+fn test_rc_function_to_box() {
+    // Test FunctionOnce::to_box (non-consuming)
     let double = RcFunction::new(|x: &i32| x * 2);
-    let boxed_once = double.to_box_once();
-    assert_eq!(boxed_once.apply_once(&21), 42);
+    let boxed_once = double.to_box();
+    assert_eq!(boxed_once.apply(&21), 42);
     assert_eq!(double.apply(&21), 42);
 }
 
 #[test]
-fn test_rc_function_to_fn_once() {
-    // Test FunctionOnce::to_fn_once (non-consuming)
+fn test_rc_function_to_fn() {
+    // Test FunctionOnce::to_fn (non-consuming)
     let double = RcFunction::new(|x: &i32| x * 2);
-    let func_once = double.to_fn_once();
+    let func_once = double.to_fn();
     assert_eq!(func_once(&21), 42);
     assert_eq!(double.apply(&21), 42);
 }

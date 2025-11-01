@@ -32,7 +32,7 @@ impl TestMutatingFunctionOnce {
 }
 
 impl MutatingFunctionOnce<i32, i32> for TestMutatingFunctionOnce {
-    fn apply_once(self, input: &mut i32) -> i32 {
+    fn apply(self, input: &mut i32) -> i32 {
         let old_value = *input;
         *input *= self.multiplier;
         old_value
@@ -44,19 +44,19 @@ mod test_mutating_function_once_default_impl {
     use super::*;
 
     #[test]
-    fn test_into_box_once() {
+    fn test_into_box() {
         let func = TestMutatingFunctionOnce::new(2);
-        let boxed = func.into_box_once();
+        let boxed = func.into_box();
 
         let mut value = 5;
-        assert_eq!(boxed.apply_once(&mut value), 5);
+        assert_eq!(boxed.apply(&mut value), 5);
         assert_eq!(value, 10);
     }
 
     #[test]
-    fn test_into_fn_once() {
+    fn test_into_fn() {
         let func = TestMutatingFunctionOnce::new(3);
-        let closure = func.into_fn_once();
+        let closure = func.into_fn();
 
         let mut value = 4;
         assert_eq!(closure(&mut value), 4);
@@ -64,19 +64,19 @@ mod test_mutating_function_once_default_impl {
     }
 
     #[test]
-    fn test_to_box_once() {
+    fn test_to_box() {
         let func = TestMutatingFunctionOnce::new(2);
-        let boxed = func.to_box_once();
+        let boxed = func.to_box();
 
         let mut value = 5;
-        assert_eq!(boxed.apply_once(&mut value), 5);
+        assert_eq!(boxed.apply(&mut value), 5);
         assert_eq!(value, 10);
     }
 
     #[test]
-    fn test_to_fn_once() {
+    fn test_to_fn() {
         let func = TestMutatingFunctionOnce::new(3);
-        let closure = func.to_fn_once();
+        let closure = func.to_fn();
 
         let mut value = 4;
         assert_eq!(closure(&mut value), 4);
@@ -102,7 +102,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut target = vec![0];
-        let old_len = func.apply_once(&mut target);
+        let old_len = func.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
@@ -117,7 +117,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut target = String::from("hello");
-        let old_len = func.apply_once(&mut target);
+        let old_len = func.apply(&mut target);
         assert_eq!(old_len, 5);
         assert_eq!(target, "hello world");
     }
@@ -137,7 +137,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut target = vec![0];
-        let final_len = chained.apply_once(&mut target);
+        let final_len = chained.apply(&mut target);
         assert_eq!(final_len, 5);
         assert_eq!(target, vec![0, 1, 2, 3, 4]);
     }
@@ -162,7 +162,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut target = vec![0];
-        let final_len = chained.apply_once(&mut target);
+        let final_len = chained.apply(&mut target);
         assert_eq!(final_len, 7);
         assert_eq!(target, vec![0, 1, 2, 3, 4, 5, 6]);
     }
@@ -171,7 +171,7 @@ mod test_box_mutating_function_once {
     fn test_identity() {
         let identity = BoxMutatingFunctionOnce::<i32, i32>::identity();
         let mut value = 42;
-        let result = identity.apply_once(&mut value);
+        let result = identity.apply(&mut value);
         assert_eq!(result, 42);
         assert_eq!(value, 42);
     }
@@ -187,7 +187,7 @@ mod test_box_mutating_function_once {
         let mapped = func.map(|old_len| format!("Old length: {}", old_len));
 
         let mut target = vec![0];
-        let result = mapped.apply_once(&mut target);
+        let result = mapped.apply(&mut target);
         assert_eq!(result, "Old length: 1");
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
@@ -208,7 +208,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut data = Data { value: -5 };
-        let result = validator.apply_once(&mut data);
+        let result = validator.apply(&mut data);
         assert_eq!(data.value, 0);
         assert!(result.is_err());
     }
@@ -223,7 +223,7 @@ mod test_box_mutating_function_once {
         });
 
         let mut target = vec![10, 20];
-        let old_sum = func.apply_once(&mut target);
+        let old_sum = func.apply(&mut target);
         assert_eq!(old_sum, 30);
         assert_eq!(target, vec![10, 20, 1, 2, 3, 4, 5]);
     }
@@ -247,7 +247,7 @@ mod test_closure {
         };
 
         let mut target = vec![0];
-        let old_len = closure.apply_once(&mut target);
+        let old_len = closure.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
@@ -267,7 +267,7 @@ mod test_closure {
         });
 
         let mut target = vec![0];
-        let final_len = chained.apply_once(&mut target);
+        let final_len = chained.apply(&mut target);
         assert_eq!(final_len, 5);
         assert_eq!(target, vec![0, 1, 2, 3, 4]);
     }
@@ -283,36 +283,36 @@ mod test_closure {
         .map(|old_len| format!("Old length: {}", old_len));
 
         let mut target = vec![0];
-        let result = mapped.apply_once(&mut target);
+        let result = mapped.apply(&mut target);
         assert_eq!(result, "Old length: 1");
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 
     #[test]
-    fn test_closure_into_box_once() {
+    fn test_closure_into_box() {
         let data = vec![1, 2, 3];
         let closure = move |x: &mut Vec<i32>| {
             let old_len = x.len();
             x.extend(data);
             old_len
         };
-        let box_func = closure.into_box_once();
+        let box_func = closure.into_box();
 
         let mut target = vec![0];
-        let old_len = box_func.apply_once(&mut target);
+        let old_len = box_func.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 
     #[test]
-    fn test_closure_into_fn_once() {
+    fn test_closure_into_fn() {
         let data = vec![1, 2, 3];
         let closure = move |x: &mut Vec<i32>| {
             let old_len = x.len();
             x.extend(data);
             old_len
         };
-        let fn_closure = closure.into_fn_once();
+        let fn_closure = closure.into_fn();
 
         let mut target = vec![0];
         let old_len = fn_closure(&mut target);
@@ -321,30 +321,30 @@ mod test_closure {
     }
 
     #[test]
-    fn test_closure_to_box_once() {
+    fn test_closure_to_box() {
         let data = vec![1, 2, 3];
         let closure = move |x: &mut Vec<i32>| {
             let old_len = x.len();
             x.extend(data);
             old_len
         };
-        let box_func = closure.to_box_once();
+        let box_func = closure.to_box();
 
         let mut target = vec![0];
-        let old_len = box_func.apply_once(&mut target);
+        let old_len = box_func.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 
     #[test]
-    fn test_closure_to_fn_once() {
+    fn test_closure_to_fn() {
         let data = vec![1, 2, 3];
         let closure = move |x: &mut Vec<i32>| {
             let old_len = x.len();
             x.extend(data);
             old_len
         };
-        let fn_closure = closure.to_fn_once();
+        let fn_closure = closure.to_fn();
 
         let mut target = vec![0];
         let old_len = fn_closure(&mut target);
@@ -363,13 +363,13 @@ mod test_closure {
         // data is no longer accessible here
 
         let mut target = vec![0];
-        let old_len = closure.apply_once(&mut target);
+        let old_len = closure.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 
     #[test]
-    fn test_into_box_once() {
+    fn test_into_box() {
         let data = vec![1, 2, 3];
         let func = BoxMutatingFunctionOnce::new(move |x: &mut Vec<i32>| {
             let old_len = x.len();
@@ -377,16 +377,16 @@ mod test_closure {
             old_len
         });
 
-        let box_func = func.into_box_once();
+        let box_func = func.into_box();
 
         let mut target = vec![0];
-        let old_len = box_func.apply_once(&mut target);
+        let old_len = box_func.apply(&mut target);
         assert_eq!(old_len, 1);
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 
     #[test]
-    fn test_into_fn_once() {
+    fn test_into_fn() {
         let data = vec![1, 2, 3];
         let func = BoxMutatingFunctionOnce::new(move |x: &mut Vec<i32>| {
             let old_len = x.len();
@@ -394,7 +394,7 @@ mod test_closure {
             old_len
         });
 
-        let closure = func.into_fn_once();
+        let closure = func.into_fn();
 
         let mut target = vec![0];
         let old_len = closure(&mut target);
