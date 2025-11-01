@@ -21,14 +21,14 @@
 //! * `$struct_name<$generics>` - The struct name with its generic parameters
 //!   - Single parameter: `ArcFunction<T, R>`
 //!   - Two parameters: `ArcBiFunction<T, U, R>`
-//! * `$return_type` - The return type for when (e.g., ArcConditionalFunction)
+//! * `$conditional_type` - The conditional function type for when (e.g., ArcConditionalFunction)
 //! * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
 //! * `$function_trait` - Function trait name (e.g., Function, BiFunction)
 //! * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
 //!
 //! # All Macro Invocations
 //!
-//! | Function Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$function_trait` | `$extra_bounds` |
+//! | Function Type | Struct Signature | `$conditional_type` | `$predicate_conversion` | `$function_trait` | `$extra_bounds` |
 //! |---------------|-----------------|----------------|------------------------|------------------|----------------|
 //! | **ArcFunction** | `ArcFunction<T, R>` | ArcConditionalFunction | into_arc | Function | Send + Sync + 'static |
 //! | **RcFunction** | `RcFunction<T, R>` | RcConditionalFunction | into_rc | Function | 'static |
@@ -81,14 +81,14 @@
 /// * `$struct_name<$generics>` - The struct name with its generic parameters
 ///   - Single parameter: `ArcFunction<T, R>`
 ///   - Two parameters: `ArcBiFunction<T, U, R>`
-/// * `$return_type` - The return type for when (e.g., ArcConditionalFunction)
+/// * `$conditional_type` - The conditional function type for when (e.g., ArcConditionalFunction)
 /// * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
 /// * `$function_trait` - Function trait name (e.g., Function, StatefulFunction)
 /// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
 ///
 /// # All Macro Invocations
 ///
-/// | Function Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$function_trait` | `$extra_bounds` |
+/// | Function Type | Struct Signature | `$conditional_type` | `$predicate_conversion` | `$function_trait` | `$extra_bounds` |
 /// |---------------|-----------------|----------------|------------------------|------------------|----------------|
 /// | **ArcFunction** | `ArcFunction<T, R>` | ArcConditionalFunction | into_arc | Function | Send + Sync + 'static |
 /// | **RcFunction** | `RcFunction<T, R>` | RcConditionalFunction | into_rc | Function | 'static |
@@ -107,22 +107,22 @@
 ///     ArcFunction<T, R>,
 ///     ArcConditionalFunction,
 ///     into_arc,
-//!     Function,
-//!     Send + Sync + 'static
-//! );
-//!
-//! // Two-parameter with Rc
-//! impl_shared_function_methods!(
-//!     RcBiFunction<T, U, R>,
-//!     RcConditionalBiFunction,
-//!     into_rc,
-//!     BiFunction,
-//!     'static
-//! );
-//! ```
+///     Function,
+///     Send + Sync + 'static
+/// );
+///
+/// // Two-parameter with Rc
+/// impl_shared_function_methods!(
+///     RcBiFunction<T, U, R>,
+///     RcConditionalBiFunction,
+///     into_rc,
+///     BiFunction,
+///     'static
+/// );
+/// ```
 macro_rules! impl_shared_function_methods {
     // Two generic parameters - Function types
-    ($struct_name:ident < $t:ident, $r:ident >, $return_type:ident, $predicate_conversion:ident, $function_trait:ident, $($extra_bounds:tt)+) => {
+    ($struct_name:ident < $t:ident, $r:ident >, $conditional_type:ident, $predicate_conversion:ident, $function_trait:ident, $($extra_bounds:tt)+) => {
         /// Creates a conditional function that executes based on predicate
         /// result.
         ///
@@ -147,11 +147,11 @@ macro_rules! impl_shared_function_methods {
         /// assert_eq!(conditional.or_else(|_| 0).apply(5), 10);  // executed
         /// assert_eq!(conditional.or_else(|_| 0).apply(-3), 0);  // not executed
         /// ```
-        pub fn when<P>(&self, predicate: P) -> $return_type<$t, $r>
+        pub fn when<P>(&self, predicate: P) -> $conditional_type<$t, $r>
         where
             P: Predicate<$t> + $($extra_bounds)+,
         {
-            $return_type {
+            $conditional_type {
                 function: self.clone(),
                 predicate: predicate.$predicate_conversion(),
             }
@@ -185,21 +185,62 @@ macro_rules! impl_shared_function_methods {
         #[allow(unused_mut)]
         pub fn and_then<S, F>(&self, mut after: F) -> $struct_name<$t, S>
         where
-            $t: 'static,
-            $r: 'static,
             S: 'static,
             F: $function_trait<$r, S> + $($extra_bounds)+,
         {
-            let mut first = self.clone();
+            let mut before = self.clone();
             $struct_name::new(move |t: &$t| {
-                let intermediate = first.apply(t);
-                after.apply(&intermediate)
+                let r = before.apply(t);
+                after.apply(&r)
+            })
+        }
+
+        /// Creates a composed function that executes the provided function first,
+        /// then applies this function to its result.
+        ///
+        /// This is the reverse of `and_then`: `before` is executed first, then `self`.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `S` - The input type of the before function
+        /// * `F` - The type of the before function
+        ///
+        /// # Parameters
+        ///
+        /// * `before` - The function to execute before this function
+        ///
+        /// # Returns
+        ///
+        /// Returns a new function that executes `before` first, then applies this
+        /// function to the result.
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{ArcFunction, Function};
+        ///
+        /// let to_string = ArcFunction::new(|x: i32| x.to_string());
+        /// let add_prefix = ArcFunction::new(|s: &str| format!("Value: {}", s));
+        ///
+        /// let composed = add_prefix.compose(to_string);
+        /// assert_eq!(composed.apply(42), "Value: 42");
+        /// ```
+        #[allow(unused_mut)]
+        pub fn compose<S, F>(&self, mut before: F) -> $struct_name<S, $r>
+        where
+            S: 'static,
+            F: $function_trait<S, $t> + $($extra_bounds)+,
+        {
+            let mut after = self.clone();
+            $struct_name::new(move |s: &S| {
+                let t = before.apply(s);
+                after.apply(&t)
             })
         }
     };
 
     // Three generic parameters - BiFunction types
-    ($struct_name:ident < $t:ident, $u:ident, $r:ident >, $return_type:ident, $predicate_conversion:ident, $function_trait:ident, $($extra_bounds:tt)+) => {
+    ($struct_name:ident < $t:ident, $u:ident, $r:ident >, $conditional_type:ident, $predicate_conversion:ident, $function_trait:ident, $($extra_bounds:tt)+) => {
         /// Creates a conditional two-parameter function that executes based
         /// on bi-predicate result.
         ///
@@ -224,11 +265,11 @@ macro_rules! impl_shared_function_methods {
         /// assert_eq!(conditional.or_else(|_, _| 0).apply(2, 3), 5);  // executed
         /// assert_eq!(conditional.or_else(|_, _| 0).apply(-1, 3), 0); // not executed
         /// ```
-        pub fn when<P>(&self, predicate: P) -> $return_type<$t, $u, $r>
+        pub fn when<P>(&self, predicate: P) -> $conditional_type<$t, $u, $r>
         where
             P: BiPredicate<$t, $u> + $($extra_bounds)+,
         {
-            $return_type {
+            $conditional_type {
                 function: self.clone(),
                 predicate: predicate.$predicate_conversion(),
             }
@@ -262,16 +303,64 @@ macro_rules! impl_shared_function_methods {
         #[allow(unused_mut)]
         pub fn and_then<S, F>(&self, mut after: F) -> $struct_name<$t, $u, S>
         where
-            $t: 'static,
-            $u: 'static,
-            $r: 'static,
             S: 'static,
             F: $function_trait<$r, S> + $($extra_bounds)+,
         {
-            let mut first = self.clone();
+            let mut before = self.clone();
             $struct_name::new(move |t: &$t, u: &$u| {
-                let intermediate = first.apply(t, u);
-                after.apply(&intermediate)
+                let r = before.apply(t, u);
+                after.apply(&r)
+            })
+        }
+
+        /// Creates a composed function that executes the provided function first,
+        /// then applies this function to its result along with the second parameter.
+        ///
+        /// This is the reverse of `and_then`: `before` is executed first, then `self`
+        /// is applied with the result of `before` as the first parameter and the
+        /// original second parameter.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `S` - The input type of the before function
+        /// * `F` - The type of the before function
+        ///
+        /// # Parameters
+        ///
+        /// * `before1` - The first two parameters function to execute before this function
+        /// * `before2` - The second two parameter function to execute before this function
+        ///
+        /// # Returns
+        ///
+        /// Returns a new function that executes `before1` and `before2` first,
+        /// then applies this function with the result of `before1` and `before2`
+        /// as the first parameter and the second parameter.
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::ArcBiFunction;
+        ///
+        /// let add = ArcBiFunction::new(|x: i32, y: i32| x + y);
+        /// let sub = ArcBiFunction::new(|x: i32, y: i32| x - y);
+        /// let multiply = ArcBiFunction::new(|x: i32, y: i32| x * y);
+        ///
+        /// let composed = multiply.compose(add, sub);
+        /// assert_eq!(composed.apply(4, 2), 12); // (4 + 2) * (4 - 2) = 12
+        /// ```
+        #[allow(unused_mut)]
+        pub fn compose<S1, S2, F1, F2>(&self, mut before1: F1, mut before2: F2) -> $struct_name<S1, S2, $r>
+        where
+            S1: 'static,
+            S2: 'static,
+            F1: $function_trait<S1, $t> + 'static,
+            F2: $function_trait<S2, $u> + 'static,
+        {
+            let mut after = self.clone();
+            $struct_name::new(move |s1: &S1, s2: &S2| {
+                let t = before1.apply(s1);
+                let u = before2.apply(s2);
+                after.apply(&t, &u)
             })
         }
     };

@@ -6,6 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
+
 //! # Function Common Methods Macro
 //!
 //! Generates common Function methods (new, new_with_name, name,
@@ -177,6 +178,33 @@ macro_rules! impl_function_common_methods {
                 name: Some(name.to_string()),
             }
         }
+
+        #[doc = concat!("Creates a new named ", $type_desc, ".")]
+        ///
+        /// Wraps the provided closure and assigns it a name, which is
+        /// useful for debugging and logging purposes.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `F` - The closure type
+        ///
+        /// # Parameters
+        ///
+        /// * `f` - The closure to wrap
+        #[doc = concat!("* `name` - The optional name for this ", $type_desc)]
+        ///
+        /// # Returns
+        ///
+        #[doc = concat!("Returns a new named ", $type_desc, " instance wrapping the closure.")]
+        pub fn new_with_optional_name<F>($f: F, name: Option<String>) -> Self
+        where
+            F: $($fn_trait_with_bounds)+,
+        {
+            Self {
+                function: $wrapper_expr,
+                name: name,
+            }
+        }
     };
 
     // Internal rule: generates name and set_name methods
@@ -200,24 +228,6 @@ macro_rules! impl_function_common_methods {
         }
     };
 
-    // Internal rule: generates identity method for when T == R
-    (@identity_method) => {
-        /// Creates an identity function.
-        ///
-        /// Creates a function that returns a clone of its input value.
-        /// Only available when input and output types are the same.
-        ///
-        /// # Returns
-        ///
-        /// Returns a new identity function that clones its input.
-        pub fn identity() -> Self
-        where
-            T: Clone,
-        {
-            Self::new(|x: &T| x.clone())
-        }
-    };
-
     // Two generic parameters - Function types
     (
         $struct_name:ident < $t:ident, $r:ident >,
@@ -231,8 +241,6 @@ macro_rules! impl_function_common_methods {
         );
 
         impl_function_common_methods!(@name_methods "function");
-
-        impl_function_common_methods!(@identity_method);
     };
 
     // Three generic parameters - BiFunction types (if applicable)
@@ -248,9 +256,6 @@ macro_rules! impl_function_common_methods {
         );
 
         impl_function_common_methods!(@name_methods "bi-function");
-
-        // For bi-functions, identity doesn't make sense as it would need two inputs
-        // but return one output, so we don't generate identity for bi-functions
     };
 }
 

@@ -80,7 +80,9 @@ macro_rules! impl_conditional_function_debug_display {
     };
     // Three generic parameters - BiFunction types
     ($struct_name:ident < $generic1:ident, $generic2:ident, $generic3:ident >) => {
-        impl<$generic1, $generic2, $generic3> std::fmt::Debug for $struct_name<$generic1, $generic2, $generic3> {
+        impl<$generic1, $generic2, $generic3> std::fmt::Debug
+            for $struct_name<$generic1, $generic2, $generic3>
+        {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct(stringify!($struct_name))
                     .field("function", &self.function)
@@ -89,7 +91,9 @@ macro_rules! impl_conditional_function_debug_display {
             }
         }
 
-        impl<$generic1, $generic2, $generic3> std::fmt::Display for $struct_name<$generic1, $generic2, $generic3> {
+        impl<$generic1, $generic2, $generic3> std::fmt::Display
+            for $struct_name<$generic1, $generic2, $generic3>
+        {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(
                     f,

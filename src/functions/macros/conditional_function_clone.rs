@@ -53,12 +53,12 @@
 /// ```ignore
 /// // For two type parameters
 /// impl_conditional_function_clone!(ArcConditionalFunction<T, R>);
-//! impl_conditional_function_clone!(RcConditionalFunction<T, R>);
+/// impl_conditional_function_clone!(RcConditionalFunction<T, R>);
 ///
-//! // For three type parameters
-//! impl_conditional_function_clone!(ArcConditionalBiFunction<T, U, R>);
-//! impl_conditional_function_clone!(RcConditionalBiFunction<T, U, R>);
-//! ```
+/// // For three type parameters
+/// impl_conditional_function_clone!(ArcConditionalBiFunction<T, U, R>);
+/// impl_conditional_function_clone!(RcConditionalBiFunction<T, U, R>);
+/// ```
 macro_rules! impl_conditional_function_clone {
     // Two generic parameters - Function types
     ($struct_name:ident < $generic1:ident, $generic2:ident >) => {
@@ -73,7 +73,9 @@ macro_rules! impl_conditional_function_clone {
     };
     // Three generic parameters - BiFunction types
     ($struct_name:ident < $generic1:ident, $generic2:ident, $generic3:ident >) => {
-        impl<$generic1, $generic2, $generic3> Clone for $struct_name<$generic1, $generic2, $generic3> {
+        impl<$generic1, $generic2, $generic3> Clone
+            for $struct_name<$generic1, $generic2, $generic3>
+        {
             fn clone(&self) -> Self {
                 Self {
                     function: self.function.clone(),

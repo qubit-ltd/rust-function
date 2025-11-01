@@ -17,6 +17,7 @@
 
 pub mod function;
 pub mod function_once;
+pub mod macros;
 pub mod mutating_function;
 pub mod mutating_function_once;
 pub mod stateful_function;

@@ -458,105 +458,6 @@ impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
 }
 
 // ============================================================================
-// BoxConditionalFunctionOnce - Box-based Conditional Function
-// ============================================================================
-
-/// BoxConditionalFunctionOnce struct
-///
-/// A conditional consuming transformer that only executes when a predicate is
-/// satisfied. Uses `BoxFunctionOnce` and `BoxPredicate` for single
-/// ownership semantics.
-///
-/// This type is typically created by calling `BoxFunctionOnce::when()` and
-/// is designed to work with the `or_else()` method to create if-then-else
-/// logic.
-///
-/// # Features
-///
-/// - **Single Ownership**: Not cloneable, consumes `self` on use
-/// - **One-time Use**: Can only be called once
-/// - **Conditional Execution**: Only transforms when predicate returns `true`
-/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
-///
-/// # Examples
-///
-/// ## With or_else Branch
-///
-/// ```rust
-/// use prism3_function::{FunctionOnce, BoxFunctionOnce};
-///
-/// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-/// let negate = BoxFunctionOnce::new(|x: i32| -x);
-/// let conditional = double.when(|x: &i32| *x > 0).or_else(negate);
-/// assert_eq!(conditional.apply_once(5), 10); // when branch executed
-///
-/// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
-/// let negate2 = BoxFunctionOnce::new(|x: i32| -x);
-/// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(negate2);
-/// assert_eq!(conditional2.apply_once(-5), 5); // or_else branch executed
-/// ```
-///
-/// # Author
-///
-/// Haixing Hu
-pub struct BoxConditionalFunctionOnce<T, R> {
-    transformer: BoxFunctionOnce<T, R>,
-    predicate: BoxPredicate<T>,
-}
-
-impl<T, R> BoxConditionalFunctionOnce<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
-    /// Adds an else branch
-    ///
-    /// Executes the original transformer when the condition is satisfied,
-    /// otherwise executes else_transformer.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_transformer` - The transformer for the else branch, can be:
-    ///   - Closure: `|x: T| -> R`
-    ///   - `BoxFunctionOnce<T, R>`
-    ///   - Any type implementing `FunctionOnce<T, R>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `BoxFunctionOnce<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{FunctionOnce, BoxFunctionOnce};
-    ///
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    /// assert_eq!(conditional.apply_once(5), 10); // Condition satisfied, execute double
-    ///
-    /// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    /// assert_eq!(conditional2.apply_once(-5), 5); // Condition not satisfied, execute negate
-    /// ```
-    pub fn or_else<F>(self, else_transformer: F) -> BoxFunctionOnce<T, R>
-    where
-        F: FunctionOnce<T, R> + 'static,
-    {
-        let pred = self.predicate;
-        let then_trans = self.transformer;
-        BoxFunctionOnce::new(move |t| {
-            if pred.test(t) {
-                then_trans.apply_once(t)
-            } else {
-                else_transformer.apply_once(t)
-            }
-        })
-    }
-}
-
-// ============================================================================
 // Blanket implementation for standard FnOnce trait
 // ============================================================================
 
@@ -860,3 +761,102 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
 ///
 /// Haixing Hu
 impl<T, R, F> FnFunctionOnceOps<T, R> for F where F: FnOnce(&T) -> R + 'static {}
+
+// ============================================================================
+// BoxConditionalFunctionOnce - Box-based Conditional Function
+// ============================================================================
+
+/// BoxConditionalFunctionOnce struct
+///
+/// A conditional consuming transformer that only executes when a predicate is
+/// satisfied. Uses `BoxFunctionOnce` and `BoxPredicate` for single
+/// ownership semantics.
+///
+/// This type is typically created by calling `BoxFunctionOnce::when()` and
+/// is designed to work with the `or_else()` method to create if-then-else
+/// logic.
+///
+/// # Features
+///
+/// - **Single Ownership**: Not cloneable, consumes `self` on use
+/// - **One-time Use**: Can only be called once
+/// - **Conditional Execution**: Only transforms when predicate returns `true`
+/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
+///
+/// # Examples
+///
+/// ## With or_else Branch
+///
+/// ```rust
+/// use prism3_function::{FunctionOnce, BoxFunctionOnce};
+///
+/// let double = BoxFunctionOnce::new(|x: i32| x * 2);
+/// let negate = BoxFunctionOnce::new(|x: i32| -x);
+/// let conditional = double.when(|x: &i32| *x > 0).or_else(negate);
+/// assert_eq!(conditional.apply_once(5), 10); // when branch executed
+///
+/// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
+/// let negate2 = BoxFunctionOnce::new(|x: i32| -x);
+/// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(negate2);
+/// assert_eq!(conditional2.apply_once(-5), 5); // or_else branch executed
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct BoxConditionalFunctionOnce<T, R> {
+    transformer: BoxFunctionOnce<T, R>,
+    predicate: BoxPredicate<T>,
+}
+
+impl<T, R> BoxConditionalFunctionOnce<T, R>
+where
+    T: 'static,
+    R: 'static,
+{
+    /// Adds an else branch
+    ///
+    /// Executes the original transformer when the condition is satisfied,
+    /// otherwise executes else_transformer.
+    ///
+    /// # Parameters
+    ///
+    /// * `else_transformer` - The transformer for the else branch, can be:
+    ///   - Closure: `|x: T| -> R`
+    ///   - `BoxFunctionOnce<T, R>`
+    ///   - Any type implementing `FunctionOnce<T, R>`
+    ///
+    /// # Returns
+    ///
+    /// Returns the composed `BoxFunctionOnce<T, R>`
+    ///
+    /// # Examples
+    ///
+    /// ## Using a closure (recommended)
+    ///
+    /// ```rust
+    /// use prism3_function::{FunctionOnce, BoxFunctionOnce};
+    ///
+    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
+    /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
+    /// assert_eq!(conditional.apply_once(5), 10); // Condition satisfied, execute double
+    ///
+    /// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
+    /// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
+    /// assert_eq!(conditional2.apply_once(-5), 5); // Condition not satisfied, execute negate
+    /// ```
+    pub fn or_else<F>(self, else_transformer: F) -> BoxFunctionOnce<T, R>
+    where
+        F: FunctionOnce<T, R> + 'static,
+    {
+        let pred = self.predicate;
+        let then_trans = self.transformer;
+        BoxFunctionOnce::new(move |t| {
+            if pred.test(t) {
+                then_trans.apply_once(t)
+            } else {
+                else_transformer.apply_once(t)
+            }
+        })
+    }
+}

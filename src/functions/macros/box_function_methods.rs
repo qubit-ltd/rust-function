@@ -78,14 +78,14 @@
 /// # Parameter Usage Comparison
 ///
 /// | Function Type | Struct Signature | `$conditional_type` | `$function_trait` |
-//! |---------------|-----------------|----------------|------------------|
-//! | **Function** | `BoxFunction<T, R>` | BoxConditionalFunction | Function |
-//! | **FunctionOnce** | `BoxFunctionOnce<T, R>` | BoxConditionalFunctionOnce | FunctionOnce |
-//! | **StatefulFunction** | `BoxStatefulFunction<T, R>` | BoxConditionalStatefulFunction | StatefulFunction |
-//! | **BiFunction** | `BoxBiFunction<T, U, R>` | BoxConditionalBiFunction | BiFunction |
-//! | **BiFunctionOnce** | `BoxBiFunctionOnce<T, U, R>` | BoxConditionalBiFunctionOnce | BiFunctionOnce |
-//! | **StatefulBiFunction** | `BoxStatefulBiFunction<T, U, R>` | BoxConditionalStatefulBiFunction | StatefulBiFunction |
-//!
+/// |---------------|-----------------|----------------|------------------|
+/// | **Function** | `BoxFunction<T, R>` | BoxConditionalFunction | Function |
+/// | **FunctionOnce** | `BoxFunctionOnce<T, R>` | BoxConditionalFunctionOnce | FunctionOnce |
+/// | **StatefulFunction** | `BoxStatefulFunction<T, R>` | BoxConditionalStatefulFunction | StatefulFunction |
+/// | **BiFunction** | `BoxBiFunction<T, U, R>` | BoxConditionalBiFunction | Function |
+/// | **BiFunctionOnce** | `BoxBiFunctionOnce<T, U, R>` | BoxConditionalBiFunctionOnce | FunctionOnce |
+/// | **StatefulBiFunction** | `BoxStatefulBiFunction<T, U, R>` | BoxConditionalStatefulBiFunction | StatefulFunction |
+///
 /// # Examples
 ///
 /// ```ignore
@@ -166,16 +166,56 @@ macro_rules! impl_box_function_methods {
         #[allow(unused_mut)]
         pub fn and_then<S, F>(self, mut after: F) -> $struct_name<$t, S>
         where
-            Self: Sized + 'static,
-            $t: 'static,
-            $r: 'static,
             S: 'static,
             F: $function_trait<$r, S> + 'static,
         {
-            let mut first = self;
+            let mut before = self.function;
             $struct_name::new(move |t: &$t| {
-                let intermediate = first.apply(t);
-                after.apply(&intermediate)
+                let r = before(t);
+                after.apply(&r)
+            })
+        }
+
+        /// Creates a composed function that executes the provided function first,
+        /// then applies this function to its result.
+        ///
+        /// This is the reverse of `and_then`: `before` is executed first, then `self`.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `S` - The input type of the before function
+        /// * `F` - The type of the before function
+        ///
+        /// # Parameters
+        ///
+        /// * `before` - The function to execute before this function
+        ///
+        /// # Returns
+        ///
+        /// Returns a new function that executes `before` first, then applies this
+        /// function to the result.
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{BoxFunction, Function};
+        ///
+        /// let to_string = BoxFunction::new(|x: i32| x.to_string());
+        /// let add_prefix = BoxFunction::new(|s: &str| format!("Value: {}", s));
+        ///
+        /// let composed = add_prefix.compose(to_string);
+        /// assert_eq!(composed.apply(42), "Value: 42");
+        /// ```
+        #[allow(unused_mut)]
+        pub fn compose<S, F>(self, mut before: F) -> $struct_name<S, $r>
+        where
+            S: 'static,
+            F: $function_trait<S, $t> + 'static,
+        {
+            let mut after = self.function;
+            $struct_name::new(move |s: &S| {
+                let t = before.apply(s);
+                after(&t)
             })
         }
     };
@@ -220,7 +260,7 @@ macro_rules! impl_box_function_methods {
         ///
         /// # Parameters
         ///
-        /// * `after` - The subsequent two-parameter function to execute after
+        /// * `after` - The subsequent one-parameter function to execute after
         ///   the current function completes
         ///
         /// # Returns
@@ -231,10 +271,10 @@ macro_rules! impl_box_function_methods {
         /// # Examples
         ///
         /// ```rust
-        /// use prism3_function::{BoxBiFunction, BiFunction};
+        /// use prism3_function::{BoxBiFunction, BoxFunction};
         ///
         /// let add = BoxBiFunction::new(|x: i32, y: i32| x + y);
-        /// let multiply_by_two = BoxBiFunction::new(|x: i32, y: i32| x * y * 2);
+        /// let multiply_by_two = BoxFunction::new(|z: i32| z * 2);
         ///
         /// let chained = add.and_then(multiply_by_two);
         /// assert_eq!(chained.apply(2, 3), 10); // (2+3) * 2 = 10
@@ -242,17 +282,68 @@ macro_rules! impl_box_function_methods {
         #[allow(unused_mut)]
         pub fn and_then<S, F>(self, mut after: F) -> $struct_name<$t, $u, S>
         where
-            Self: Sized + 'static,
-            $t: 'static,
-            $u: 'static,
-            $r: 'static,
             S: 'static,
             F: $function_trait<$r, S> + 'static,
         {
-            let mut first = self;
+            let mut before = self.function;
             $struct_name::new(move |t: &$t, u: &$u| {
-                let intermediate = self.apply(t, u);
-                after.apply(&intermediate)
+                let r = before(t, u);
+                after.apply(&r)
+            })
+        }
+
+        /// Creates a composed function that executes the provided function first,
+        /// then applies this function to its result along with the second parameter.
+        ///
+        /// This is the reverse of `and_then`: `before` is executed first, then `self`
+        /// is applied with the result of `before` as the first parameter and the
+        /// original second parameter.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `S` - The input type of the before function
+        /// * `F` - The type of the before function
+        ///
+        /// # Parameters
+        ///
+        /// * `before1` - The first two parameters function to execute before this function
+        /// * `before2` - The second two parameter function to execute before this function
+        ///
+        /// # Returns
+        ///
+        /// Returns a new function that executes `before1` and `before2` first,
+        /// then applies this function with the result of `before1` and `before2`
+        /// as the first parameter and the second parameter.
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::BoxBiFunction;
+        ///
+        /// let add = BoxBiFunction::new(|x: i32, y: i32| x + y);
+        /// let sub = BoxBiFunction::new(|x: i32, y: i32| x - y);
+        /// let multiply = BoxBiFunction::new(|x: i32, y: i32| x * y);
+        ///
+        /// let composed = multiply.compose(add, sub);
+        /// assert_eq!(composed.apply(4, 2), 12); // (4 + 2) * (4 - 2) = 12
+        /// ```
+        #[allow(unused_mut)]
+        pub fn compose<S1, S2, F1, F2>(
+            self,
+            mut before1: F1,
+            mut before2: F2,
+        ) -> $struct_name<S1, S2, $r>
+        where
+            S1: 'static,
+            S2: 'static,
+            F1: $function_trait<S1, $t> + 'static,
+            F2: $function_trait<S2, $u> + 'static,
+        {
+            let mut after = self.function;
+            $struct_name::new(move |s1: &S1, s2: &S2| {
+                let t = before1.apply(s1);
+                let u = before2.apply(s2);
+                after(&t, &u)
             })
         }
     };
