@@ -25,15 +25,26 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::functions::macros::{
-    impl_box_conditional_function, impl_box_function_methods, impl_function_clone, impl_function_common_methods, impl_function_constant_method, impl_function_debug_display, impl_function_identity_method, impl_shared_function_methods
-};
-
-use crate::predicates::predicate::{
-    ArcPredicate,
-    BoxPredicate,
-    Predicate,
-    RcPredicate,
+use crate::{
+    functions::macros::{
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_clone,
+        impl_conditional_function_debug_display,
+        impl_function_clone,
+        impl_function_common_methods,
+        impl_function_constant_method,
+        impl_function_debug_display,
+        impl_function_identity_method,
+        impl_shared_conditional_function,
+        impl_shared_function_methods,
+    },
+    predicates::predicate::{
+        ArcPredicate,
+        BoxPredicate,
+        Predicate,
+        RcPredicate,
+    },
 };
 
 // ============================================================================
@@ -334,7 +345,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         BoxFunction<T, R>,
         (Fn(&T) -> R + 'static),
@@ -355,6 +366,10 @@ impl_function_constant_method!(BoxFunction<T, R>, 'static);
 // Generates: identity() method for BoxFunction<T, T>
 impl_function_identity_method!(BoxFunction<T, T>);
 
+// Generates: Debug and Display implementations for BoxFunction<T, R>
+impl_function_debug_display!(BoxFunction<T, R>);
+
+// Implement Function trait for BoxFunction<T, R>
 impl<T, R> Function<T, R> for BoxFunction<T, R> {
     fn apply(&self, t: &T) -> R {
         (self.function)(t)
@@ -411,9 +426,6 @@ impl<T, R> Function<T, R> for BoxFunction<T, R> {
     //    guides users to the correct usage pattern
 }
 
-// Generates: Debug and Display implementations for BoxFunction<T, R>
-impl_function_debug_display!(BoxFunction<T, R>);
-
 // ============================================================================
 // RcFunction - Rc<dyn Fn(&T) -> R>
 // ============================================================================
@@ -445,7 +457,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         RcFunction<T, R>,
         (Fn(&T) -> R + 'static),
@@ -468,6 +480,13 @@ impl_function_constant_method!(RcFunction<T, R>, 'static);
 // Generates: identity() method for RcFunction<T, T>
 impl_function_identity_method!(RcFunction<T, T>);
 
+// Generates: Clone implementation for RcFunction<T, R>
+impl_function_clone!(RcFunction<T, R>);
+
+// Generates: Debug and Display implementations for RcFunction<T, R>
+impl_function_debug_display!(RcFunction<T, R>);
+
+// Implement Function trait for RcFunction<T, R>
 impl<T, R> Function<T, R> for RcFunction<T, R> {
     fn apply(&self, t: &T) -> R {
         (self.function)(t)
@@ -537,12 +556,6 @@ impl<T, R> Function<T, R> for RcFunction<T, R> {
     }
 }
 
-// Generates: Clone implementation for RcFunction<T, R>
-impl_function_clone!(RcFunction<T, R>);
-
-// Generates: Debug and Display implementations for RcFunction<T, R>
-impl_function_debug_display!(RcFunction<T, R>);
-
 // ============================================================================
 // ArcFunction - Arc<dyn Fn(&T) -> R + Send + Sync>
 // ============================================================================
@@ -574,7 +587,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         ArcFunction<T, R>,
         (Fn(&T) -> R + 'static),
@@ -597,6 +610,13 @@ impl_function_constant_method!(ArcFunction<T, R>, Send + Sync + 'static);
 // Generates: identity() method for ArcFunction<T, T>
 impl_function_identity_method!(ArcFunction<T, T>);
 
+// Generates: Clone implementation for ArcFunction<T, R>
+impl_function_clone!(ArcFunction<T, R>);
+
+// Generates: Debug and Display implementations for ArcFunction<T, R>
+impl_function_debug_display!(ArcFunction<T, R>);
+
+// Implement Function trait for ArcFunction<T, R>
 impl<T, R> Function<T, R> for ArcFunction<T, R> {
     fn apply(&self, t: &T) -> R {
         (self.function)(t)
@@ -671,12 +691,6 @@ impl<T, R> Function<T, R> for ArcFunction<T, R> {
         move |t| self_fn(t)
     }
 }
-
-// Generates: Clone implementation for ArcFunction<T, R>
-impl_function_clone!(ArcFunction<T, R>);
-
-// Generates: Debug and Display implementations for ArcFunction<T, R>
-impl_function_debug_display!(ArcFunction<T, R>);
 
 // ============================================================================
 // Blanket implementation for standard Fn trait
@@ -1238,6 +1252,9 @@ impl_box_conditional_function!(
     Function
 );
 
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(BoxConditionalFunction<T, R>);
+
 // ============================================================================
 // RcConditionalFunction - Rc-based Conditional Function
 // ============================================================================
@@ -1281,68 +1298,19 @@ pub struct RcConditionalFunction<T, R> {
     predicate: RcPredicate<T>,
 }
 
-impl<T, R> RcConditionalFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
-    /// Adds an else branch (single-threaded shared version)
-    ///
-    /// Executes the original function when the condition is satisfied,
-    /// otherwise executes else_function.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_function` - The function for the else branch, can be:
-    ///   - Closure: `|x: &T| -> R`
-    ///   - `RcFunction<T, R>`, `BoxFunction<T, R>`
-    ///   - Any type implementing `Function<T, R>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `RcFunction<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{Function, RcFunction};
-    ///
-    /// let double = RcFunction::new(|x: i32| x * 2);
-    /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    ///
-    /// assert_eq!(conditional.apply(5), 10);
-    /// assert_eq!(conditional.apply(-5), 5);
-    /// ```
-    pub fn or_else<F>(self, else_function: F) -> RcFunction<T, R>
-    where
-        F: Function<T, R> + 'static,
-    {
-        let pred = self.predicate;
-        let then_function = self.function;
-        RcFunction::new(move |t| {
-            if pred.test(t) {
-                then_function.apply(t)
-            } else {
-                else_function.apply(t)
-            }
-        })
-    }
-}
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    RcConditionalFunction<T, R>,
+    RcFunction,
+    Function,
+    'static
+);
 
-impl<T, R> Clone for RcConditionalFunction<T, R> {
-    /// Clones the conditional function
-    ///
-    /// Creates a new instance that shares the underlying function and
-    /// predicate with the original instance.
-    fn clone(&self) -> Self {
-        Self {
-            function: self.function.clone(),
-            predicate: self.predicate.clone(),
-        }
-    }
-}
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(RcConditionalFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(RcConditionalFunction<T, R>);
 
 // ============================================================================
 // ArcConditionalFunction - Arc-based Conditional Function
@@ -1387,66 +1355,16 @@ pub struct ArcConditionalFunction<T, R> {
     predicate: ArcPredicate<T>,
 }
 
-impl<T, R> ArcConditionalFunction<T, R>
-where
-    T: Send + Sync + 'static,
-    R: 'static,
-{
-    /// Adds an else branch (thread-safe version)
-    ///
-    /// Executes the original function when the condition is satisfied,
-    /// otherwise executes else_function.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_function` - The function for the else branch, can be:
-    ///   - Closure: `|x: &T| -> R` (must be `Send + Sync`)
-    ///   - `ArcFunction<T, R>`, `BoxFunction<T, R>`
-    ///   - Any type implementing `Function<T, R> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `ArcFunction<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{Function, ArcFunction};
-    ///
-    /// let double = ArcFunction::new(|x: i32| x * 2);
-    /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    ///
-    /// assert_eq!(conditional.apply(5), 10);
-    /// assert_eq!(conditional.apply(-5), 5);
-    /// ```
-    pub fn or_else<F>(self, else_function: F) -> ArcFunction<T, R>
-    where
-        F: Function<T, R> + Send + Sync + 'static,
-        R: Send + Sync,
-    {
-        let pred = self.predicate;
-        let then_function = self.function;
-        ArcFunction::new(move |t| {
-            if pred.test(t) {
-                then_function.apply(t)
-            } else {
-                else_function.apply(t)
-            }
-        })
-    }
-}
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    ArcConditionalFunction<T, R>,
+    ArcFunction,
+    Function,
+    Send + Sync + 'static
+);
 
-impl<T, R> Clone for ArcConditionalFunction<T, R> {
-    /// Clones the conditional function
-    ///
-    /// Creates a new instance that shares the underlying function and
-    /// predicate with the original instance.
-    fn clone(&self) -> Self {
-        Self {
-            function: self.function.clone(),
-            predicate: self.predicate.clone(),
-        }
-    }
-}
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(ArcConditionalFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(ArcConditionalFunction<T, R>);

@@ -10,13 +10,11 @@
 //!
 //! Generates Box-based Conditional Function implementations
 //!
-//! For Box-based conditional functions, generates `and_then` and `or_else` methods,
+//! For Box-based conditional functions, generates `or_else` methods,
 //! as well as complete Function/BiFunction trait implementations.
 //!
 //! Box type characteristics:
-//! - `and_then` and `or_else` consume self (because Box cannot Clone)
-//! - Does not implement `into_arc()` (because Box types are not Send + Sync)
-//! - Does not implement `to_xxx()` methods (because Box types cannot Clone)
+//! - `or_else` function self (because Box cannot Clone)
 //!
 //! # Parameters
 //!
@@ -50,11 +48,11 @@
 ///
 /// This macro should be used at the top level (outside of any impl block) as
 /// it generates a complete impl block with methods for the specified struct.
-/// For Box-based conditional functions, generates `and_then` and `or_else` methods,
+/// For Box-based conditional functions, generates `or_else` methods,
 /// as well as complete Function/BiFunction trait implementations.
 ///
 /// Box type characteristics:
-/// - `and_then` and `or_else` consume self (because Box cannot Clone)
+/// - `or_else` consume self (because Box cannot Clone)
 /// - Does not implement `into_arc()` (because Box types are not Send + Sync)
 /// - Does not implement `to_xxx()` methods (because Box types cannot Clone)
 ///

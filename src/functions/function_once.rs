@@ -19,10 +19,20 @@
 //! # Author
 //!
 //! Haixing Hu
-
-use crate::predicates::predicate::{
-    BoxPredicate,
-    Predicate,
+use crate::{
+    functions::macros::{
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_debug_display,
+        impl_function_common_methods,
+        impl_function_constant_method,
+        impl_function_debug_display,
+        impl_function_identity_method,
+    },
+    predicates::predicate::{
+        BoxPredicate,
+        Predicate,
+    },
 };
 
 // ============================================================================
@@ -48,12 +58,12 @@ pub trait FunctionOnce<T, R> {
     ///
     /// # Parameters
     ///
-    /// * `input` - Reference to the input value
+    /// * `t` - Reference to the input value
     ///
     /// # Returns
     ///
     /// The computed output value
-    fn apply_once(self, input: &T) -> R;
+    fn apply(self, t: &T) -> R;
 
     /// Converts to BoxFunctionOnce
     ///
@@ -70,16 +80,16 @@ pub trait FunctionOnce<T, R> {
     /// use prism3_function::FunctionOnce;
     ///
     /// let double = |x: &i32| x * 2;
-    /// let boxed = double.into_box_once();
-    /// assert_eq!(boxed.apply_once(&21), 42);
+    /// let boxed = double.into_box();
+    /// assert_eq!(boxed.apply(&21), 42);
     /// ```
-    fn into_box_once(self) -> BoxFunctionOnce<T, R>
+    fn into_box(self) -> BoxFunctionOnce<T, R>
     where
         Self: Sized + 'static,
         T: 'static,
         R: 'static,
     {
-        BoxFunctionOnce::new(move |input: &T| self.apply_once(input))
+        BoxFunctionOnce::new(move |input: &T| self.apply(input))
     }
 
     /// Converts function to a closure
@@ -97,16 +107,16 @@ pub trait FunctionOnce<T, R> {
     /// use prism3_function::FunctionOnce;
     ///
     /// let double = |x: &i32| x * 2;
-    /// let func = double.into_fn_once();
+    /// let func = double.into_fn();
     /// assert_eq!(func(&21), 42);
     /// ```
-    fn into_fn_once(self) -> impl FnOnce(&T) -> R
+    fn into_fn(self) -> impl FnOnce(&T) -> R
     where
         Self: Sized + 'static,
         T: 'static,
         R: 'static,
     {
-        move |input: &T| self.apply_once(input)
+        move |input: &T| self.apply(input)
     }
 
     /// Converts to BoxFunctionOnce without consuming self
@@ -130,16 +140,16 @@ pub trait FunctionOnce<T, R> {
     /// use prism3_function::FunctionOnce;
     ///
     /// let double = |x: &i32| x * 2;
-    /// let boxed = double.to_box_once();
-    /// assert_eq!(boxed.apply_once(&21), 42);
+    /// let boxed = double.to_box();
+    /// assert_eq!(boxed.apply(&21), 42);
     /// ```
-    fn to_box_once(&self) -> BoxFunctionOnce<T, R>
+    fn to_box(&self) -> BoxFunctionOnce<T, R>
     where
         Self: Clone + 'static,
         T: 'static,
         R: 'static,
     {
-        self.clone().into_box_once()
+        self.clone().into_box()
     }
 
     /// Converts function to a closure without consuming self
@@ -150,7 +160,7 @@ pub trait FunctionOnce<T, R> {
     /// # Default Implementation
     ///
     /// The default implementation creates a closure that captures a
-    /// clone of `self` and calls its `apply_once` method. Types can
+    /// clone of `self` and calls its `apply` method. Types can
     /// override this method to provide more efficient conversions.
     ///
     /// # Returns
@@ -163,16 +173,16 @@ pub trait FunctionOnce<T, R> {
     /// use prism3_function::FunctionOnce;
     ///
     /// let double = |x: &i32| x * 2;
-    /// let func = double.to_fn_once();
+    /// let func = double.to_fn();
     /// assert_eq!(func(&21), 42);
     /// ```
-    fn to_fn_once(&self) -> impl FnOnce(&T) -> R
+    fn to_fn(&self) -> impl FnOnce(&T) -> R
     where
         Self: Clone + 'static,
         T: 'static,
         R: 'static,
     {
-        self.clone().into_fn_once()
+        self.clone().into_fn()
     }
 }
 
@@ -198,6 +208,7 @@ pub trait FunctionOnce<T, R> {
 /// Haixing Hu
 pub struct BoxFunctionOnce<T, R> {
     function: Box<dyn FnOnce(&T) -> R>,
+    name: Option<String>,
 }
 
 impl<T, R> BoxFunctionOnce<T, R>
@@ -205,236 +216,36 @@ where
     T: 'static,
     R: 'static,
 {
-    /// Creates a new BoxFunctionOnce
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure or function to wrap
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxFunctionOnce, FunctionOnce};
-    ///
-    /// let parse = BoxFunctionOnce::new(|s: String| {
-    ///     s.parse::<i32>().unwrap_or(0)
-    /// });
-    ///
-    /// assert_eq!(parse.apply_once("42".to_string()), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnOnce(&T) -> R + 'static,
-    {
-        BoxFunctionOnce {
-            function: Box::new(f),
-        }
-    }
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
+    impl_function_common_methods!(
+        BoxFunctionOnce<T, R>,
+        (FnOnce(&T) -> R + 'static),
+        |f| Box::new(f)
+    );
 
-    /// Creates an identity transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxFunctionOnce, FunctionOnce};
-    ///
-    /// let identity = BoxFunctionOnce::<i32, i32>::identity();
-    /// assert_eq!(identity.apply_once(42), 42);
-    /// ```
-    pub fn identity() -> BoxFunctionOnce<T, T>
-    where
-        T: Clone,
-    {
-        BoxFunctionOnce::new(|x: &T| x.clone())
-    }
-
-    /// Chain composition - applies self first, then after
-    ///
-    /// # Type Parameters
-    ///
-    /// * `S` - The output type of the after transformer
-    /// * `G` - The type of the after transformer (must implement
-    ///   FunctionOnce<R, S>)
-    ///
-    /// # Parameters
-    ///
-    /// * `after` - The transformer to apply after self. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** Since
-    ///   `BoxFunctionOnce` cannot be cloned, the parameter will be consumed.
-    ///   Can be:
-    ///   - A closure: `|x: R| -> S`
-    ///   - A function pointer: `fn(R) -> S`
-    ///   - A `BoxFunctionOnce<R, S>`
-    ///   - Any type implementing `FunctionOnce<R, S>`
-    ///
-    /// # Returns
-    ///
-    /// A new BoxFunctionOnce representing the composition
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxFunctionOnce, FunctionOnce};
-    ///
-    /// let add_one = BoxFunctionOnce::new(|x: i32| x + 1);
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    ///
-    /// // Both add_one and double are moved and consumed
-    /// let composed = add_one.and_then(double);
-    /// assert_eq!(composed.apply_once(5), 12); // (5 + 1) * 2
-    /// // add_one.apply_once(3); // Would not compile - moved
-    /// // double.apply_once(4);  // Would not compile - moved
-    /// ```
-    pub fn and_then<S, G>(self, after: G) -> BoxFunctionOnce<T, S>
-    where
-        S: 'static,
-        G: FunctionOnce<R, S> + 'static,
-    {
-        BoxFunctionOnce::new(move |x| {
-            let intermediate = (self.function)(x);
-            after.apply_once(&intermediate)
-        })
-    }
-
-    /// Reverse composition - applies before first, then self
-    ///
-    /// # Type Parameters
-    ///
-    /// * `S` - The input type of the before transformer
-    /// * `G` - The type of the before transformer (must implement
-    ///   FunctionOnce<S, T>)
-    ///
-    /// # Parameters
-    ///
-    /// * `before` - The transformer to apply before self. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** Since
-    ///   `BoxFunctionOnce` cannot be cloned, the parameter will be consumed.
-    ///   Can be:
-    ///   - A closure: `|x: S| -> T`
-    ///   - A function pointer: `fn(S) -> T`
-    ///   - A `BoxFunctionOnce<S, T>`
-    ///   - Any type implementing `FunctionOnce<S, T>`
-    ///
-    /// # Returns
-    ///
-    /// A new BoxFunctionOnce representing the composition
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxFunctionOnce, FunctionOnce};
-    ///
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let add_one = BoxFunctionOnce::new(|x: i32| x + 1);
-    ///
-    /// // Both double and add_one are moved and consumed
-    /// let composed = double.compose(add_one);
-    /// assert_eq!(composed.apply_once(5), 12); // (5 + 1) * 2
-    /// // double.apply_once(3); // Would not compile - moved
-    /// // add_one.apply_once(4); // Would not compile - moved
-    /// ```
-    pub fn compose<S, G>(self, before: G) -> BoxFunctionOnce<S, R>
-    where
-        S: 'static,
-        G: FunctionOnce<S, T> + 'static,
-    {
-        let self_fn = self.function;
-        BoxFunctionOnce::new(move |x: &S| self_fn(&before.apply_once(x)))
-    }
-
-    /// Creates a conditional transformer
-    ///
-    /// Returns a transformer that only executes when a predicate is satisfied.
-    /// You must call `or_else()` to provide an alternative transformer.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The condition to check. **Note: This parameter is passed
-    ///   by value and will transfer ownership.** If you need to preserve the
-    ///   original predicate, clone it first (if it implements `Clone`). Can be:
-    ///   - A closure: `|x: &T| -> bool`
-    ///   - A function pointer: `fn(&T) -> bool`
-    ///   - A `BoxPredicate<T>`
-    ///   - An `RcPredicate<T>`
-    ///   - An `ArcPredicate<T>`
-    ///   - Any type implementing `Predicate<T>`
-    ///
-    /// # Returns
-    ///
-    /// Returns `BoxConditionalFunctionOnce<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ## Basic usage with or_else
-    ///
-    /// ```rust
-    /// use prism3_function::{FunctionOnce, BoxFunctionOnce};
-    ///
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let identity = BoxFunctionOnce::<i32, i32>::identity();
-    /// let conditional = double.when(|x: &i32| *x > 0).or_else(identity);
-    /// assert_eq!(conditional.apply_once(5), 10);
-    ///
-    /// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let identity2 = BoxFunctionOnce::<i32, i32>::identity();
-    /// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(identity2);
-    /// assert_eq!(conditional2.apply_once(-5), -5);
-    /// ```
-    ///
-    /// ## Preserving predicate with clone
-    ///
-    /// ```rust
-    /// use prism3_function::{FunctionOnce, BoxFunctionOnce, RcPredicate};
-    ///
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let is_positive = RcPredicate::new(|x: &i32| *x > 0);
-    ///
-    /// // Clone to preserve original predicate
-    /// let conditional = double.when(is_positive.clone())
-    ///     .or_else(BoxFunctionOnce::identity());
-    ///
-    /// assert_eq!(conditional.apply_once(5), 10);
-    ///
-    /// // Original predicate still usable
-    /// assert!(is_positive.test(&3));
-    /// ```
-    pub fn when<P>(self, predicate: P) -> BoxConditionalFunctionOnce<T, R>
-    where
-        P: Predicate<T> + 'static,
-    {
-        BoxConditionalFunctionOnce {
-            transformer: self,
-            predicate: predicate.into_box(),
-        }
-    }
+    // Generates: when(), and_then(), compose()
+    impl_box_function_methods!(
+        BoxFunctionOnce<T, R>,
+        BoxConditionalFunctionOnce,
+        FunctionOnce
+    );
 }
 
-impl<T, R> BoxFunctionOnce<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxFunctionOnce, FunctionOnce};
-    ///
-    /// let constant = BoxFunctionOnce::constant("hello");
-    /// assert_eq!(constant.apply_once(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxFunctionOnce<T, R> {
-        BoxFunctionOnce::new(move |_| value.clone())
-    }
-}
+// Generates: constant() method for BoxFunctionOnce<T, R>
+impl_function_constant_method!(BoxFunctionOnce<T, R>, 'static);
+
+// Generates: identity() method for BoxFunctionOnce<T, T>
+impl_function_identity_method!(BoxFunctionOnce<T, T>);
+
+// Generates: Debug and Display implementations for BoxFunctionOnce<T, R>
+impl_function_debug_display!(BoxFunctionOnce<T, R>);
 
 impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
-    fn apply_once(self, input: &T) -> R {
+    fn apply(self, input: &T) -> R {
         (self.function)(input)
     }
 
-    fn into_box_once(self) -> BoxFunctionOnce<T, R>
+    fn into_box(self) -> BoxFunctionOnce<T, R>
     where
         T: 'static,
         R: 'static,
@@ -443,7 +254,7 @@ impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
         self
     }
 
-    fn into_fn_once(self) -> impl FnOnce(&T) -> R
+    fn into_fn(self) -> impl FnOnce(&T) -> R
     where
         T: 'static,
         R: 'static,
@@ -452,9 +263,9 @@ impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
         self.function
     }
 
-    // do NOT override BoxFunction::to_box_once() and BoxFunction::to_fn_once()
-    // because BoxFunction is not Clone and calling BoxFunction::to_box_once()
-    // or BoxFunction::to_fn_once() will cause a compile error
+    // do NOT override BoxFunction::to_box() and BoxFunction::to_fn()
+    // because BoxFunction is not Clone and calling BoxFunction::to_box()
+    // or BoxFunction::to_fn() will cause a compile error
 }
 
 // ============================================================================
@@ -476,13 +287,13 @@ impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
 ///     s.parse().unwrap_or(0)
 /// }
 ///
-/// assert_eq!(parse.apply_once("42".to_string()), 42);
+/// assert_eq!(parse.apply("42".to_string()), 42);
 ///
 /// let owned_value = String::from("hello");
 /// let consume = |s: String| {
 ///     format!("{} world", s)
 /// };
-/// assert_eq!(consume.apply_once(owned_value), "hello world");
+/// assert_eq!(consume.apply(owned_value), "hello world");
 /// ```
 ///
 /// # Author
@@ -494,18 +305,18 @@ where
     T: 'static,
     R: 'static,
 {
-    fn apply_once(self, input: &T) -> R {
+    fn apply(self, input: &T) -> R {
         self(input)
     }
 
-    fn into_box_once(self) -> BoxFunctionOnce<T, R>
+    fn into_box(self) -> BoxFunctionOnce<T, R>
     where
         Self: Sized + 'static,
     {
         BoxFunctionOnce::new(self)
     }
 
-    fn into_fn_once(self) -> impl FnOnce(&T) -> R
+    fn into_fn(self) -> impl FnOnce(&T) -> R
     where
         Self: Sized + 'static,
     {
@@ -513,14 +324,14 @@ where
         self
     }
 
-    fn to_box_once(&self) -> BoxFunctionOnce<T, R>
+    fn to_box(&self) -> BoxFunctionOnce<T, R>
     where
         Self: Clone + Sized + 'static,
     {
-        self.clone().into_box_once()
+        self.clone().into_box()
     }
 
-    fn to_fn_once(&self) -> impl FnOnce(&T) -> R
+    fn to_fn(&self) -> impl FnOnce(&T) -> R
     where
         Self: Clone + Sized + 'static,
     {
@@ -559,7 +370,7 @@ where
 /// let double = |x: i32| x * 2;
 ///
 /// let composed = parse.and_then(double);
-/// assert_eq!(composed.apply_once("21".to_string()), 42);
+/// assert_eq!(composed.apply("21".to_string()), 42);
 /// ```
 ///
 /// ## Reverse composition with compose
@@ -571,7 +382,7 @@ where
 /// let to_string = |x: i32| x.to_string();
 ///
 /// let composed = to_string.compose(double);
-/// assert_eq!(composed.apply_once(21), "42");
+/// assert_eq!(composed.apply(21), "42");
 /// ```
 ///
 /// ## Conditional transformation with when
@@ -582,7 +393,7 @@ where
 /// let double = |x: i32| x * 2;
 /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
 ///
-/// assert_eq!(conditional.apply_once(5), 10);
+/// assert_eq!(conditional.apply(5), 10);
 /// ```
 ///
 /// # Author
@@ -626,8 +437,8 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
     ///
     /// // double is moved and consumed
     /// let composed = parse.and_then(double);
-    /// assert_eq!(composed.apply_once("21".to_string()), 42);
-    /// // double.apply_once(5); // Would not compile - moved
+    /// assert_eq!(composed.apply("21".to_string()), 42);
+    /// // double.apply(5); // Would not compile - moved
     /// ```
     fn and_then<S, G>(self, after: G) -> BoxFunctionOnce<T, S>
     where
@@ -636,7 +447,7 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
         T: 'static,
         R: 'static,
     {
-        BoxFunctionOnce::new(move |x: &T| after.apply_once(&self(x)))
+        BoxFunctionOnce::new(move |x: &T| after.apply(&self(x)))
     }
 
     /// Reverse composition - applies before first, then self
@@ -676,8 +487,8 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
     ///
     /// // double is moved and consumed
     /// let composed = to_string.compose(double);
-    /// assert_eq!(composed.apply_once(21), "42");
-    /// // double.apply_once(5); // Would not compile - moved
+    /// assert_eq!(composed.apply(21), "42");
+    /// // double.apply(5); // Would not compile - moved
     /// ```
     fn compose<S, G>(self, before: G) -> BoxFunctionOnce<S, R>
     where
@@ -686,7 +497,7 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
         T: 'static,
         R: 'static,
     {
-        BoxFunctionOnce::new(move |x: &S| self(&before.apply_once(x)))
+        BoxFunctionOnce::new(move |x: &S| self(&before.apply(x)))
     }
 
     /// Creates a conditional transformer
@@ -721,7 +532,7 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
     /// let double = |x: i32| x * 2;
     /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
     ///
-    /// assert_eq!(conditional.apply_once(5), 10);
+    /// assert_eq!(conditional.apply(5), 10);
     /// ```
     ///
     /// ## Preserving predicate with clone
@@ -737,7 +548,7 @@ pub trait FnFunctionOnceOps<T, R>: FnOnce(&T) -> R + Sized + 'static {
     /// let conditional = double.when(is_positive.clone())
     ///     .or_else(|x: i32| -x);
     ///
-    /// assert_eq!(conditional.apply_once(5), 10);
+    /// assert_eq!(conditional.apply(5), 10);
     ///
     /// // Original predicate still usable
     /// assert!(is_positive.test(&3));
@@ -793,70 +604,28 @@ impl<T, R, F> FnFunctionOnceOps<T, R> for F where F: FnOnce(&T) -> R + 'static {
 /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
 /// let negate = BoxFunctionOnce::new(|x: i32| -x);
 /// let conditional = double.when(|x: &i32| *x > 0).or_else(negate);
-/// assert_eq!(conditional.apply_once(5), 10); // when branch executed
+/// assert_eq!(conditional.apply(5), 10); // when branch executed
 ///
 /// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
 /// let negate2 = BoxFunctionOnce::new(|x: i32| -x);
 /// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(negate2);
-/// assert_eq!(conditional2.apply_once(-5), 5); // or_else branch executed
+/// assert_eq!(conditional2.apply(-5), 5); // or_else branch executed
 /// ```
 ///
 /// # Author
 ///
 /// Haixing Hu
 pub struct BoxConditionalFunctionOnce<T, R> {
-    transformer: BoxFunctionOnce<T, R>,
+    function: BoxFunctionOnce<T, R>,
     predicate: BoxPredicate<T>,
 }
 
-impl<T, R> BoxConditionalFunctionOnce<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
-    /// Adds an else branch
-    ///
-    /// Executes the original transformer when the condition is satisfied,
-    /// otherwise executes else_transformer.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_transformer` - The transformer for the else branch, can be:
-    ///   - Closure: `|x: T| -> R`
-    ///   - `BoxFunctionOnce<T, R>`
-    ///   - Any type implementing `FunctionOnce<T, R>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `BoxFunctionOnce<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using a closure (recommended)
-    ///
-    /// ```rust
-    /// use prism3_function::{FunctionOnce, BoxFunctionOnce};
-    ///
-    /// let double = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let conditional = double.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    /// assert_eq!(conditional.apply_once(5), 10); // Condition satisfied, execute double
-    ///
-    /// let double2 = BoxFunctionOnce::new(|x: i32| x * 2);
-    /// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(|x: i32| -x);
-    /// assert_eq!(conditional2.apply_once(-5), 5); // Condition not satisfied, execute negate
-    /// ```
-    pub fn or_else<F>(self, else_transformer: F) -> BoxFunctionOnce<T, R>
-    where
-        F: FunctionOnce<T, R> + 'static,
-    {
-        let pred = self.predicate;
-        let then_trans = self.transformer;
-        BoxFunctionOnce::new(move |t| {
-            if pred.test(t) {
-                then_trans.apply_once(t)
-            } else {
-                else_transformer.apply_once(t)
-            }
-        })
-    }
-}
+// Use macro to generate conditional function implementations
+impl_box_conditional_function!(
+    BoxConditionalFunctionOnce<T, R>,
+    BoxFunctionOnce,
+    FunctionOnce
+);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(BoxConditionalFunctionOnce<T, R>);

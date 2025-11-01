@@ -80,7 +80,7 @@
 //! });
 //!
 //! let mut target = vec![0];
-//! let old_len = func.apply_once(&mut target);
+//! let old_len = func.apply(&mut target);
 //! assert_eq!(old_len, 1);
 //! assert_eq!(target, vec![0, 1, 2, 3]);
 //! ```
@@ -103,7 +103,7 @@
 //! });
 //!
 //! let mut target = vec![0];
-//! let final_len = chained.apply_once(&mut target);
+//! let final_len = chained.apply(&mut target);
 //! assert_eq!(final_len, 5);
 //! assert_eq!(target, vec![0, 1, 2, 3, 4]);
 //! ```
@@ -127,7 +127,7 @@
 //! });
 //!
 //! let mut data = Data { value: -5 };
-//! let result = validator.apply_once(&mut data);
+//! let result = validator.apply(&mut data);
 //! assert_eq!(data.value, 0);
 //! assert!(result.is_err());
 //! ```
@@ -135,6 +135,19 @@
 //! # Author
 //!
 //! Haixing Hu
+use crate::{
+    functions::macros::{
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_debug_display,
+        impl_function_common_methods,
+        impl_function_debug_display,
+    },
+    predicates::predicate::{
+        BoxPredicate,
+        Predicate,
+    },
+};
 
 // =======================================================================
 // 1. MutatingFunctionOnce Trait - One-time Function Interface
@@ -160,7 +173,7 @@
 /// # Features
 ///
 /// - **Unified Interface**: All one-time mutating functions share the same
-///   `apply_once` method signature
+///   `apply` method signature
 /// - **Automatic Implementation**: Closures automatically implement this
 ///   trait with zero overhead
 /// - **Type Conversions**: Provides `into_box` method for type conversion
@@ -174,12 +187,12 @@
 /// ```rust
 /// use prism3_function::{MutatingFunctionOnce, BoxMutatingFunctionOnce};
 ///
-/// fn apply_once<F: MutatingFunctionOnce<Vec<i32>, usize>>(
+/// fn apply<F: MutatingFunctionOnce<Vec<i32>, usize>>(
 ///     func: F,
 ///     initial: Vec<i32>
 /// ) -> (Vec<i32>, usize) {
 ///     let mut val = initial;
-///     let result = func.apply_once(&mut val);
+///     let result = func.apply(&mut val);
 ///     (val, result)
 /// }
 ///
@@ -189,7 +202,7 @@
 ///     x.extend(data);
 ///     old_len
 /// });
-/// let (vec, old_len) = apply_once(func, vec![0]);
+/// let (vec, old_len) = apply(func, vec![0]);
 /// assert_eq!(vec, vec![0, 1, 2, 3]);
 /// assert_eq!(old_len, 1);
 /// ```
@@ -205,7 +218,7 @@
 ///     x.extend(data);
 ///     old_len
 /// };
-/// let box_func = closure.into_box_once();
+/// let box_func = closure.into_box();
 /// ```
 ///
 /// # Author
@@ -220,7 +233,7 @@ pub trait MutatingFunctionOnce<T, R> {
     ///
     /// # Parameters
     ///
-    /// * `input` - A mutable reference to the input value
+    /// * `t - A mutable reference to the input value
     ///
     /// # Returns
     ///
@@ -240,17 +253,17 @@ pub trait MutatingFunctionOnce<T, R> {
     /// });
     ///
     /// let mut target = vec![0];
-    /// let old_len = func.apply_once(&mut target);
+    /// let old_len = func.apply(&mut target);
     /// assert_eq!(old_len, 1);
     /// assert_eq!(target, vec![0, 1, 2, 3]);
     /// ```
-    fn apply_once(self, input: &mut T) -> R;
+    fn apply(self, t: &mut T) -> R;
 
     /// Converts to `BoxMutatingFunctionOnce` (consuming)
     ///
     /// Consumes `self` and returns an owned `BoxMutatingFunctionOnce<T, R>`.
     /// The default implementation simply wraps the consuming
-    /// `apply_once(self, &mut T)` call in a `Box<dyn FnOnce(&mut T) -> R>`.
+    /// `apply(self, &mut T)` call in a `Box<dyn FnOnce(&mut T) -> R>`.
     /// Types that can provide a cheaper or identity conversion (for example
     /// `BoxMutatingFunctionOnce` itself) should override this method.
     ///
@@ -260,28 +273,28 @@ pub trait MutatingFunctionOnce<T, R> {
     /// - Implementors may return `self` directly when `Self` is already a
     ///   `BoxMutatingFunctionOnce<T, R>` to avoid the extra wrapper
     ///   allocation.
-    fn into_box_once(self) -> BoxMutatingFunctionOnce<T, R>
+    fn into_box(self) -> BoxMutatingFunctionOnce<T, R>
     where
         Self: Sized + 'static,
         T: 'static,
         R: 'static,
     {
-        BoxMutatingFunctionOnce::new(move |t| self.apply_once(t))
+        BoxMutatingFunctionOnce::new(move |t| self.apply(t))
     }
 
     /// Converts to a consuming closure `FnOnce(&mut T) -> R`
     ///
     /// Consumes `self` and returns a closure that, when invoked, calls
-    /// `apply_once(self, &mut T)`. This is the default, straightforward
+    /// `apply(self, &mut T)`. This is the default, straightforward
     /// implementation; types that can produce a more direct function pointer
     /// or avoid additional captures may override it.
-    fn into_fn_once(self) -> impl FnOnce(&mut T) -> R
+    fn into_fn(self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + 'static,
         T: 'static,
         R: 'static,
     {
-        move |t| self.apply_once(t)
+        move |t| self.apply(t)
     }
 
     /// Non-consuming adapter to `BoxMutatingFunctionOnce`
@@ -292,13 +305,13 @@ pub trait MutatingFunctionOnce<T, R> {
     /// boxed function is invoked. Types that can provide a zero-cost adapter
     /// (for example clonable closures) should override this method to avoid
     /// unnecessary allocations.
-    fn to_box_once(&self) -> BoxMutatingFunctionOnce<T, R>
+    fn to_box(&self) -> BoxMutatingFunctionOnce<T, R>
     where
         Self: Sized + Clone + 'static,
         T: 'static,
         R: 'static,
     {
-        self.clone().into_box_once()
+        self.clone().into_box()
     }
 
     /// Non-consuming adapter to a callable `FnOnce(&mut T) -> R`
@@ -307,13 +320,13 @@ pub trait MutatingFunctionOnce<T, R> {
     /// `Self: Clone` and clones `self` for the captured closure; the clone is
     /// consumed when the returned closure is invoked. Implementors may
     /// provide more efficient adapters for specific types.
-    fn to_fn_once(&self) -> impl FnOnce(&mut T) -> R
+    fn to_fn(&self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + Clone + 'static,
         T: 'static,
         R: 'static,
     {
-        self.clone().into_fn_once()
+        self.clone().into_fn()
     }
 }
 
@@ -375,7 +388,7 @@ pub trait MutatingFunctionOnce<T, R> {
 /// });
 ///
 /// let mut target = vec![0];
-/// let old_len = func.apply_once(&mut target);
+/// let old_len = func.apply(&mut target);
 /// assert_eq!(old_len, 1);
 /// assert_eq!(target, vec![0, 1, 2, 3]);
 /// ```
@@ -398,7 +411,7 @@ pub trait MutatingFunctionOnce<T, R> {
 /// });
 ///
 /// let mut target = vec![0];
-/// let final_len = chained.apply_once(&mut target);
+/// let final_len = chained.apply(&mut target);
 /// assert_eq!(final_len, 5);
 /// assert_eq!(target, vec![0, 1, 2, 3, 4]);
 /// ```
@@ -408,6 +421,7 @@ pub trait MutatingFunctionOnce<T, R> {
 /// Haixing Hu
 pub struct BoxMutatingFunctionOnce<T, R> {
     function: Box<dyn FnOnce(&mut T) -> R>,
+    name: Option<String>,
 }
 
 impl<T, R> BoxMutatingFunctionOnce<T, R>
@@ -415,186 +429,30 @@ where
     T: 'static,
     R: 'static,
 {
-    /// Creates a new BoxMutatingFunctionOnce
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `BoxMutatingFunctionOnce<T, R>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatingFunctionOnce,
-    ///                       BoxMutatingFunctionOnce};
-    ///
-    /// let data = String::from("world");
-    /// let func = BoxMutatingFunctionOnce::new(move |x: &mut String| {
-    ///     let old_len = x.len();
-    ///     x.push_str(" ");
-    ///     x.push_str(&data); // Move data
-    ///     old_len
-    /// });
-    ///
-    /// let mut target = String::from("hello");
-    /// let old_len = func.apply_once(&mut target);
-    /// assert_eq!(old_len, 5);
-    /// assert_eq!(target, "hello world");
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnOnce(&mut T) -> R + 'static,
-    {
-        BoxMutatingFunctionOnce {
-            function: Box::new(f),
-        }
-    }
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
+    impl_function_common_methods!(
+        BoxMutatingFunctionOnce<T, R>,
+        (FnOnce(&mut T) -> R + 'static),
+        |f| Box::new(f)
+    );
 
-    /// Creates an identity function
-    ///
-    /// Returns a function that returns a clone of the input value without
-    /// modifying it. Only available when `T` and `R` are the same type.
-    ///
-    /// # Returns
-    ///
-    /// Returns an identity function
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatingFunctionOnce,
-    ///                       BoxMutatingFunctionOnce};
-    ///
-    /// let identity = BoxMutatingFunctionOnce::<i32, i32>::identity();
-    /// let mut value = 42;
-    /// let result = identity.apply_once(&mut value);
-    /// assert_eq!(result, 42);
-    /// assert_eq!(value, 42); // Value unchanged
-    /// ```
-    pub fn identity() -> Self
-    where
-        T: Clone,
-        R: From<T>,
-    {
-        BoxMutatingFunctionOnce::new(|t: &mut T| R::from(t.clone()))
-    }
-
-    /// Chains another mutating function in sequence
-    ///
-    /// Returns a new function that first executes the current operation, then
-    /// executes the next operation. The result of the first operation is
-    /// discarded, and the result of the second operation is returned.
-    /// Consumes self.
-    ///
-    /// # Parameters
-    ///
-    /// * `next` - The function to execute after the current operation.
-    ///   **Note: This parameter is passed by value and will transfer
-    ///   ownership.** Since `BoxMutatingFunctionOnce` cannot be cloned, the
-    ///   parameter will be consumed. Can be:
-    ///   - A closure: `|x: &mut T| -> R2`
-    ///   - A `BoxMutatingFunctionOnce<T, R2>`
-    ///   - Any type implementing `MutatingFunctionOnce<T, R2>`
-    ///
-    /// # Returns
-    ///
-    /// Returns a new composed `BoxMutatingFunctionOnce<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatingFunctionOnce,
-    ///                       BoxMutatingFunctionOnce};
-    ///
-    /// let data1 = vec![1, 2];
-    /// let data2 = vec![3, 4];
-    /// let data3 = vec![5, 6];
-    ///
-    /// let chained = BoxMutatingFunctionOnce::new(
-    ///     move |x: &mut Vec<i32>| {
-    ///         x.extend(data1);
-    ///         x.len()
-    ///     }
-    /// )
-    /// .and_then(move |x: &mut Vec<i32>| {
-    ///     x.extend(data2);
-    ///     x.len()
-    /// })
-    /// .and_then(move |x: &mut Vec<i32>| {
-    ///     x.extend(data3);
-    ///     x.len()
-    /// });
-    ///
-    /// let mut target = vec![0];
-    /// let final_len = chained.apply_once(&mut target);
-    /// assert_eq!(final_len, 7);
-    /// assert_eq!(target, vec![0, 1, 2, 3, 4, 5, 6]);
-    /// ```
-    pub fn and_then<F, R2>(self, next: F) -> BoxMutatingFunctionOnce<T, R2>
-    where
-        F: MutatingFunctionOnce<T, R2> + 'static,
-        R2: 'static,
-    {
-        let first = self.function;
-        BoxMutatingFunctionOnce::new(move |t| {
-            let _ = first(t);
-            next.apply_once(t)
-        })
-    }
-
-    /// Maps the result of this function using another function
-    ///
-    /// Returns a new function that applies this function and then transforms
-    /// the result using the provided mapping function.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The function to transform the result
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `BoxMutatingFunctionOnce<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{MutatingFunctionOnce,
-    ///                       BoxMutatingFunctionOnce};
-    ///
-    /// let data = vec![1, 2, 3];
-    /// let func = BoxMutatingFunctionOnce::new(move |x: &mut Vec<i32>| {
-    ///     let old_len = x.len();
-    ///     x.extend(data);
-    ///     old_len
-    /// });
-    /// let mapped = func.map(|old_len| format!("Old length: {}", old_len));
-    ///
-    /// let mut target = vec![0];
-    /// let result = mapped.apply_once(&mut target);
-    /// assert_eq!(result, "Old length: 1");
-    /// ```
-    pub fn map<F, R2>(self, mapper: F) -> BoxMutatingFunctionOnce<T, R2>
-    where
-        F: FnOnce(R) -> R2 + 'static,
-        R2: 'static,
-    {
-        let func = self.function;
-        BoxMutatingFunctionOnce::new(move |t| {
-            let result = func(t);
-            mapper(result)
-        })
-    }
+    // Generates: when(), and_then(), compose()
+    impl_box_function_methods!(
+        BoxMutatingFunctionOnce<T, R>,
+        BoxConditionalMutatingFunctionOnce,
+        MutatingFunctionOnce
+    );
 }
 
+// Generates: Debug and Display implementations for BoxMutatingFunctionOnce<T, R>
+impl_function_debug_display!(BoxMutatingFunctionOnce<T, R>);
+
 impl<T, R> MutatingFunctionOnce<T, R> for BoxMutatingFunctionOnce<T, R> {
-    fn apply_once(self, input: &mut T) -> R {
+    fn apply(self, input: &mut T) -> R {
         (self.function)(input)
     }
 
-    fn into_box_once(self) -> BoxMutatingFunctionOnce<T, R>
+    fn into_box(self) -> BoxMutatingFunctionOnce<T, R>
     where
         T: 'static,
         R: 'static,
@@ -602,7 +460,7 @@ impl<T, R> MutatingFunctionOnce<T, R> for BoxMutatingFunctionOnce<T, R> {
         self
     }
 
-    fn into_fn_once(self) -> impl FnOnce(&mut T) -> R
+    fn into_fn(self) -> impl FnOnce(&mut T) -> R
     where
         T: 'static,
         R: 'static,
@@ -619,11 +477,11 @@ impl<T, R, F> MutatingFunctionOnce<T, R> for F
 where
     F: FnOnce(&mut T) -> R,
 {
-    fn apply_once(self, input: &mut T) -> R {
+    fn apply(self, input: &mut T) -> R {
         self(input)
     }
 
-    fn into_box_once(self) -> BoxMutatingFunctionOnce<T, R>
+    fn into_box(self) -> BoxMutatingFunctionOnce<T, R>
     where
         Self: Sized + 'static,
         T: 'static,
@@ -632,7 +490,7 @@ where
         BoxMutatingFunctionOnce::new(self)
     }
 
-    fn into_fn_once(self) -> impl FnOnce(&mut T) -> R
+    fn into_fn(self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + 'static,
         T: 'static,
@@ -644,17 +502,17 @@ where
     // Provide specialized non-consuming conversions for closures that
     // implement `Clone`. Many simple closures are zero-sized and `Clone`,
     // allowing non-consuming adapters to be cheaply produced.
-    fn to_box_once(&self) -> BoxMutatingFunctionOnce<T, R>
+    fn to_box(&self) -> BoxMutatingFunctionOnce<T, R>
     where
         Self: Sized + Clone + 'static,
         T: 'static,
         R: 'static,
     {
         let cloned = self.clone();
-        BoxMutatingFunctionOnce::new(move |t| cloned.apply_once(t))
+        BoxMutatingFunctionOnce::new(move |t| cloned.apply(t))
     }
 
-    fn to_fn_once(&self) -> impl FnOnce(&mut T) -> R
+    fn to_fn(&self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + Clone + 'static,
         T: 'static,
@@ -703,7 +561,7 @@ where
 /// });
 ///
 /// let mut target = vec![0];
-/// let final_len = chained.apply_once(&mut target);
+/// let final_len = chained.apply(&mut target);
 /// assert_eq!(final_len, 5);
 /// ```
 ///
@@ -751,7 +609,7 @@ pub trait FnOnceMutatingFunctionOps<T, R>: FnOnce(&mut T) -> R + Sized {
     /// });
     ///
     /// let mut target = vec![0];
-    /// let final_len = chained.apply_once(&mut target);
+    /// let final_len = chained.apply(&mut target);
     /// assert_eq!(final_len, 5);
     /// // The original closures are consumed and no longer usable
     /// ```
@@ -765,7 +623,7 @@ pub trait FnOnceMutatingFunctionOps<T, R>: FnOnce(&mut T) -> R + Sized {
     {
         BoxMutatingFunctionOnce::new(move |t| {
             let _ = self(t);
-            next.apply_once(t)
+            next.apply(t)
         })
     }
 
@@ -797,7 +655,7 @@ pub trait FnOnceMutatingFunctionOps<T, R>: FnOnce(&mut T) -> R + Sized {
     /// .map(|old_len| format!("Old length: {}", old_len));
     ///
     /// let mut target = vec![0];
-    /// let result = mapped.apply_once(&mut target);
+    /// let result = mapped.apply(&mut target);
     /// assert_eq!(result, "Old length: 1");
     /// ```
     fn map<F, R2>(self, mapper: F) -> BoxMutatingFunctionOnce<T, R2>
@@ -817,3 +675,60 @@ pub trait FnOnceMutatingFunctionOps<T, R>: FnOnce(&mut T) -> R + Sized {
 
 /// Implements FnOnceMutatingFunctionOps for all closure types
 impl<T, R, F> FnOnceMutatingFunctionOps<T, R> for F where F: FnOnce(&mut T) -> R {}
+
+// ============================================================================
+// BoxConditionalMutatingFunctionOnce - Box-based Conditional Mutating Function
+// ============================================================================
+
+/// BoxConditionalMutatingFunctionOnce struct
+///
+/// A conditional consuming transformer that only executes when a predicate is
+/// satisfied. Uses `BoxMutatingFunctionOnce` and `BoxPredicate` for single
+/// ownership semantics.
+///
+/// This type is typically created by calling `BoxMutatingFunctionOnce::when()` and
+/// is designed to work with the `or_else()` method to create if-then-else
+/// logic.
+///
+/// # Features
+///
+/// - **Single Ownership**: Not cloneable, consumes `self` on use
+/// - **One-time Use**: Can only be called once
+/// - **Conditional Execution**: Only transforms when predicate returns `true`
+/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
+///
+/// # Examples
+///
+/// ## With or_else Branch
+///
+/// ```rust
+/// use prism3_function::{MutatingFunctionOnce, BoxMutatingFunctionOnce};
+///
+/// let double = BoxMutatingFunctionOnce::new(|x: &mut i32| x * 2);
+/// let negate = BoxMutatingFunctionOnce::new(|x: &mut i32| -x);
+/// let conditional = double.when(|x: &i32| *x > 0).or_else(negate);
+/// assert_eq!(conditional.apply(5), 10); // when branch executed
+///
+/// let double2 = BoxMutatingFunctionOnce::new(|x: &mut i32| x * 2);
+/// let negate2 = BoxMutatingFunctionOnce::new(|x: &mut i32| -x);
+/// let conditional2 = double2.when(|x: &i32| *x > 0).or_else(negate2);
+/// assert_eq!(conditional2.apply(-5), 5); // or_else branch executed
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct BoxConditionalMutatingFunctionOnce<T, R> {
+    function: BoxMutatingFunctionOnce<T, R>,
+    predicate: BoxPredicate<T>,
+}
+
+// Use macro to generate conditional function implementations
+impl_box_conditional_function!(
+    BoxConditionalMutatingFunctionOnce<T, R>,
+    BoxMutatingFunctionOnce,
+    MutatingFunctionOnce
+);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(BoxConditionalMutatingFunctionOnce<T, R>);

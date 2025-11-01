@@ -170,9 +170,9 @@ macro_rules! impl_box_function_methods {
             F: $function_trait<$r, S> + 'static,
         {
             let mut before = self.function;
-            $struct_name::new(move |t: &$t| {
-                let r = before(t);
-                after.apply(&r)
+            $struct_name::new(move |t| {
+                let mut r = before(t);
+                after.apply(&mut r)
             })
         }
 
@@ -213,9 +213,9 @@ macro_rules! impl_box_function_methods {
             F: $function_trait<S, $t> + 'static,
         {
             let mut after = self.function;
-            $struct_name::new(move |s: &S| {
-                let t = before.apply(s);
-                after(&t)
+            $struct_name::new(move |s| {
+                let mut t = before.apply(s);
+                after(&mut t)
             })
         }
     };
@@ -286,9 +286,9 @@ macro_rules! impl_box_function_methods {
             F: $function_trait<$r, S> + 'static,
         {
             let mut before = self.function;
-            $struct_name::new(move |t: &$t, u: &$u| {
-                let r = before(t, u);
-                after.apply(&r)
+            $struct_name::new(move |t, u| {
+                let mut r = before(t, u);
+                after.apply(&mut r)
             })
         }
 
@@ -340,10 +340,10 @@ macro_rules! impl_box_function_methods {
             F2: $function_trait<S2, $u> + 'static,
         {
             let mut after = self.function;
-            $struct_name::new(move |s1: &S1, s2: &S2| {
-                let t = before1.apply(s1);
-                let u = before2.apply(s2);
-                after(&t, &u)
+            $struct_name::new(move |s1, s2| {
+                let mut t = before1.apply(s1);
+                let mut u = before2.apply(s2);
+                after(&mut t, &mut u)
             })
         }
     };

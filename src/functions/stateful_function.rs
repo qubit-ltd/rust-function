@@ -21,7 +21,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{
@@ -29,15 +28,26 @@ use std::sync::{
     Mutex,
 };
 
-use crate::functions::macros::{
-    impl_box_conditional_function, impl_box_function_methods, impl_function_clone, impl_function_common_methods, impl_function_constant_method, impl_function_debug_display, impl_function_identity_method, impl_shared_function_methods
-};
-
-use crate::predicates::predicate::{
-    ArcPredicate,
-    BoxPredicate,
-    Predicate,
-    RcPredicate,
+use crate::{
+    functions::macros::{
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_clone,
+        impl_conditional_function_debug_display,
+        impl_function_clone,
+        impl_function_common_methods,
+        impl_function_constant_method,
+        impl_function_debug_display,
+        impl_function_identity_method,
+        impl_shared_conditional_function,
+        impl_shared_function_methods,
+    },
+    predicates::predicate::{
+        ArcPredicate,
+        BoxPredicate,
+        Predicate,
+        RcPredicate,
+    },
 };
 
 // ============================================================================
@@ -326,7 +336,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         BoxStatefulFunction<T, R>,
         (FnMut(&T) -> R + 'static),
@@ -347,6 +357,10 @@ impl_function_constant_method!(BoxStatefulFunction<T, R>, 'static);
 // Generates: identity() method for BoxStatefulFunction<T, T>
 impl_function_identity_method!(BoxStatefulFunction<T, T>);
 
+// Generates: Debug and Display implementations for BoxStatefulFunction<T, R>
+impl_function_debug_display!(BoxStatefulFunction<T, R>);
+
+// Implement StatefulFunction trait for BoxStatefulFunction<T, R>
 impl<T, R> StatefulFunction<T, R> for BoxStatefulFunction<T, R> {
     fn apply(&mut self, t: &T) -> R {
         (self.function)(t)
@@ -383,9 +397,6 @@ impl<T, R> StatefulFunction<T, R> for BoxStatefulFunction<T, R> {
     // and calling BoxStatefulFunction::to_xxx() will cause a compile error
 }
 
-// Generates: Debug and Display implementations for BoxStatefulFunction<T, R>
-impl_function_debug_display!(BoxStatefulFunction<T, R>);
-
 // ============================================================================
 // RcStatefulFunction - Rc<RefCell<dyn FnMut(&T) -> R>>
 // ============================================================================
@@ -420,7 +431,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         RcStatefulFunction<T, R>,
         (FnMut(&T) -> R + 'static),
@@ -443,6 +454,13 @@ impl_function_constant_method!(RcStatefulFunction<T, R>, 'static);
 // Generates: identity() method for RcStatefulFunction<T, T>
 impl_function_identity_method!(RcStatefulFunction<T, T>);
 
+// Generates: Clone implementation for RcStatefulFunction<T, R>
+impl_function_clone!(RcStatefulFunction<T, R>);
+
+// Generates: Debug and Display implementations for RcStatefulFunction<T, R>
+impl_function_debug_display!(RcStatefulFunction<T, R>);
+
+// Implement StatefulFunction trait for RcStatefulFunction<T, R>
 impl<T, R> StatefulFunction<T, R> for RcStatefulFunction<T, R> {
     fn apply(&mut self, t: &T) -> R {
         (self.function.borrow_mut())(t)
@@ -512,12 +530,6 @@ impl<T, R> StatefulFunction<T, R> for RcStatefulFunction<T, R> {
     }
 }
 
-// Generates: Clone implementation for RcStatefulFunction<T, R>
-impl_function_clone!(RcStatefulFunction<T, R>);
-
-// Generates: Debug and Display implementations for RcStatefulFunction<T, R>
-impl_function_debug_display!(RcStatefulFunction<T, R>);
-
 // ============================================================================
 // ArcStatefulFunction - Arc<Mutex<dyn FnMut(&T) -> R + Send>>
 // ============================================================================
@@ -553,7 +565,7 @@ where
     T: 'static,
     R: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name()
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         ArcStatefulFunction<T, R>,
         (FnMut(&T) -> R + 'static),
@@ -576,6 +588,13 @@ impl_function_constant_method!(ArcStatefulFunction<T, R>, Send + Sync + 'static)
 // Generates: identity() method for ArcStatefulFunction<T, T>
 impl_function_identity_method!(ArcStatefulFunction<T, T>);
 
+// Generates: Clone implementation for ArcStatefulFunction<T, R>
+impl_function_clone!(ArcStatefulFunction<T, R>);
+
+// Generates: Debug and Display implementations for ArcStatefulFunction<T, R>
+impl_function_debug_display!(ArcStatefulFunction<T, R>);
+
+// Implement StatefulFunction trait for ArcStatefulFunction<T, R>
 impl<T, R> StatefulFunction<T, R> for ArcStatefulFunction<T, R> {
     fn apply(&mut self, t: &T) -> R {
         (self.function.lock().unwrap())(t)
@@ -656,12 +675,6 @@ impl<T, R> StatefulFunction<T, R> for ArcStatefulFunction<T, R> {
         move |t| self_fn.lock().unwrap()(t)
     }
 }
-
-// Generates: Clone implementation for ArcStatefulFunction<T, R>
-impl_function_clone!(ArcStatefulFunction<T, R>);
-
-// Generates: Debug and Display implementations for ArcStatefulFunction<T, R>
-impl_function_debug_display!(ArcStatefulFunction<T, R>);
 
 // ============================================================================
 // Blanket implementation for standard FnMut trait
@@ -1050,6 +1063,9 @@ impl_box_conditional_function!(
     StatefulFunction
 );
 
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(BoxConditionalStatefulFunction<T, R>);
+
 // ============================================================================
 // RcConditionalStatefulFunction - Rc-based Conditional StatefulFunction
 // ============================================================================
@@ -1094,70 +1110,19 @@ pub struct RcConditionalStatefulFunction<T, R> {
     predicate: RcPredicate<T>,
 }
 
-impl<T, R> RcConditionalStatefulFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
-    /// Adds an else branch (single-threaded shared version)
-    ///
-    /// Executes the original function when the condition is satisfied,
-    /// otherwise executes else_function.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_function` - The function for the else branch, can be:
-    ///   - Closure: `|x: &T| -> R`
-    ///   - `RcStatefulFunction<T, R>`, `BoxStatefulFunction<T, R>`
-    ///   - Any type implementing `StatefulFunction<T, R>`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `RcStatefulFunction<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulFunction, RcStatefulFunction};
-    ///
-    /// let mut function = RcStatefulFunction::new(|x: i32| x * 2)
-    ///     .when(|x: &i32| *x > 0)
-    ///     .or_else(|x: i32| -x);
-    ///
-    /// assert_eq!(function.apply(5), 10);
-    /// assert_eq!(function.apply(-5), 5);
-    /// ```
-    pub fn or_else<F>(self, else_function: F) -> RcStatefulFunction<T, R>
-    where
-        F: StatefulFunction<T, R> + 'static,
-    {
-        let pred = self.predicate;
-        let then_function = self.function;
-        let else_function = Rc::new(RefCell::new(else_function));
-        RcStatefulFunction {
-            function: Rc::new(RefCell::new(move |t: &T| {
-                if pred.test(t) {
-                    then_function.function.borrow_mut()(t)
-                } else {
-                    else_function.borrow_mut().apply(t)
-                }
-            })),
-        }
-    }
-}
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    RcConditionalStatefulFunction<T, R>,
+    RcStatefulFunction,
+    StatefulFunction,
+    'static
+);
 
-impl<T, R> Clone for RcConditionalStatefulFunction<T, R> {
-    /// Clones the conditional function
-    ///
-    /// Creates a new instance that shares the underlying function and
-    /// predicate with the original instance.
-    fn clone(&self) -> Self {
-        Self {
-            function: self.function.clone(),
-            predicate: self.predicate.clone(),
-        }
-    }
-}
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(RcConditionalStatefulFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(RcConditionalStatefulFunction<T, R>);
 
 // ============================================================================
 // ArcConditionalStatefulFunction - Arc-based Conditional StatefulFunction
@@ -1204,67 +1169,16 @@ pub struct ArcConditionalStatefulFunction<T, R> {
     predicate: ArcPredicate<T>,
 }
 
-impl<T, R> ArcConditionalStatefulFunction<T, R>
-where
-    T: Send + Sync + 'static,
-    R: Send + 'static,
-{
-    /// Adds an else branch (thread-safe version)
-    ///
-    /// Executes the original function when the condition is satisfied,
-    /// otherwise executes else_function.
-    ///
-    /// # Parameters
-    ///
-    /// * `else_function` - The function for the else branch, can be:
-    ///   - Closure: `|x: &T| -> R` (must be `Send`)
-    ///   - `ArcStatefulFunction<T, R>`, `BoxStatefulFunction<T, R>`
-    ///   - Any type implementing `StatefulFunction<T, R> + Send`
-    ///
-    /// # Returns
-    ///
-    /// Returns the composed `ArcStatefulFunction<T, R>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulFunction, ArcStatefulFunction};
-    ///
-    /// let mut function = ArcStatefulFunction::new(|x: i32| x * 2)
-    ///     .when(|x: &i32| *x > 0)
-    ///     .or_else(|x: i32| -x);
-    ///
-    /// assert_eq!(function.apply(5), 10);
-    /// assert_eq!(function.apply(-5), 5);
-    /// ```
-    pub fn or_else<F>(self, else_function: F) -> ArcStatefulFunction<T, R>
-    where
-        F: StatefulFunction<T, R> + Send + 'static,
-    {
-        let pred = self.predicate;
-        let then_function = self.function;
-        let else_function = Arc::new(Mutex::new(else_function));
-        ArcStatefulFunction {
-            function: Arc::new(Mutex::new(move |t: &T| {
-                if pred.test(t) {
-                    then_function.function.lock().unwrap()(t)
-                } else {
-                    else_function.lock().unwrap().apply(t)
-                }
-            })),
-        }
-    }
-}
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    ArcConditionalStatefulFunction<T, R>,
+    ArcStatefulFunction,
+    StatefulFunction,
+    Send + Sync + 'static
+);
 
-impl<T, R> Clone for ArcConditionalStatefulFunction<T, R> {
-    /// Clones the conditional function
-    ///
-    /// Creates a new instance that shares the underlying function and
-    /// predicate with the original instance.
-    fn clone(&self) -> Self {
-        Self {
-            function: self.function.clone(),
-            predicate: self.predicate.clone(),
-        }
-    }
-}
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(ArcConditionalStatefulFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(ArcConditionalStatefulFunction<T, R>);

@@ -189,9 +189,9 @@ macro_rules! impl_shared_function_methods {
             F: $function_trait<$r, S> + $($extra_bounds)+,
         {
             let mut before = self.clone();
-            $struct_name::new(move |t: &$t| {
-                let r = before.apply(t);
-                after.apply(&r)
+            $struct_name::new(move |t| {
+                let mut r = before.apply(t);
+                after.apply(&mut r)
             })
         }
 
@@ -232,9 +232,9 @@ macro_rules! impl_shared_function_methods {
             F: $function_trait<S, $t> + $($extra_bounds)+,
         {
             let mut after = self.clone();
-            $struct_name::new(move |s: &S| {
-                let t = before.apply(s);
-                after.apply(&t)
+            $struct_name::new(move |s| {
+                let mut t = before.apply(s);
+                after.apply(&mut t)
             })
         }
     };
@@ -307,9 +307,9 @@ macro_rules! impl_shared_function_methods {
             F: $function_trait<$r, S> + $($extra_bounds)+,
         {
             let mut before = self.clone();
-            $struct_name::new(move |t: &$t, u: &$u| {
-                let r = before.apply(t, u);
-                after.apply(&r)
+            $struct_name::new(move |t, u| {
+                let mut r = before.apply(t, u);
+                after.apply(&mut r)
             })
         }
 
@@ -357,10 +357,10 @@ macro_rules! impl_shared_function_methods {
             F2: $function_trait<S2, $u> + 'static,
         {
             let mut after = self.clone();
-            $struct_name::new(move |s1: &S1, s2: &S2| {
-                let t = before1.apply(s1);
-                let u = before2.apply(s2);
-                after.apply(&t, &u)
+            $struct_name::new(move |s1, s2| {
+                let mut t = before1.apply(s1);
+                let mut u = before2.apply(s2);
+                after.apply(&mut t, &mut u)
             })
         }
     };

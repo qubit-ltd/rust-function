@@ -118,12 +118,31 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{
     Arc,
     Mutex,
+};
+
+use crate::{
+    functions::macros::{
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_clone,
+        impl_conditional_function_debug_display,
+        impl_function_clone,
+        impl_function_common_methods,
+        impl_function_debug_display,
+        impl_shared_conditional_function,
+        impl_shared_function_methods,
+    },
+    predicates::predicate::{
+        ArcPredicate,
+        BoxPredicate,
+        Predicate,
+        RcPredicate,
+    },
 };
 
 // =======================================================================
@@ -221,7 +240,7 @@ pub trait StatefulMutatingFunction<T, R> {
     ///
     /// # Parameters
     ///
-    /// * `input` - A mutable reference to the input value
+    /// * `t` - A mutable reference to the input value
     ///
     /// # Returns
     ///
@@ -249,7 +268,7 @@ pub trait StatefulMutatingFunction<T, R> {
     /// assert_eq!(call_count, 1);
     /// assert_eq!(value, 6);
     /// ```
-    fn apply(&mut self, input: &mut T) -> R;
+    fn apply(&mut self, t: &mut T) -> R;
 
     /// Convert this function into a `BoxStatefulMutatingFunction<T, R>`.
     ///
@@ -567,6 +586,7 @@ type RcStatefulMutatingFunctionFn<T, R> = Rc<RefCell<dyn FnMut(&mut T) -> R>>;
 /// Haixing Hu
 pub struct BoxStatefulMutatingFunction<T, R> {
     function: Box<dyn FnMut(&mut T) -> R>,
+    name: Option<String>,
 }
 
 impl<T, R> BoxStatefulMutatingFunction<T, R>
@@ -574,183 +594,28 @@ where
     T: 'static,
     R: 'static,
 {
-    /// Creates a new BoxStatefulMutatingFunction
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The stateful closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `BoxStatefulMutatingFunction<T, R>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       BoxStatefulMutatingFunction};
-    ///
-    /// let mut counter = {
-    ///     let mut count = 0;
-    ///     BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x += 1;
-    ///         count
-    ///     })
-    /// };
-    /// let mut value = 5;
-    /// assert_eq!(counter.apply(&mut value), 1);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut(&mut T) -> R + 'static,
-    {
-        BoxStatefulMutatingFunction {
-            function: Box::new(f),
-        }
-    }
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
+    impl_function_common_methods!(
+        BoxStatefulMutatingFunction<T, R>,
+        (FnMut(&mut T) -> R + 'static),
+        |f| Box::new(f)
+    );
 
-    /// Creates an identity function
-    ///
-    /// Returns a function that returns a clone of the input value without
-    /// modifying it. Only available when `T` and `R` are the same type.
-    ///
-    /// # Returns
-    ///
-    /// Returns an identity function
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       BoxStatefulMutatingFunction};
-    ///
-    /// let mut identity =
-    ///     BoxStatefulMutatingFunction::<i32, i32>::identity();
-    /// let mut value = 42;
-    /// assert_eq!(identity.apply(&mut value), 42);
-    /// assert_eq!(value, 42); // Value unchanged
-    /// ```
-    pub fn identity() -> Self
-    where
-        T: Clone,
-        R: From<T>,
-    {
-        BoxStatefulMutatingFunction::new(|t: &mut T| R::from(t.clone()))
-    }
-
-    /// Chains another stateful mutating function in sequence
-    ///
-    /// Returns a new function that first executes the current operation, then
-    /// executes the next operation. The result of the first operation is
-    /// discarded, and the result of the second operation is returned.
-    /// Consumes self.
-    ///
-    /// # Parameters
-    ///
-    /// * `next` - The function to execute after the current operation.
-    ///   **Note: This parameter is passed by value and will transfer
-    ///   ownership.** If you need to preserve the original function, clone it
-    ///   first (if it implements `Clone`). Can be:
-    ///   - A closure: `|x: &mut T| -> R2`
-    ///   - A `BoxStatefulMutatingFunction<T, R2>`
-    ///   - An `ArcStatefulMutatingFunction<T, R2>`
-    ///   - An `RcStatefulMutatingFunction<T, R2>`
-    ///   - Any type implementing `StatefulMutatingFunction<T, R2>`
-    ///
-    /// # Returns
-    ///
-    /// Returns a new composed `BoxStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       BoxStatefulMutatingFunction};
-    ///
-    /// let first = {
-    ///     let mut count1 = 0;
-    ///     BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count1 += 1;
-    ///         *x *= 2;
-    ///         count1
-    ///     })
-    /// };
-    /// let second = {
-    ///     let mut count2 = 0;
-    ///     BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count2 += 1;
-    ///         *x += 10;
-    ///         count2
-    ///     })
-    /// };
-    ///
-    /// let mut chained = first.and_then(second);
-    /// let mut value = 5;
-    /// assert_eq!(chained.apply(&mut value), 1);
-    /// assert_eq!(value, 20); // (5 * 2) + 10
-    /// ```
-    pub fn and_then<F, R2>(self, next: F) -> BoxStatefulMutatingFunction<T, R2>
-    where
-        F: StatefulMutatingFunction<T, R2> + 'static,
-        R2: 'static,
-    {
-        let mut first = self.function;
-        let mut second = next.into_fn();
-        BoxStatefulMutatingFunction::new(move |t| {
-            let _ = (first)(t);
-            (second)(t)
-        })
-    }
-
-    /// Maps the result of this function using another function
-    ///
-    /// Returns a new function that applies this function and then transforms
-    /// the result using the provided mapping function.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The function to transform the result
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `BoxStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       BoxStatefulMutatingFunction};
-    ///
-    /// let func = {
-    ///     let mut count = 0;
-    ///     BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x *= 2;
-    ///         count
-    ///     })
-    /// };
-    /// let mut mapped = func.map(|count| format!("Call #{}", count));
-    ///
-    /// let mut value = 5;
-    /// assert_eq!(mapped.apply(&mut value), "Call #1");
-    /// ```
-    pub fn map<F, R2>(self, mapper: F) -> BoxStatefulMutatingFunction<T, R2>
-    where
-        F: Fn(R) -> R2 + 'static,
-        R2: 'static,
-    {
-        let mut func = self.function;
-        BoxStatefulMutatingFunction::new(move |t| {
-            let result = (func)(t);
-            mapper(result)
-        })
-    }
+    // Generates: when(), and_then(), compose()
+    impl_box_function_methods!(
+        BoxStatefulMutatingFunction<T, R>,
+        BoxConditionalStatefulMutatingFunction,
+        StatefulMutatingFunction
+    );
 }
 
+// Generates: Debug and Display implementations for BoxMutatingFunction<T, R>
+impl_function_debug_display!(BoxStatefulMutatingFunction<T, R>);
+
+// Implement StatefulMutatingFunction trait for BoxStatefulMutatingFunction<T, R>
 impl<T, R> StatefulMutatingFunction<T, R> for BoxStatefulMutatingFunction<T, R> {
-    fn apply(&mut self, input: &mut T) -> R {
-        (self.function)(input)
+    fn apply(&mut self, t: &mut T) -> R {
+        (self.function)(t)
     }
 
     fn into_box(self) -> BoxStatefulMutatingFunction<T, R>
@@ -761,13 +626,12 @@ impl<T, R> StatefulMutatingFunction<T, R> for BoxStatefulMutatingFunction<T, R> 
         self
     }
 
-    fn into_rc(self) -> RcStatefulMutatingFunction<T, R>
+    fn into_rc(mut self) -> RcStatefulMutatingFunction<T, R>
     where
         T: 'static,
         R: 'static,
     {
-        let mut self_fn = self.function;
-        RcStatefulMutatingFunction::new(move |t| (self_fn)(t))
+        RcStatefulMutatingFunction::new(move |t| (self.function)(t))
     }
 
     // do NOT override StatefulMutatingFunction::into_arc() because
@@ -841,6 +705,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for BoxStatefulMutatingFunction<T, R> 
 /// Haixing Hu
 pub struct RcStatefulMutatingFunction<T, R> {
     function: RcStatefulMutatingFunctionFn<T, R>,
+    name: Option<String>,
 }
 
 impl<T, R> RcStatefulMutatingFunction<T, R>
@@ -848,177 +713,33 @@ where
     T: 'static,
     R: 'static,
 {
-    /// Creates a new RcStatefulMutatingFunction
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The stateful closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `RcStatefulMutatingFunction<T, R>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       RcStatefulMutatingFunction};
-    ///
-    /// let mut counter = {
-    ///     let mut count = 0;
-    ///     RcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x += 1;
-    ///         count
-    ///     })
-    /// };
-    /// let mut value = 5;
-    /// assert_eq!(counter.apply(&mut value), 1);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut(&mut T) -> R + 'static,
-    {
-        RcStatefulMutatingFunction {
-            function: Rc::new(RefCell::new(f)),
-        }
-    }
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
+    impl_function_common_methods!(
+        RcStatefulMutatingFunction<T, R>,
+        (FnMut(&mut T) -> R + 'static),
+        |f| Rc::new(RefCell::new(f))
+    );
 
-    /// Creates an identity function
-    ///
-    /// Returns a function that returns a clone of the input value without
-    /// modifying it. Only available when `T` and `R` are the same type.
-    ///
-    /// # Returns
-    ///
-    /// Returns an identity function
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       RcStatefulMutatingFunction};
-    ///
-    /// let mut identity =
-    ///     RcStatefulMutatingFunction::<i32, i32>::identity();
-    /// let mut value = 42;
-    /// assert_eq!(identity.apply(&mut value), 42);
-    /// assert_eq!(value, 42); // Value unchanged
-    /// ```
-    pub fn identity() -> Self
-    where
-        T: Clone,
-        R: From<T>,
-    {
-        RcStatefulMutatingFunction::new(|t: &mut T| R::from(t.clone()))
-    }
-
-    /// Chains another RcStatefulMutatingFunction in sequence
-    ///
-    /// Returns a new function that first executes the current operation, then
-    /// executes the next operation. Borrows &self, does not consume the
-    /// original function.
-    ///
-    /// # Parameters
-    ///
-    /// * `next` - The function to execute after the current operation
-    ///
-    /// # Returns
-    ///
-    /// Returns a new composed `RcStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       RcStatefulMutatingFunction};
-    ///
-    /// let first = {
-    ///     let mut count1 = 0;
-    ///     RcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count1 += 1;
-    ///         *x *= 2;
-    ///         count1
-    ///     })
-    /// };
-    /// let second = {
-    ///     let mut count2 = 0;
-    ///     RcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count2 += 1;
-    ///         *x += 10;
-    ///         count2
-    ///     })
-    /// };
-    ///
-    /// let mut chained = first.and_then(&second);
-    ///
-    /// // first and second are still usable
-    /// let mut value = 5;
-    /// assert_eq!(chained.apply(&mut value), 1);
-    /// ```
-    pub fn and_then<R2>(
-        &self,
-        next: &RcStatefulMutatingFunction<T, R2>,
-    ) -> RcStatefulMutatingFunction<T, R2>
-    where
-        R2: 'static,
-    {
-        let first = self.function.clone();
-        let second = next.function.clone();
-        RcStatefulMutatingFunction::new(move |t: &mut T| {
-            let _ = (first.borrow_mut())(t);
-            (second.borrow_mut())(t)
-        })
-    }
-
-    /// Maps the result of this function using another function
-    ///
-    /// Returns a new function that applies this function and then transforms
-    /// the result using the provided mapping function.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The function to transform the result
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `RcStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       RcStatefulMutatingFunction};
-    ///
-    /// let func = {
-    ///     let mut count = 0;
-    ///     RcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x *= 2;
-    ///         count
-    ///     })
-    /// };
-    /// let mut mapped = func.map(|count| format!("Call #{}", count));
-    ///
-    /// let mut value = 5;
-    /// assert_eq!(mapped.apply(&mut value), "Call #1");
-    /// ```
-    pub fn map<F, R2>(&self, mapper: F) -> RcStatefulMutatingFunction<T, R2>
-    where
-        F: Fn(R) -> R2 + 'static,
-        R2: 'static,
-    {
-        let func = self.function.clone();
-        RcStatefulMutatingFunction::new(move |t| {
-            let result = (func.borrow_mut())(t);
-            mapper(result)
-        })
-    }
+    // Generates: when(), and_then(), compose()
+    impl_shared_function_methods!(
+        RcStatefulMutatingFunction<T, R>,
+        RcConditionalStatefulMutatingFunction,
+        into_rc,
+        StatefulMutatingFunction,
+        'static
+    );
 }
 
+// Generates: Clone implementation for RcStatefulMutatingFunction<T, R>
+impl_function_clone!(RcStatefulMutatingFunction<T, R>);
+
+// Generates: Debug and Display implementations for RcStatefulMutatingFunction<T, R>
+impl_function_debug_display!(RcStatefulMutatingFunction<T, R>);
+
+// Implement StatefulMutatingFunction trait for RcStatefulMutatingFunction<T, R>
 impl<T, R> StatefulMutatingFunction<T, R> for RcStatefulMutatingFunction<T, R> {
-    fn apply(&mut self, input: &mut T) -> R {
-        (self.function.borrow_mut())(input)
+    fn apply(&mut self, t: &mut T) -> R {
+        (self.function.borrow_mut())(t)
     }
 
     fn into_box(self) -> BoxStatefulMutatingFunction<T, R>
@@ -1026,8 +747,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for RcStatefulMutatingFunction<T, R> {
         T: 'static,
         R: 'static,
     {
-        let self_fn = self.function;
-        BoxStatefulMutatingFunction::new(move |t| (self_fn.borrow_mut())(t))
+        BoxStatefulMutatingFunction::new(move |t| (self.function.borrow_mut())(t))
     }
 
     fn into_rc(self) -> RcStatefulMutatingFunction<T, R>
@@ -1048,8 +768,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for RcStatefulMutatingFunction<T, R> {
         T: 'static,
         R: 'static,
     {
-        let self_fn = self.function;
-        move |t| (self_fn.borrow_mut())(t)
+        move |t| (self.function.borrow_mut())(t)
     }
 
     fn to_box(&self) -> BoxStatefulMutatingFunction<T, R>
@@ -1083,18 +802,6 @@ impl<T, R> StatefulMutatingFunction<T, R> for RcStatefulMutatingFunction<T, R> {
     {
         let self_fn = self.function.clone();
         move |t| (self_fn.borrow_mut())(t)
-    }
-}
-
-impl<T, R> Clone for RcStatefulMutatingFunction<T, R> {
-    /// Clones the RcStatefulMutatingFunction
-    ///
-    /// Creates a new RcStatefulMutatingFunction that shares the underlying
-    /// function with the original instance.
-    fn clone(&self) -> Self {
-        RcStatefulMutatingFunction {
-            function: self.function.clone(),
-        }
     }
 }
 
@@ -1149,189 +856,41 @@ impl<T, R> Clone for RcStatefulMutatingFunction<T, R> {
 /// Haixing Hu
 pub struct ArcStatefulMutatingFunction<T, R> {
     function: ArcStatefulMutatingFunctionFn<T, R>,
+    name: Option<String>,
 }
 
 impl<T, R> ArcStatefulMutatingFunction<T, R>
 where
-    T: Send + 'static,
-    R: Send + 'static,
+    T: 'static,
+    R: 'static,
 {
-    /// Creates a new ArcStatefulMutatingFunction
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The stateful closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `ArcStatefulMutatingFunction<T, R>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       ArcStatefulMutatingFunction};
-    ///
-    /// let mut counter = {
-    ///     let mut count = 0;
-    ///     ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x += 1;
-    ///         count
-    ///     })
-    /// };
-    /// let mut value = 5;
-    /// assert_eq!(counter.apply(&mut value), 1);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut(&mut T) -> R + Send + 'static,
-    {
-        ArcStatefulMutatingFunction {
-            function: Arc::new(Mutex::new(f)),
-        }
-    }
+    // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
+    impl_function_common_methods!(
+        ArcStatefulMutatingFunction<T, R>,
+        (FnMut(&mut T) -> R + Send + 'static),
+        |f| Arc::new(Mutex::new(f))
+    );
 
-    /// Creates an identity function
-    ///
-    /// Returns a function that returns a clone of the input value without
-    /// modifying it. Only available when `T` and `R` are the same type.
-    ///
-    /// # Returns
-    ///
-    /// Returns an identity function
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       ArcStatefulMutatingFunction};
-    ///
-    /// let mut identity =
-    ///     ArcStatefulMutatingFunction::<i32, i32>::identity();
-    /// let mut value = 42;
-    /// assert_eq!(identity.apply(&mut value), 42);
-    /// assert_eq!(value, 42); // Value unchanged
-    /// ```
-    pub fn identity() -> Self
-    where
-        T: Clone,
-        R: From<T>,
-    {
-        ArcStatefulMutatingFunction::new(|t: &mut T| R::from(t.clone()))
-    }
-
-    /// Chains another ArcStatefulMutatingFunction in sequence
-    ///
-    /// Returns a new function that first executes the current operation, then
-    /// executes the next operation. Borrows &self, does not consume the
-    /// original function.
-    ///
-    /// # Parameters
-    ///
-    /// * `next` - The function to execute after the current operation
-    ///
-    /// # Returns
-    ///
-    /// Returns a new composed `ArcStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       ArcStatefulMutatingFunction};
-    ///
-    /// let first = {
-    ///     let mut count1 = 0;
-    ///     ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count1 += 1;
-    ///         *x *= 2;
-    ///         count1
-    ///     })
-    /// };
-    /// let second = {
-    ///     let mut count2 = 0;
-    ///     ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count2 += 1;
-    ///         *x += 10;
-    ///         count2
-    ///     })
-    /// };
-    ///
-    /// let mut chained = first.and_then(&second);
-    ///
-    /// // first and second are still usable
-    /// let mut value = 5;
-    /// assert_eq!(chained.apply(&mut value), 1);
-    /// ```
-    pub fn and_then<R2>(
-        &self,
-        next: &ArcStatefulMutatingFunction<T, R2>,
-    ) -> ArcStatefulMutatingFunction<T, R2>
-    where
-        R2: Send + 'static,
-    {
-        let first = Arc::clone(&self.function);
-        let second = Arc::clone(&next.function);
-        ArcStatefulMutatingFunction {
-            function: Arc::new(Mutex::new(move |t: &mut T| {
-                let _ = (first.lock().unwrap())(t);
-                (second.lock().unwrap())(t)
-            })),
-        }
-    }
-
-    /// Maps the result of this function using another function
-    ///
-    /// Returns a new function that applies this function and then transforms
-    /// the result using the provided mapping function.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The function to transform the result
-    ///
-    /// # Returns
-    ///
-    /// Returns a new `ArcStatefulMutatingFunction<T, R2>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{StatefulMutatingFunction,
-    ///                       ArcStatefulMutatingFunction};
-    ///
-    /// let func = {
-    ///     let mut count = 0;
-    ///     ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-    ///         count += 1;
-    ///         *x *= 2;
-    ///         count
-    ///     })
-    /// };
-    /// let mut mapped = func.map(|count| format!("Call #{}", count));
-    ///
-    /// let mut value = 5;
-    /// assert_eq!(mapped.apply(&mut value), "Call #1");
-    /// ```
-    pub fn map<F, R2>(&self, mapper: F) -> ArcStatefulMutatingFunction<T, R2>
-    where
-        F: Fn(R) -> R2 + Send + Sync + 'static,
-        R2: Send + 'static,
-    {
-        let func = Arc::clone(&self.function);
-        let mapper = Arc::new(mapper);
-        ArcStatefulMutatingFunction {
-            function: Arc::new(Mutex::new(move |t: &mut T| {
-                let result = (func.lock().unwrap())(t);
-                (mapper)(result)
-            })),
-        }
-    }
+    // Generates: when(), and_then(), compose()
+    impl_shared_function_methods!(
+        ArcStatefulMutatingFunction<T, R>,
+        ArcConditionalStatefulMutatingFunction,
+        into_arc,
+        StatefulMutatingFunction,
+        Send + Sync + 'static
+    );
 }
 
+// Generates: Clone implementation for ArcStatefulMutatingFunction<T, R>
+impl_function_clone!(ArcStatefulMutatingFunction<T, R>);
+
+// Generates: Debug and Display implementations for ArcStatefulMutatingFunction<T, R>
+impl_function_debug_display!(ArcStatefulMutatingFunction<T, R>);
+
+// Implement StatefulMutatingFunction trait for ArcStatefulMutatingFunction<T, R>
 impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> {
-    fn apply(&mut self, input: &mut T) -> R {
-        (self.function.lock().unwrap())(input)
+    fn apply(&mut self, t: &mut T) -> R {
+        (self.function.lock().unwrap())(t)
     }
 
     fn into_box(self) -> BoxStatefulMutatingFunction<T, R>
@@ -1339,8 +898,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
         T: 'static,
         R: 'static,
     {
-        let self_fn = self.function;
-        BoxStatefulMutatingFunction::new(move |t| (self_fn.lock().unwrap())(t))
+        BoxStatefulMutatingFunction::new(move |t| (self.function.lock().unwrap())(t))
     }
 
     fn into_rc(self) -> RcStatefulMutatingFunction<T, R>
@@ -1348,8 +906,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
         T: 'static,
         R: 'static,
     {
-        let self_fn = self.function;
-        RcStatefulMutatingFunction::new(move |t| (self_fn.lock().unwrap())(t))
+        RcStatefulMutatingFunction::new(move |t| (self.function.lock().unwrap())(t))
     }
 
     fn into_arc(self) -> ArcStatefulMutatingFunction<T, R>
@@ -1366,8 +923,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
         T: 'static,
         R: 'static,
     {
-        let self_fn = self.function;
-        move |t| (self_fn.lock().unwrap())(t)
+        move |t| (self.function.lock().unwrap())(t)
     }
 
     fn to_box(&self) -> BoxStatefulMutatingFunction<T, R>
@@ -1407,18 +963,6 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
     {
         let self_fn = self.function.clone();
         move |t| (self_fn.lock().unwrap())(t)
-    }
-}
-
-impl<T, R> Clone for ArcStatefulMutatingFunction<T, R> {
-    /// Clones the ArcStatefulMutatingFunction
-    ///
-    /// Creates a new ArcStatefulMutatingFunction that shares the underlying
-    /// function with the original instance.
-    fn clone(&self) -> Self {
-        ArcStatefulMutatingFunction {
-            function: self.function.clone(),
-        }
     }
 }
 
@@ -1665,3 +1209,169 @@ pub trait FnMutStatefulMutatingFunctionOps<T, R>: FnMut(&mut T) -> R + Sized {
 
 /// Implements FnMutStatefulMutatingFunctionOps for all closure types
 impl<T, R, F> FnMutStatefulMutatingFunctionOps<T, R> for F where F: FnMut(&mut T) -> R {}
+
+// ============================================================================
+// BoxConditionalStatefulMutatingFunction - Box-based Conditional Stateful Mutating Function
+// ============================================================================
+
+/// BoxConditionalStatefulMutatingFunction struct
+///
+/// A conditional function that only executes when a predicate is satisfied.
+/// Uses `BoxStatefulMutatingFunction` and `BoxPredicate` for single ownership semantics.
+///
+/// This type is typically created by calling `BoxStatefulMutatingFunction::when()` and is
+/// designed to work with the `or_else()` method to create if-then-else logic.
+///
+/// # Features
+///
+/// - **Single Ownership**: Not cloneable, consumes `self` on use
+/// - **Conditional Execution**: Only transforms when predicate returns `true`
+/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
+/// - **Implements Function**: Can be used anywhere a `Function` is expected
+///
+/// # Examples
+///
+/// ## With or_else Branch
+///
+/// ```rust
+/// use prism3_function::{StatefulMutatingFunction, BoxStatefulMutatingFunction};
+///
+/// let double = BoxStatefulMutatingFunction::new(|x: &mut i32| x * 2);
+/// let negate = BoxStatefulMutatingFunction::new(|x: &mut i32| -x);
+/// let conditional = double.when(|x: &i32| *x > 0).or_else(negate);
+///
+/// assert_eq!(conditional.apply(5), 10); // when branch executed
+/// assert_eq!(conditional.apply(-5), 5); // or_else branch executed
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct BoxConditionalStatefulMutatingFunction<T, R> {
+    function: BoxStatefulMutatingFunction<T, R>,
+    predicate: BoxPredicate<T>,
+}
+
+// Use macro to generate conditional function implementations
+impl_box_conditional_function!(
+    BoxConditionalStatefulMutatingFunction<T, R>,
+    BoxStatefulMutatingFunction,
+    StatefulMutatingFunction
+);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(BoxConditionalStatefulMutatingFunction<T, R>);
+
+// ============================================================================
+// RcConditionalStatefulMutatingFunction - Rc-based Conditional Stateful Mutating Function
+// ============================================================================
+
+/// RcConditionalStatefulMutatingFunction struct
+///
+/// A single-threaded conditional function that only executes when a
+/// predicate is satisfied. Uses `RcStatefulMutatingFunction` and `RcPredicate` for shared
+/// ownership within a single thread.
+///
+/// This type is typically created by calling `RcStatefulMutatingFunction::when()` and is
+/// designed to work with the `or_else()` method to create if-then-else logic.
+///
+/// # Features
+///
+/// - **Shared Ownership**: Cloneable via `Rc`, multiple owners allowed
+/// - **Single-Threaded**: Not thread-safe, cannot be sent across threads
+/// - **Conditional Execution**: Only transforms when predicate returns `true`
+/// - **No Lock Overhead**: More efficient than `ArcConditionalFunction`
+///
+/// # Examples
+///
+/// ```rust
+/// use prism3_function::{StatefulMutatingFunction, RcStatefulMutatingFunction};
+///
+/// let double = RcStatefulMutatingFunction::new(|x: &mut i32| x * 2);
+/// let identity = RcStatefulMutatingFunction::<i32, i32>::identity();
+/// let conditional = double.when(|x: &i32| *x > 0).or_else(identity);
+///
+/// let conditional_clone = conditional.clone();
+///
+/// assert_eq!(conditional.apply(5), 10);
+/// assert_eq!(conditional_clone.apply(-5), -5);
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct RcConditionalStatefulMutatingFunction<T, R> {
+    function: RcStatefulMutatingFunction<T, R>,
+    predicate: RcPredicate<T>,
+}
+
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    RcConditionalStatefulMutatingFunction<T, R>,
+    RcStatefulMutatingFunction,
+    StatefulMutatingFunction,
+    'static
+);
+
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(RcConditionalStatefulMutatingFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(RcConditionalStatefulMutatingFunction<T, R>);
+
+// ============================================================================
+// ArcConditionalStatefulMutatingFunction - Arc-based Conditional Stateful Mutating Function
+// ============================================================================
+
+/// ArcConditionalStatefulMutatingFunction struct
+///
+/// A thread-safe conditional function that only executes when a predicate is
+/// satisfied. Uses `ArcStatefulMutatingFunction` and `ArcPredicate` for shared ownership
+/// across threads.
+///
+/// This type is typically created by calling `ArcStatefulMutatingFunction::when()` and is
+/// designed to work with the `or_else()` method to create if-then-else logic.
+///
+/// # Features
+///
+/// - **Shared Ownership**: Cloneable via `Arc`, multiple owners allowed
+/// - **Thread-Safe**: Implements `Send + Sync`, safe for concurrent use
+/// - **Conditional Execution**: Only transforms when predicate returns `true`
+/// - **Chainable**: Can add `or_else` branch to create if-then-else logic
+///
+/// # Examples
+///
+/// ```rust
+/// use prism3_function::{StatefulMutatingFunction, ArcStatefulMutatingFunction};
+///
+/// let double = ArcStatefulMutatingFunction::new(|x: &mut i32| x * 2);
+/// let identity = ArcStatefulMutatingFunction::<i32, i32>::identity();
+/// let conditional = double.when(|x: &i32| *x > 0).or_else(identity);
+///
+/// let conditional_clone = conditional.clone();
+///
+/// assert_eq!(conditional.apply(5), 10);
+/// assert_eq!(conditional_clone.apply(-5), -5);
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct ArcConditionalStatefulMutatingFunction<T, R> {
+    function: ArcStatefulMutatingFunction<T, R>,
+    predicate: ArcPredicate<T>,
+}
+
+// Use macro to generate conditional function implementations
+impl_shared_conditional_function!(
+    ArcConditionalStatefulMutatingFunction<T, R>,
+    ArcStatefulMutatingFunction,
+    StatefulMutatingFunction,
+    Send + Sync + 'static
+);
+
+// Use macro to generate conditional function clone implementations
+impl_conditional_function_clone!(ArcConditionalStatefulMutatingFunction<T, R>);
+
+// Use macro to generate conditional function debug and display implementations
+impl_conditional_function_debug_display!(ArcConditionalStatefulMutatingFunction<T, R>);
