@@ -24,6 +24,7 @@
 //!
 //! Consumer uses `Fn(&T)` semantics, neither modifying its own state nor
 //! modifying input values.
+//!
 //! Suitable for pure observation, logging, notification and other scenarios.
 //! Compared to Consumer, Consumer does not require interior mutability
 //! (Mutex/RefCell), making it more efficient and easier to share.

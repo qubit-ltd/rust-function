@@ -24,6 +24,7 @@
 //! # Design Philosophy
 //!
 //! ConsumerOnce uses `FnOnce(&T)` semantics for truly one-time consumption operations.
+//!
 //! Unlike Consumer, ConsumerOnce consumes itself on first call. Suitable for initialization
 //! callbacks, cleanup callbacks, and similar scenarios.
 //!

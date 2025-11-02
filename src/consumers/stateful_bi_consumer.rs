@@ -23,8 +23,10 @@
 //! # Design Philosophy
 //!
 //! BiConsumer uses `FnMut(&T, &U)` semantics: can modify its own state but
-//! does NOT modify input values. Suitable for statistics, accumulation, and
-//! event processing scenarios involving two parameters.
+//! does NOT modify input values.
+//!
+//! Suitable for statistics, accumulation, and event processing scenarios
+//! involving two parameters.
 //!
 //! # Author
 //!

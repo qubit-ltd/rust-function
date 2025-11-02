@@ -24,8 +24,9 @@
 //! # Design Philosophy
 //!
 //! Consumer uses `FnMut(&T)` semantics, allowing modification of its own state
-//! but not the input value. Suitable for statistics, accumulation, event
-//! handling, and other scenarios.
+//! but not the input value.
+//!
+//! Suitable for statistics, accumulation, event handling, and other scenarios.
 //!
 //! # Author
 //!

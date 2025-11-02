@@ -28,9 +28,10 @@
 //! # Design Philosophy
 //!
 //! BiConsumerOnce uses `FnOnce(&T, &U)` semantics: for truly one-time
-//! consumption operations. Unlike BiConsumer, BiConsumerOnce consumes
-//! itself on first call. Suitable for initialization callbacks, cleanup
-//! callbacks, etc.
+//! consumption operations.
+//!
+//! Unlike BiConsumer, BiConsumerOnce consumes itself on first call. Suitable
+//! for initialization callbacks, cleanup callbacks, etc.
 //!
 //! # Author
 //!

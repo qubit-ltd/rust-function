@@ -24,10 +24,11 @@
 //! # Design Philosophy
 //!
 //! BiConsumer uses `Fn(&T, &U)` semantics: neither modifies its
-//! own state nor the input values. Suitable for pure observation, logging,
-//! and notification scenarios with two parameters. Compared to BiConsumer,
-//! BiConsumer does not require interior mutability
-//! (Mutex/RefCell), thus more efficient and easier to share.
+//! own state nor the input values.
+//!
+//! Suitable for pure observation, logging, and notification scenarios with two
+//! parameters. Compared to BiConsumer, BiConsumer does not require interior
+//! mutability (Mutex/RefCell), thus more efficient and easier to share.
 //!
 //! # Author
 //!
