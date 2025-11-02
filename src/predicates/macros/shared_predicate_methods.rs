@@ -22,40 +22,30 @@
 //! * `$struct_name<$generics>` - The struct name with its generic parameters
 //!   - Single parameter: `ArcPredicate<T>`
 //!   - Two parameters: `ArcBiPredicate<T, U>`
-//! * `$return_type` - The return type for when (e.g., ArcConditionalPredicate)
-//! * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
-//! * `$predicate_trait` - Predicate trait name (e.g., Predicate, BiPredicate)
-//! * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+//! * `$predicate_trait_name` - Predicate trait name (e.g., Predicate, BiPredicate)
+//! * `$predicate_extra_bounds` - Extra trait bounds (e.g., 'static for Rc,
+//!   Send + Sync + 'static for Arc)
 //!
 //! # All Macro Invocations
 //!
-//! | Predicate Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$predicate_trait` | `$extra_bounds` |
+//! | Predicate Type | Struct Signature | `$predicate_trait_name` | `$predicate_extra_bounds` |
 //! |----------------|------------------|----------------|------------------------|-------------------|----------------|
-//! | **ArcPredicate** | `ArcPredicate<T>` | ArcConditionalPredicate | into_arc | Predicate | Send + Sync + 'static |
-//! | **RcPredicate** | `RcPredicate<T>` | RcConditionalPredicate | into_rc | Predicate | 'static |
-//! | **ArcBiPredicate** | `ArcBiPredicate<T, U>` | ArcConditionalBiPredicate | into_arc | BiPredicate | Send + Sync + 'static |
-//! | **RcBiPredicate** | `RcBiPredicate<T, U>` | RcConditionalBiPredicate | into_rc | BiPredicate | 'static |
+//! | **BoxPredicate** | `BoxPredicate<T>` | Predicate | 'static |
+//! | **ArcPredicate** | `ArcPredicate<T>` | Predicate | Send + Sync + 'static |
+//! | **RcPredicate** | `RcPredicate<T>` | Predicate | 'static |
+//! | **ArcBiPredicate** | `ArcBiPredicate<T, U>` | BiPredicate | Send + Sync + 'static |
+//! | **RcBiPredicate** | `RcBiPredicate<T, U>` | BiPredicate | 'static |
 //!
 //! # Examples
 //!
 //! ```ignore
+//! // Single-parameter with Box
+//! impl_shared_predicate_methods!(BoxPredicate<T>, 'static);
 //! // Single-parameter with Arc
-//! impl_shared_predicate_methods!(
-//!     ArcPredicate<T>,
-//!     ArcConditionalPredicate,
-//!     into_arc,
-//!     Predicate,
-//!     Send + Sync + 'static
-//! );
+//! impl_shared_predicate_methods!(ArcPredicate<T>, Send + Sync + 'static);
 //!
 //! // Two-parameter with Rc
-//! impl_shared_predicate_methods!(
-//!     RcBiPredicate<T, U>,
-//!     RcConditionalBiPredicate,
-//!     into_rc,
-//!     BiPredicate,
-//!     'static
-//! );
+//! impl_shared_predicate_methods!(RcBiPredicate<T, U>, 'static);
 //! ```
 //!
 //! # Author
@@ -78,177 +68,321 @@
 /// * `$struct_name<$generics>` - The struct name with its generic parameters
 ///   - Single parameter: `ArcPredicate<T>`
 ///   - Two parameters: `ArcBiPredicate<T, U>`
-/// * `$return_type` - The return type for when (e.g., ArcConditionalPredicate)
-/// * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
-/// * `$predicate_trait` - Predicate trait name (e.g., Predicate, BiPredicate)
-/// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+/// * `$predicate_trait_name` - Predicate trait name (e.g., Predicate, BiPredicate)
+/// * `$predicate_extra_bounds` - Extra trait bounds (e.g., 'static for Rc,
+///   Send + Sync + 'static for Arc)
 ///
 /// # All Macro Invocations
 ///
-/// | Predicate Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$predicate_trait` | `$extra_bounds` |
+/// | Predicate Type | Struct Signature | `$predicate_trait_name` | `$predicate_extra_bounds` |
 /// |----------------|------------------|----------------|------------------------|-------------------|----------------|
-/// | **ArcPredicate** | `ArcPredicate<T>` | ArcConditionalPredicate | into_arc | Predicate | Send + Sync + 'static |
-/// | **RcPredicate** | `RcPredicate<T>` | RcConditionalPredicate | into_rc | Predicate | 'static |
-/// | **ArcBiPredicate** | `ArcBiPredicate<T, U>` | ArcConditionalBiPredicate | into_arc | BiPredicate | Send + Sync + 'static |
-/// | **RcBiPredicate** | `RcBiPredicate<T, U>` | RcConditionalBiPredicate | into_rc | BiPredicate | 'static |
+/// | **BoxPredicate** | `BoxPredicate<T>` | Predicate | 'static |
+/// | **ArcPredicate** | `ArcPredicate<T>` | Predicate | Send + Sync + 'static |
+/// | **RcPredicate** | `RcPredicate<T>` | Predicate | 'static |
+/// | **ArcBiPredicate** | `ArcBiPredicate<T, U>` | BiPredicate | Send + Sync + 'static |
+/// | **RcBiPredicate** | `RcBiPredicate<T, U>` | BiPredicate | 'static |
 ///
 /// # Examples
 ///
 /// ```ignore
 /// // Single-parameter with Arc
-/// impl_shared_predicate_methods!(
-///     ArcPredicate<T>,
-///     ArcConditionalPredicate,
-//!     into_arc,
-//!     Predicate,
-//!     Send + Sync + 'static
-//! );
-//!
-//! // Two-parameter with Rc
-/// impl_shared_predicate_methods!(
-//!     RcBiPredicate<T, U>,
-//!     RcConditionalBiPredicate,
-//!     into_rc,
-//!     BiPredicate,
-//!     'static
-//! );
-//! ```
+/// impl_shared_predicate_methods!(ArcPredicate<T>, Send + Sync + 'static);
+/// // Single-parameter with Box
+/// impl_shared_predicate_methods!(BoxPredicate<T>, 'static);
+///
+/// // Two-parameter with Arc
+/// impl_shared_predicate_methods!(ArcBiPredicate<T, U>, Send + Sync + 'static);
+/// // Two-parameter with Rc
+/// impl_shared_predicate_methods!(RcBiPredicate<T, U>, 'static);
+/// ```
 macro_rules! impl_shared_predicate_methods {
-    // Single generic parameter
-    ($struct_name:ident < $t:ident >, $return_type:ident, $predicate_conversion:ident, $predicate_trait:ident, $($extra_bounds:tt)+) => {
-        /// Creates a conditional predicate that executes based on condition
-        /// predicate result.
+    // Internal macro for generating logical operations
+    (
+        @logical_ops
+        $struct_name:ident < $t:ident >,
+        $predicate_trait_name:ident,
+        $($predicate_extra_bounds:tt)+
+    ) => {
+        /// Returns a predicate that represents the logical AND of this predicate
+        /// and another.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
         ///
         /// # Parameters
         ///
-        /// * `condition` - The condition predicate to determine whether to
-        ///   execute the main predicate
+        /// * `other` - The other predicate to combine with.
         ///
         /// # Returns
         ///
-        /// Returns a conditional predicate that combines the condition and
-        /// main predicate with logical AND.
-        ///
-        /// # Examples
-        ///
-        /// ```ignore
-        /// let pred = ArcPredicate::new(|x: &i32| *x > 10);
-        /// let condition = ArcPredicate::new(|x: &i32| *x < 100);
-        /// let conditional = pred.when(condition);
-        ///
-        /// assert!(conditional.test(&50));  // 50 > 10 && 50 < 100
-        /// assert!(!conditional.test(&5));  // 5 > 10 (false) && 5 < 100
-        /// ```
-        pub fn when<P>(&self, condition: P) -> $return_type<$t>
+        /// A new predicate representing the logical AND.
+        pub fn and<P>(&self, other: P) -> $struct_name<$t>
         where
-            P: $predicate_trait<$t> + $($extra_bounds)+,
+            P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
         {
-            $return_type {
-                predicate: self.clone(),
-                condition: condition.$predicate_conversion(),
-            }
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| self_fn(x) && other.test(x))
         }
 
-        /// Combines with another predicate using logical AND.
+        /// Returns a predicate that represents the logical OR of this predicate
+        /// and another.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
         ///
         /// # Parameters
         ///
-        /// * `other` - The other predicate to combine with
+        /// * `other` - The other predicate to combine with.
         ///
         /// # Returns
         ///
-        /// Returns a new predicate that returns `true` only when both
-        /// predicates return `true`.
-        ///
-        /// # Examples
-        ///
-        /// ```ignore
-        /// let pred1 = ArcPredicate::new(|x: &i32| *x > 0);
-        /// let pred2 = ArcPredicate::new(|x: &i32| x % 2 == 0);
-        /// let combined = pred1.and_then(pred2);
-        ///
-        /// assert!(combined.test(&4));  // 4 > 0 && 4 % 2 == 0
-        /// assert!(!combined.test(&3)); // 3 > 0 && 3 % 2 != 0 (false)
-        /// ```
-        pub fn and_then<P>(&self, other: P) -> $struct_name<$t>
+        /// A new predicate representing the logical OR.
+        pub fn or<P>(&self, other: P) -> $struct_name<$t>
         where
-            $t: 'static,
-            P: $predicate_trait<$t> + $($extra_bounds)+,
+            P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
         {
-            let first = self.clone();
-            $struct_name::new(move |t: &$t| {
-                first.test(t) && other.test(t)
-            })
-        }
-    };
-    // Two generic parameters
-    ($struct_name:ident < $t:ident, $u:ident >, $return_type:ident, $predicate_conversion:ident, $predicate_trait:ident, $($extra_bounds:tt)+) => {
-        /// Creates a conditional two-parameter predicate that executes based
-        /// on condition bi-predicate result.
-        ///
-        /// # Parameters
-        ///
-        /// * `condition` - The condition bi-predicate to determine whether to
-        ///   execute the main bi-predicate
-        ///
-        /// # Returns
-        ///
-        /// Returns a conditional two-parameter predicate that combines the
-        /// condition and main bi-predicate with logical AND.
-        ///
-        /// # Examples
-        ///
-        /// ```ignore
-        /// let pred = ArcBiPredicate::new(|x: &i32, y: &i32| x + y > 10);
-        /// let condition = ArcBiPredicate::new(|x: &i32, y: &i32| *x > 0);
-        /// let conditional = pred.when(condition);
-        ///
-        /// assert!(conditional.test(&5, &8));  // 5 > 0 && (5+8) > 10
-        /// assert!(!conditional.test(&-1, &8)); // -1 > 0 (false) && (-1+8) > 10
-        /// ```
-        pub fn when<P>(&self, condition: P) -> $return_type<$t, $u>
-        where
-            P: $predicate_trait<$t, $u> + $($extra_bounds)+,
-        {
-            $return_type {
-                predicate: self.clone(),
-                condition: condition.$predicate_conversion(),
-            }
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| self_fn(x) || other.test(x))
         }
 
-        /// Combines with another bi-predicate using logical AND.
+        /// Returns a predicate that represents the logical negation of this
+        /// predicate.
         ///
-        /// # Parameters
-        ///
-        /// * `other` - The other bi-predicate to combine with
+        /// This method consumes `self` due to single-ownership semantics.
         ///
         /// # Returns
         ///
-        /// Returns a new bi-predicate that returns `true` only when both
-        /// bi-predicates return `true`.
-        ///
-        /// # Examples
-        ///
-        /// ```ignore
-        /// let pred1 = ArcBiPredicate::new(|x: &i32, y: &i32| *x > 0);
-        /// let pred2 = ArcBiPredicate::new(|x: &i32, y: &i32| *y > 0);
-        /// let combined = pred1.and_then(pred2);
-        ///
-        /// assert!(combined.test(&1, &2));  // 1 > 0 && 2 > 0
-        /// assert!(!combined.test(&1, &-1)); // 1 > 0 && -1 > 0 (false)
-        /// ```
-        pub fn and_then<P>(&self, other: P) -> $struct_name<$t, $u>
-        where
-            $t: 'static,
-            $u: 'static,
-            P: $predicate_trait<$t, $u> + $($extra_bounds)+,
+        /// A new predicate representing the logical negation.
+        #[allow(clippy::should_implement_trait)]
+        pub fn not(&self) -> $struct_name<$t>
         {
-            let first = self.clone();
-            $struct_name::new(move |t: &$t, u: &$u| {
-                first.test(t, u) && other.test(t, u)
-            })
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| !(self_fn(x)))
+        }
+
+        /// Returns a predicate that represents the logical NAND (NOT AND) of this
+        /// predicate and another.
+        ///
+        /// NAND returns `true` unless both predicates are `true`.
+        /// Equivalent to `!(self AND other)`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new predicate representing the logical NAND.
+        pub fn nand<P>(&self, other: P) -> $struct_name<$t>
+        where
+            P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| !((self_fn(x) && other.test(x))))
+        }
+
+        /// Returns a predicate that represents the logical XOR (exclusive OR) of
+        /// this predicate and another.
+        ///
+        /// XOR returns `true` if exactly one of the predicates is `true`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new predicate representing the logical XOR.
+        pub fn xor<P>(&self, other: P) -> $struct_name<$t>
+        where
+            P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| self_fn(x) ^ other.test(x))
+        }
+
+        /// Returns a predicate that represents the logical NOR (NOT OR) of this
+        /// predicate and another.
+        ///
+        /// NOR returns `true` only when both predicates are `false`.
+        /// Equivalent to `!(self OR other)`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new predicate representing the logical NOR.
+        pub fn nor<P>(&self, other: P) -> $struct_name<$t>
+        where
+            P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x| !((self_fn(x) || other.test(x))))
         }
     };
+
+    // Two parameter version
+    (
+        @logical_ops
+        $struct_name:ident < $t:ident, $u:ident >,
+        $predicate_trait_name:ident,
+        $($predicate_extra_bounds:tt)+
+    ) => {
+        /// Returns a bi-predicate that represents the logical AND of this
+        /// bi-predicate and another.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other bi-predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical AND.
+        pub fn and<P>(&self, other: P) -> $struct_name<$t, $u>
+        where
+            P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| self_fn(x, y) && other.test(x, y))
+        }
+
+        /// Returns a bi-predicate that represents the logical OR of this
+        /// bi-predicate and another.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other bi-predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical OR.
+        pub fn or<P>(&self, other: P) -> $struct_name<$t, $u>
+        where
+            P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| self_fn(x, y) || other.test(x, y))
+        }
+
+        /// Returns a bi-predicate that represents the logical negation of
+        /// this bi-predicate.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical negation.
+        #[allow(clippy::should_implement_trait)]
+        pub fn not(&self) -> $struct_name<$t, $u>
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| !(self_fn(x, y)))
+        }
+
+        /// Returns a bi-predicate that represents the logical NAND (NOT
+        /// AND) of this bi-predicate and another.
+        ///
+        /// NAND returns `true` unless both bi-predicates are `true`.
+        /// Equivalent to `!(self AND other)`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other bi-predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical NAND.
+        pub fn nand<P>(&self, other: P) -> $struct_name<$t, $u>
+        where
+            P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| !((self_fn(x, y) && other.test(x, y))))
+        }
+
+        /// Returns a bi-predicate that represents the logical XOR
+        /// (exclusive OR) of this bi-predicate and another.
+        ///
+        /// XOR returns `true` if exactly one of the bi-predicates is
+        /// `true`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other bi-predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical XOR.
+        pub fn xor<P>(&self, other: P) -> $struct_name<$t, $u>
+        where
+            P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| self_fn(x, y) ^ other.test(x, y))
+        }
+
+        /// Returns a bi-predicate that represents the logical NOR (NOT OR)
+        /// of this bi-predicate and another.
+        ///
+        /// NOR returns `true` only when both bi-predicates are `false`.
+        /// Equivalent to `!(self OR other)`.
+        ///
+        /// This method consumes `self` due to single-ownership semantics.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other bi-predicate to combine with.
+        ///
+        /// # Returns
+        ///
+        /// A new bi-predicate representing the logical NOR.
+        pub fn nor<P>(&self, other: P) -> $struct_name<$t, $u>
+        where
+            P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
+        {
+            let self_fn = self.function.clone();
+            $struct_name::new(move |x, y| !((self_fn(x, y) || other.test(x, y))))
+        }
+    };
+
+    // Single generic parameter - Predicate
+    (
+        $struct_name:ident < $t:ident >,
+        $($predicate_extra_bounds:tt)+
+    ) => {
+        impl_shared_predicate_methods!(
+            @logical_ops $struct_name<$t>,
+            Predicate,
+            $($predicate_extra_bounds)+,
+        );
+    };
+
+    // Two generic parameters - BiPredicate
+    (
+        $struct_name:ident < $t:ident, $u:ident >,
+        $($predicate_extra_bounds:tt)+
+    ) => {
+        impl_shared_predicate_methods!(
+            @logical_ops $struct_name<$t, $u>,
+            BiPredicate,
+            $($predicate_extra_bounds)+,
+        );
+    };
+
 }
 
 pub(crate) use impl_shared_predicate_methods;

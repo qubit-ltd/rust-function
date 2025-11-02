@@ -16,6 +16,7 @@
 //! Haixing Hu
 
 pub mod bi_predicate;
+pub mod macros;
 pub mod predicate;
 
 pub use bi_predicate::{

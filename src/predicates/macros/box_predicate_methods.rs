@@ -62,10 +62,10 @@
 /// // Two-parameter predicate
 /// impl_box_predicate_methods!(BoxBiPredicate<T, U>);
 /// ```
-// Internal macro for generating logical operations
-macro_rules! impl_box_logical_ops {
-    // Single parameter version
-    ($struct_name:ident < $t:ident >, $trait_name:ident) => {
+
+macro_rules! impl_box_predicate_methods {
+    // Internal macro for generating logical operations
+    (@logical_ops $struct_name:ident < $t:ident >, $trait_name:ident) => {
         /// Returns a predicate that represents the logical AND of this predicate
         /// and another.
         ///
@@ -83,7 +83,7 @@ macro_rules! impl_box_logical_ops {
             P: $trait_name<$t> + 'static,
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| (self.function)(value) && other.test(value))
+            $struct_name::new(move |x| (self.function)(x) && other.test(x))
         }
 
         /// Returns a predicate that represents the logical OR of this predicate
@@ -103,7 +103,7 @@ macro_rules! impl_box_logical_ops {
             P: $trait_name<$t> + 'static,
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| (self.function)(value) || other.test(value))
+            $struct_name::new(move |x| (self.function)(x) || other.test(x))
         }
 
         /// Returns a predicate that represents the logical negation of this
@@ -119,7 +119,7 @@ macro_rules! impl_box_logical_ops {
         where
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| !(self.function)(value))
+            $struct_name::new(move |x| !(self.function)(x))
         }
 
         /// Returns a predicate that represents the logical NAND (NOT AND) of this
@@ -142,7 +142,7 @@ macro_rules! impl_box_logical_ops {
             P: $trait_name<$t> + 'static,
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| !((self.function)(value) && other.test(value)))
+            $struct_name::new(move |x| !((self.function)(x) && other.test(x)))
         }
 
         /// Returns a predicate that represents the logical XOR (exclusive OR) of
@@ -164,7 +164,7 @@ macro_rules! impl_box_logical_ops {
             P: $trait_name<$t> + 'static,
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| (self.function)(value) ^ other.test(value))
+            $struct_name::new(move |x| (self.function)(x) ^ other.test(x))
         }
 
         /// Returns a predicate that represents the logical NOR (NOT OR) of this
@@ -187,11 +187,12 @@ macro_rules! impl_box_logical_ops {
             P: $trait_name<$t> + 'static,
             $t: 'static,
         {
-            $struct_name::new(move |value: &$t| !((self.function)(value) || other.test(value)))
+            $struct_name::new(move |x| !((self.function)(x) || other.test(x)))
         }
     };
+
     // Two parameter version
-    ($struct_name:ident < $t:ident, $u:ident >, $trait_name:ident) => {
+    (@logical_ops $struct_name:ident < $t:ident, $u:ident >, $trait_name:ident) => {
         /// Returns a bi-predicate that represents the logical AND of this
         /// bi-predicate and another.
         ///
@@ -210,9 +211,7 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| {
-                (self.function)(first, second) && other.test(first, second)
-            })
+            $struct_name::new(move |x, y| (self.function)(x, y) && other.test(x, y))
         }
 
         /// Returns a bi-predicate that represents the logical OR of this
@@ -233,9 +232,7 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| {
-                (self.function)(first, second) || other.test(first, second)
-            })
+            $struct_name::new(move |x, y| (self.function)(x, y) || other.test(x, y))
         }
 
         /// Returns a bi-predicate that represents the logical negation of
@@ -252,7 +249,7 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| !(self.function)(first, second))
+            $struct_name::new(move |x, y| !(self.function)(x, y))
         }
 
         /// Returns a bi-predicate that represents the logical NAND (NOT
@@ -276,9 +273,7 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| {
-                !((self.function)(first, second) && other.test(first, second))
-            })
+            $struct_name::new(move |x, y| !((self.function)(x, y) && other.test(x, y)))
         }
 
         /// Returns a bi-predicate that represents the logical XOR
@@ -302,9 +297,7 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| {
-                (self.function)(first, second) ^ other.test(first, second)
-            })
+            $struct_name::new(move |x, y| (self.function)(x, y) ^ other.test(x, y))
         }
 
         /// Returns a bi-predicate that represents the logical NOR (NOT OR)
@@ -328,23 +321,19 @@ macro_rules! impl_box_logical_ops {
             $t: 'static,
             $u: 'static,
         {
-            $struct_name::new(move |first, second| {
-                !((self.function)(first, second) || other.test(first, second))
-            })
+            $struct_name::new(move |x, y| !((self.function)(x, y) || other.test(x, y)))
         }
     };
-}
 
-macro_rules! impl_box_predicate_methods {
     // Single generic parameter - Predicate
     ($struct_name:ident < $t:ident >) => {
-        impl_box_logical_ops!($struct_name<$t>, Predicate);
+        impl_box_predicate_methods!(@logical_ops $struct_name<$t>, Predicate);
     };
+
     // Two generic parameters - BiPredicate
     ($struct_name:ident < $t:ident, $u:ident >) => {
-        impl_box_logical_ops!($struct_name<$t, $u>, BiPredicate);
+        impl_box_predicate_methods!(@logical_ops $struct_name<$t, $u>, BiPredicate);
     };
 }
 
 pub(crate) use impl_box_predicate_methods;
-pub(crate) use impl_box_logical_ops;

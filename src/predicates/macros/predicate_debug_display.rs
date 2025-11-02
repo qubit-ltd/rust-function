@@ -56,8 +56,8 @@
 /// ```
 macro_rules! impl_predicate_debug_display {
     // Single generic parameter
-    ($struct_name:ident < $generic:ident >) => {
-        impl<$generic> std::fmt::Debug for $struct_name<$generic> {
+    ($struct_name:ident < $t:ident >) => {
+        impl<$t> std::fmt::Debug for $struct_name<$t> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct(stringify!($struct_name))
                     .field("name", &self.name)
@@ -66,7 +66,7 @@ macro_rules! impl_predicate_debug_display {
             }
         }
 
-        impl<$generic> std::fmt::Display for $struct_name<$generic> {
+        impl<$t> std::fmt::Display for $struct_name<$t> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match &self.name {
                     Some(name) => write!(f, "{}({})", stringify!($struct_name), name),
@@ -76,8 +76,8 @@ macro_rules! impl_predicate_debug_display {
         }
     };
     // Two generic parameters
-    ($struct_name:ident < $generic1:ident, $generic2:ident >) => {
-        impl<$generic1, $generic2> std::fmt::Debug for $struct_name<$generic1, $generic2> {
+    ($struct_name:ident < $t:ident, $u:ident >) => {
+        impl<$t, $u> std::fmt::Debug for $struct_name<$t, $u> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct(stringify!($struct_name))
                     .field("name", &self.name)
@@ -86,7 +86,7 @@ macro_rules! impl_predicate_debug_display {
             }
         }
 
-        impl<$generic1, $generic2> std::fmt::Display for $struct_name<$generic1, $generic2> {
+        impl<$t, $u> std::fmt::Display for $struct_name<$t, $u> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match &self.name {
                     Some(name) => write!(f, "{}({})", stringify!($struct_name), name),

@@ -150,6 +150,10 @@ use std::fmt::{
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::predicates::macros::{
+    impl_box_predicate_methods, impl_predicate_clone, impl_predicate_common_methods, impl_predicate_debug_display, impl_shared_predicate_methods
+};
+
 /// Type alias for bi-predicate function to simplify complex types.
 ///
 /// This type alias represents a function that takes two references and returns a boolean.
@@ -441,300 +445,24 @@ pub trait BiPredicate<T, U> {
 ///
 /// Haixing Hu
 pub struct BoxBiPredicate<T, U> {
-    function: Box<BiPredicateFn<T, U>>,
+    function: Box<dyn Fn(&T, &U) -> bool>,
     name: Option<String>,
 }
 
 impl<T, U> BoxBiPredicate<T, U> {
-    /// Creates a new `BoxBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` instance.
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + 'static,
-    {
-        Self {
-            function: Box::new(f),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
+    impl_predicate_common_methods!(
+        BoxBiPredicate<T, U>,
+        (Fn(&T, &U) -> bool + 'static),
+        |f| Box::new(f)
+    );
 
-    /// Creates a named `BoxBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this bi-predicate.
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new named `BoxBiPredicate` instance.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + 'static,
-    {
-        Self {
-            function: Box::new(f),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Creates a bi-predicate that always returns `true`.
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` that always returns `true`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, BoxBiPredicate};
-    ///
-    /// let pred: BoxBiPredicate<i32, i32> = BoxBiPredicate::always_true();
-    /// assert!(pred.test(&42, &10));
-    /// assert!(pred.test(&-1, &5));
-    /// assert!(pred.test(&0, &0));
-    /// ```
-    pub fn always_true() -> Self {
-        Self {
-            function: Box::new(|_, _| true),
-            name: Some(ALWAYS_TRUE_NAME.to_string()),
-        }
-    }
-
-    /// Creates a bi-predicate that always returns `false`.
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` that always returns `false`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, BoxBiPredicate};
-    ///
-    /// let pred: BoxBiPredicate<i32, i32> = BoxBiPredicate::always_false();
-    /// assert!(!pred.test(&42, &10));
-    /// assert!(!pred.test(&-1, &5));
-    /// assert!(!pred.test(&0, &0));
-    /// ```
-    pub fn always_false() -> Self {
-        Self {
-            function: Box::new(|_, _| false),
-            name: Some(ALWAYS_FALSE_NAME.to_string()),
-        }
-    }
-
-    /// Returns the name of this bi-predicate, if set.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing the bi-predicate's name.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this bi-predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The new name for this bi-predicate.
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Returns a bi-predicate that represents the logical AND of this
-    /// bi-predicate and another.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - Another `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical AND.
-    pub fn and<P>(self, other: P) -> BoxBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| {
-            (self.function)(first, second) && other.test(first, second)
-        })
-    }
-
-    /// Returns a bi-predicate that represents the logical OR of this
-    /// bi-predicate and another.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - Another `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical OR.
-    pub fn or<P>(self, other: P) -> BoxBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| {
-            (self.function)(first, second) || other.test(first, second)
-        })
-    }
-
-    /// Returns a bi-predicate that represents the logical negation of
-    /// this bi-predicate.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical negation.
-    #[allow(clippy::should_implement_trait)]
-    pub fn not(self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| !(self.function)(first, second))
-    }
-
-    /// Returns a bi-predicate that represents the logical NAND (NOT
-    /// AND) of this bi-predicate and another.
-    ///
-    /// NAND returns `true` unless both bi-predicates are `true`.
-    /// Equivalent to `!(self AND other)`.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - Another `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical NAND.
-    pub fn nand<P>(self, other: P) -> BoxBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| {
-            !((self.function)(first, second) && other.test(first, second))
-        })
-    }
-
-    /// Returns a bi-predicate that represents the logical XOR
-    /// (exclusive OR) of this bi-predicate and another.
-    ///
-    /// XOR returns `true` if exactly one of the bi-predicates is
-    /// `true`.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - Another `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical XOR.
-    pub fn xor<P>(self, other: P) -> BoxBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| {
-            (self.function)(first, second) ^ other.test(first, second)
-        })
-    }
-
-    /// Returns a bi-predicate that represents the logical NOR (NOT
-    /// OR) of this bi-predicate and another.
-    ///
-    /// NOR returns `true` only if both bi-predicates are `false`.
-    /// Equivalent to `!(self OR other)`.
-    ///
-    /// This method consumes `self` due to single-ownership semantics.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - Another `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxBiPredicate` representing the logical NOR.
-    pub fn nor<P>(self, other: P) -> BoxBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(move |first, second| {
-            !((self.function)(first, second) || other.test(first, second))
-        })
-    }
+    // Generates: and(), or(), not(), nand(), xor(), nor()
+    impl_box_predicate_methods!(BoxBiPredicate<T, U>);
 }
+
+// Generates: impl Debug for BoxBiPredicate<T, U> and impl Display for BoxBiPredicate<T, U>
+impl_predicate_debug_display!(BoxBiPredicate<T, U>);
 
 impl<T, U> BiPredicate<T, U> for BoxBiPredicate<T, U> {
     fn test(&self, first: &T, second: &U) -> bool {
@@ -777,24 +505,6 @@ impl<T, U> BiPredicate<T, U> for BoxBiPredicate<T, U> {
     // and calling BoxBiPredicate::to_xxx() will cause a compile error
 }
 
-impl<T, U> Display for BoxBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "BoxBiPredicate({})",
-            self.name.as_deref().unwrap_or("unnamed")
-        )
-    }
-}
-
-impl<T, U> Debug for BoxBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_struct("BoxBiPredicate")
-            .field("name", &self.name)
-            .finish()
-    }
-}
-
 /// An Rc-based bi-predicate with single-threaded shared ownership.
 ///
 /// This type is suitable for scenarios where the bi-predicate needs
@@ -823,309 +533,26 @@ pub struct RcBiPredicate<T, U> {
     name: Option<String>,
 }
 
-impl<T, U> RcBiPredicate<T, U> {
-    /// Creates a new `RcBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` instance.
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + 'static,
-    {
-        Self {
-            function: Rc::new(f),
-            name: None,
-        }
-    }
+impl<T: 'static, U: 'static> RcBiPredicate<T, U> {
 
-    /// Creates a named `RcBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this bi-predicate.
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new named `RcBiPredicate` instance.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + 'static,
-    {
-        Self {
-            function: Rc::new(f),
-            name: Some(name.to_string()),
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
+    impl_predicate_common_methods!(
+        RcBiPredicate<T, U>,
+        (Fn(&T, &U) -> bool + 'static),
+        |f| Rc::new(f)
+    );
 
-    /// Creates a bi-predicate that always returns `true`.
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` that always returns `true`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, RcBiPredicate};
-    ///
-    /// let pred: RcBiPredicate<i32, i32> = RcBiPredicate::always_true();
-    /// assert!(pred.test(&42, &10));
-    /// assert!(pred.test(&-1, &5));
-    /// assert!(pred.test(&0, &0));
-    /// ```
-    pub fn always_true() -> Self {
-        Self {
-            function: Rc::new(|_, _| true),
-            name: Some(ALWAYS_TRUE_NAME.to_string()),
-        }
-    }
-
-    /// Creates a bi-predicate that always returns `false`.
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` that always returns `false`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, RcBiPredicate};
-    ///
-    /// let pred: RcBiPredicate<i32, i32> = RcBiPredicate::always_false();
-    /// assert!(!pred.test(&42, &10));
-    /// assert!(!pred.test(&-1, &5));
-    /// assert!(!pred.test(&0, &0));
-    /// ```
-    pub fn always_false() -> Self {
-        Self {
-            function: Rc::new(|_, _| false),
-            name: Some(ALWAYS_FALSE_NAME.to_string()),
-        }
-    }
-
-    /// Returns the name of this bi-predicate, if set.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing the bi-predicate's name.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this bi-predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The new name for this bi-predicate.
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Returns a bi-predicate that represents the logical AND of this
-    /// bi-predicate and another.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - Another `RcBiPredicate<T, U>` (will be moved)
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical AND.
-    pub fn and<P>(&self, other: P) -> RcBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| {
-                self_fn(first, second) && other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical OR of this
-    /// bi-predicate and another.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - Another `RcBiPredicate<T, U>` (will be moved)
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical OR.
-    pub fn or<P>(&self, other: P) -> RcBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| {
-                self_fn(first, second) || other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical negation of
-    /// this bi-predicate.
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical negation.
-    #[allow(clippy::should_implement_trait)]
-    pub fn not(&self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| !self_fn(first, second)),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical NAND (NOT
-    /// AND) of this bi-predicate and another.
-    ///
-    /// NAND returns `true` unless both bi-predicates are `true`.
-    /// Equivalent to `!(self AND other)`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - Another `RcBiPredicate<T, U>` (will be moved)
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical NAND.
-    pub fn nand<P>(&self, other: P) -> RcBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| {
-                !(self_fn(first, second) && other.test(first, second))
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical XOR
-    /// (exclusive OR) of this bi-predicate and another.
-    ///
-    /// XOR returns `true` if exactly one of the bi-predicates is
-    /// `true`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - Another `RcBiPredicate<T, U>` (will be moved)
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical XOR.
-    pub fn xor<P>(&self, other: P) -> RcBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| {
-                self_fn(first, second) ^ other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical NOR (NOT
-    /// OR) of this bi-predicate and another.
-    ///
-    /// NOR returns `true` only if both bi-predicates are `false`.
-    /// Equivalent to `!(self OR other)`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - Another `RcBiPredicate<T, U>` (will be moved)
-    ///   - An `ArcBiPredicate<T, U>`
-    ///   - Any type implementing `BiPredicate<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `RcBiPredicate` representing the logical NOR.
-    pub fn nor<P>(&self, other: P) -> RcBiPredicate<T, U>
-    where
-        P: BiPredicate<T, U> + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        RcBiPredicate {
-            function: Rc::new(move |first, second| {
-                !(self_fn(first, second) || other.test(first, second))
-            }),
-            name: None,
-        }
-    }
+    // Generates: and(), or(), not(), nand(), xor(), nor()
+    impl_shared_predicate_methods!(RcBiPredicate<T, U>, 'static);
 }
 
+// Generates: impl Clone for RcBiPredicate<T, U>
+impl_predicate_clone!(RcBiPredicate<T, U>);
+
+// Generates: impl Debug for RcBiPredicate<T, U> and impl Display for RcBiPredicate<T, U>
+impl_predicate_debug_display!(RcBiPredicate<T, U>);
+
+// Implements BiPredicate trait for RcBiPredicate<T, U>
 impl<T, U> BiPredicate<T, U> for RcBiPredicate<T, U> {
     fn test(&self, first: &T, second: &U) -> bool {
         (self.function)(first, second)
@@ -1195,38 +622,6 @@ impl<T, U> BiPredicate<T, U> for RcBiPredicate<T, U> {
     }
 }
 
-impl<T, U> Clone for RcBiPredicate<T, U> {
-    /// Clones this bi-predicate.
-    ///
-    /// Creates a new instance that shares the underlying function with
-    /// the original, allowing multiple references to the same
-    /// bi-predicate logic.
-    fn clone(&self) -> Self {
-        RcBiPredicate {
-            function: Rc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
-
-impl<T, U> Display for RcBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "RcBiPredicate({})",
-            self.name.as_deref().unwrap_or("unnamed")
-        )
-    }
-}
-
-impl<T, U> Debug for RcBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_struct("RcBiPredicate")
-            .field("name", &self.name)
-            .finish()
-    }
-}
-
 /// An Arc-based bi-predicate with thread-safe shared ownership.
 ///
 /// This type is suitable for scenarios where the bi-predicate needs
@@ -1261,313 +656,27 @@ pub struct ArcBiPredicate<T, U> {
     name: Option<String>,
 }
 
-impl<T, U> ArcBiPredicate<T, U> {
-    /// Creates a new `ArcBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` instance.
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + Send + Sync + 'static,
-    {
-        Self {
-            function: Arc::new(f),
-            name: None,
-        }
-    }
+impl<T: 'static, U: 'static> ArcBiPredicate<T, U> {
 
-    /// Creates a named `ArcBiPredicate` from a closure.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this bi-predicate.
-    /// * `f` - The closure to wrap.
-    ///
-    /// # Returns
-    ///
-    /// A new named `ArcBiPredicate` instance.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn(&T, &U) -> bool + Send + Sync + 'static,
-    {
-        Self {
-            function: Arc::new(f),
-            name: Some(name.to_string()),
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
+    impl_predicate_common_methods!(
+        ArcBiPredicate<T, U>,
+        (Fn(&T, &U) -> bool + Send + Sync + 'static),
+        |f| Arc::new(f)
+    );
 
-    /// Creates a bi-predicate that always returns `true`.
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` that always returns `true`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, ArcBiPredicate};
-    ///
-    /// let pred: ArcBiPredicate<i32, i32> = ArcBiPredicate::always_true();
-    /// assert!(pred.test(&42, &10));
-    /// assert!(pred.test(&-1, &5));
-    /// assert!(pred.test(&0, &0));
-    /// ```
-    pub fn always_true() -> Self {
-        Self {
-            function: Arc::new(|_, _| true),
-            name: Some(ALWAYS_TRUE_NAME.to_string()),
-        }
-    }
-
-    /// Creates a bi-predicate that always returns `false`.
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` that always returns `false`.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::bi_predicate::{BiPredicate, ArcBiPredicate};
-    ///
-    /// let pred: ArcBiPredicate<i32, i32> = ArcBiPredicate::always_false();
-    /// assert!(!pred.test(&42, &10));
-    /// assert!(!pred.test(&-1, &5));
-    /// assert!(!pred.test(&0, &0));
-    /// ```
-    pub fn always_false() -> Self {
-        Self {
-            function: Arc::new(|_, _| false),
-            name: Some(ALWAYS_FALSE_NAME.to_string()),
-        }
-    }
-
-    /// Returns the name of this bi-predicate, if set.
-    ///
-    /// # Returns
-    ///
-    /// An `Option` containing the bi-predicate's name.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this bi-predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The new name for this bi-predicate.
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Returns a bi-predicate that represents the logical AND of this
-    /// bi-predicate and another.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - Another `ArcBiPredicate<T, U>` (will be moved)
-    ///   - Any type implementing `BiPredicate<T, U> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical AND.
-    pub fn and<P>(&self, other: P) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-        P: BiPredicate<T, U> + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| {
-                self_fn(first, second) && other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical OR of this
-    /// bi-predicate and another.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - Another `ArcBiPredicate<T, U>` (will be moved)
-    ///   - Any type implementing `BiPredicate<T, U> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical OR.
-    /// Thread-safe.
-    pub fn or<P>(&self, other: P) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-        P: BiPredicate<T, U> + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| {
-                self_fn(first, second) || other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical negation of
-    /// this bi-predicate.
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical negation.
-    #[allow(clippy::should_implement_trait)]
-    pub fn not(&self) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| !self_fn(first, second)),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical NAND (NOT
-    /// AND) of this bi-predicate and another.
-    ///
-    /// NAND returns `true` unless both bi-predicates are `true`.
-    /// Equivalent to `!(self AND other)`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - Another `ArcBiPredicate<T, U>` (will be moved)
-    ///   - Any type implementing `BiPredicate<T, U> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical NAND.
-    /// Thread-safe.
-    pub fn nand<P>(&self, other: P) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-        P: BiPredicate<T, U> + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| {
-                !(self_fn(first, second) && other.test(first, second))
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical XOR
-    /// (exclusive OR) of this bi-predicate and another.
-    ///
-    /// XOR returns `true` if exactly one of the bi-predicates is
-    /// `true`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - Another `ArcBiPredicate<T, U>` (will be moved)
-    ///   - Any type implementing `BiPredicate<T, U> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical XOR.
-    pub fn xor<P>(&self, other: P) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-        P: BiPredicate<T, U> + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| {
-                self_fn(first, second) ^ other.test(first, second)
-            }),
-            name: None,
-        }
-    }
-
-    /// Returns a bi-predicate that represents the logical NOR (NOT
-    /// OR) of this bi-predicate and another.
-    ///
-    /// NOR returns `true` only if both bi-predicates are `false`.
-    /// Equivalent to `!(self OR other)`.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other bi-predicate to combine with. **Note: This parameter
-    ///   is passed by value and will transfer ownership.** If you need to
-    ///   preserve the original bi-predicate, clone it first (if it implements
-    ///   `Clone`). Can be:
-    ///   - A closure: `|x: &T, y: &U| -> bool`
-    ///   - A function pointer: `fn(&T, &U) -> bool`
-    ///   - A `BoxBiPredicate<T, U>`
-    ///   - An `RcBiPredicate<T, U>`
-    ///   - Another `ArcBiPredicate<T, U>` (will be moved)
-    ///   - Any type implementing `BiPredicate<T, U> + Send + Sync`
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcBiPredicate` representing the logical NOR.
-    /// Thread-safe.
-    pub fn nor<P>(&self, other: P) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-        P: BiPredicate<T, U> + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        ArcBiPredicate {
-            function: Arc::new(move |first, second| {
-                !(self_fn(first, second) || other.test(first, second))
-            }),
-            name: None,
-        }
-    }
+    // Generates: and(), or(), not(), nand(), xor(), nor()
+    impl_shared_predicate_methods!(ArcBiPredicate<T, U>, Send + Sync + 'static);
 }
 
-impl<T, U> BiPredicate<T, U> for ArcBiPredicate<T, U> {
+// Generates: impl Clone for ArcBiPredicate<T, U>
+impl_predicate_clone!(ArcBiPredicate<T, U>);
+
+// Generates: impl Debug for ArcBiPredicate<T, U> and impl Display for ArcBiPredicate<T, U>
+impl_predicate_debug_display!(ArcBiPredicate<T, U>);
+
+// Implements BiPredicate trait for ArcBiPredicate<T, U>
+impl<T: 'static, U: 'static> BiPredicate<T, U> for ArcBiPredicate<T, U> {
     fn test(&self, first: &T, second: &U) -> bool {
         (self.function)(first, second)
     }
@@ -1657,38 +766,6 @@ impl<T, U> BiPredicate<T, U> for ArcBiPredicate<T, U> {
     {
         let self_fn = self.function.clone();
         move |first, second| self_fn(first, second)
-    }
-}
-
-impl<T, U> Clone for ArcBiPredicate<T, U> {
-    /// Clones this bi-predicate.
-    ///
-    /// Creates a new instance that shares the underlying function with
-    /// the original, allowing multiple references to the same
-    /// bi-predicate logic.
-    fn clone(&self) -> Self {
-        ArcBiPredicate {
-            function: Arc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
-
-impl<T, U> Display for ArcBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "ArcBiPredicate({})",
-            self.name.as_deref().unwrap_or("unnamed")
-        )
-    }
-}
-
-impl<T, U> Debug for ArcBiPredicate<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.debug_struct("ArcBiPredicate")
-            .field("name", &self.name)
-            .finish()
     }
 }
 
