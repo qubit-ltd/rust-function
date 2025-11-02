@@ -17,6 +17,8 @@ use prism3_function::{
     RcStatefulMutatingFunction,
     StatefulMutatingFunction,
 };
+use std::cell::RefCell;
+use std::rc::Rc;
 
 // ============================================================================
 // StatefulMutatingFunction Default Implementation Tests
@@ -739,14 +741,15 @@ mod test_closure {
     #[test]
     fn test_closure_and_then() {
         let mut count1 = 0;
-        let mut count2 = 0;
+        let count2 = Rc::new(RefCell::new(0));
+        let count2_clone = Rc::clone(&count2);
         let mut chained = (move |x: &mut i32| {
             count1 += 1;
             *x *= 2;
             count1
         })
         .and_then::<i32, _>(move |x: &mut i32| {
-            count2 += 1;
+            *count2_clone.borrow_mut() += 1;
             *x + 10
         });
 
@@ -754,6 +757,7 @@ mod test_closure {
         let result = chained.apply(&mut value);
         assert_eq!(result, 11); // First function returns 1, second function returns 1 + 10
         assert_eq!(value, 10); // Input only modified by first function
+        assert_eq!(*count2.borrow(), 1); // Second function should be called once
     }
 
     #[test]
