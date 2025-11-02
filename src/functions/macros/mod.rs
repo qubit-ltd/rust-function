@@ -19,7 +19,6 @@
 mod box_conditional_function;
 mod box_function_methods;
 mod conditional_function_clone;
-mod conditional_function_conversions;
 mod conditional_function_debug_display;
 mod fn_ops_trait;
 mod function_clone;
@@ -34,7 +33,6 @@ mod shared_function_methods;
 pub(crate) use box_conditional_function::impl_box_conditional_function;
 pub(crate) use box_function_methods::impl_box_function_methods;
 pub(crate) use conditional_function_clone::impl_conditional_function_clone;
-// pub(crate) use conditional_function_conversions::impl_conditional_function_conversions;
 pub(crate) use conditional_function_debug_display::impl_conditional_function_debug_display;
 pub(crate) use fn_ops_trait::impl_fn_ops_trait;
 pub(crate) use function_clone::impl_function_clone;
