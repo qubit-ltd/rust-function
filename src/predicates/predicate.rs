@@ -173,14 +173,19 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::predicates::macros::{
-    impl_predicate_clone,
-    impl_predicate_common_methods,
-    impl_predicate_debug_display,
-    ALWAYS_FALSE_NAME,
-    ALWAYS_TRUE_NAME,
-    impl_box_predicate_methods,
-    impl_shared_predicate_methods,
+use crate::{
+    predicates::macros::{
+        constants::{
+            ALWAYS_FALSE_NAME,
+            ALWAYS_TRUE_NAME,
+        },
+        impl_predicate_clone,
+        impl_predicate_common_methods,
+        impl_predicate_debug_display,
+        impl_box_predicate_methods,
+        impl_shared_predicate_methods,
+    },
+    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 /// A predicate trait for testing whether a value satisfies a condition.

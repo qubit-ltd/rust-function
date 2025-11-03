@@ -147,14 +147,17 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::predicates::macros::{
+    constants::{
+        ALWAYS_FALSE_NAME,
+        ALWAYS_TRUE_NAME,
+    },
     impl_box_predicate_methods,
     impl_predicate_clone,
     impl_predicate_common_methods,
     impl_predicate_debug_display,
     impl_shared_predicate_methods,
-    ALWAYS_FALSE_NAME,
-    ALWAYS_TRUE_NAME,
 };
+use crate::macros::{impl_common_name_methods, impl_common_new_methods};
 
 /// Type alias for bi-predicate function to simplify complex types.
 ///
