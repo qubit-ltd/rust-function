@@ -454,3 +454,42 @@ fn test_box_mutating_function_once_name_methods() {
     assert_eq!(double.apply(&mut value), 10);
     assert_eq!(value, 10);
 }
+
+// ============================================================================
+// ConditionalMutatingFunctionOnce Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_conditional_mutating_function_once_debug_display() {
+    // Test Debug and Display for BoxConditionalMutatingFunctionOnce without name
+    let double = BoxMutatingFunctionOnce::new(|x: &mut i32| *x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalMutatingFunctionOnce"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalMutatingFunctionOnce("));
+    assert!(display_str.contains("BoxMutatingFunctionOnce"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalMutatingFunctionOnce with name
+    let triple = BoxMutatingFunctionOnce::new_with_name("triple_mutating_once_func", |x: &mut i32| *x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalMutatingFunctionOnce"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalMutatingFunctionOnce("));
+    assert!(named_display_str.contains("BoxMutatingFunctionOnce(triple_mutating_once_func)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}

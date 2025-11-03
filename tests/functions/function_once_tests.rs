@@ -587,3 +587,42 @@ fn test_box_function_once_name_methods() {
     // Test that function still works after name change
     assert_eq!(double.apply(&5), 10);
 }
+
+// ============================================================================
+// ConditionalFunctionOnce Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_conditional_function_once_debug_display() {
+    // Test Debug and Display for BoxConditionalFunctionOnce without name
+    let double = BoxFunctionOnce::new(|x: &i32| x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalFunctionOnce"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalFunctionOnce("));
+    assert!(display_str.contains("BoxFunctionOnce"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalFunctionOnce with name
+    let triple = BoxFunctionOnce::new_with_name("triple_func_once", |x: &i32| x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalFunctionOnce"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalFunctionOnce("));
+    assert!(named_display_str.contains("BoxFunctionOnce(triple_func_once)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}

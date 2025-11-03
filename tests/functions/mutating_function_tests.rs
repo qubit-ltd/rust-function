@@ -939,3 +939,112 @@ fn test_arc_mutating_function_name_methods() {
     assert_eq!(cloned.apply(&mut value2), 6);
     assert_eq!(value2, 6);
 }
+
+// ============================================================================
+// ConditionalMutatingFunction Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_conditional_mutating_function_debug_display() {
+    // Test Debug and Display for BoxConditionalMutatingFunction without name
+    let double = BoxMutatingFunction::new(|x: &mut i32| *x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalMutatingFunction("));
+    assert!(display_str.contains("BoxMutatingFunction"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalMutatingFunction with name
+    let triple = BoxMutatingFunction::new_with_name("triple_mutating_func", |x: &mut i32| *x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalMutatingFunction("));
+    assert!(named_display_str.contains("BoxMutatingFunction(triple_mutating_func)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+#[test]
+fn test_rc_conditional_mutating_function_debug_display() {
+    // Test Debug and Display for RcConditionalMutatingFunction without name
+    let double = RcMutatingFunction::new(|x: &mut i32| *x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("RcConditionalMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("RcConditionalMutatingFunction("));
+    assert!(display_str.contains("RcMutatingFunction"));
+    assert!(display_str.contains("RcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for RcConditionalMutatingFunction with name
+    let triple = RcMutatingFunction::new_with_name("rc_triple_mutating_func", |x: &mut i32| *x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("RcConditionalMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("RcConditionalMutatingFunction("));
+    assert!(named_display_str.contains("RcMutatingFunction(rc_triple_mutating_func)"));
+    assert!(named_display_str.contains("RcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+#[test]
+fn test_arc_conditional_mutating_function_debug_display() {
+    // Test Debug and Display for ArcConditionalMutatingFunction without name
+    let double = ArcMutatingFunction::new(|x: &mut i32| *x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("ArcConditionalMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("ArcConditionalMutatingFunction("));
+    assert!(display_str.contains("ArcMutatingFunction"));
+    assert!(display_str.contains("ArcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for ArcConditionalMutatingFunction with name
+    let triple = ArcMutatingFunction::new_with_name("arc_triple_mutating_func", |x: &mut i32| *x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("ArcConditionalMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("ArcConditionalMutatingFunction("));
+    assert!(named_display_str.contains("ArcMutatingFunction(arc_triple_mutating_func)"));
+    assert!(named_display_str.contains("ArcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}

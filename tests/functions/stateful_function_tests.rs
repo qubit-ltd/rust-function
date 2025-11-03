@@ -1307,3 +1307,160 @@ fn test_arc_stateful_function_name_methods() {
     assert_eq!(cloned.name(), Some("modified_arc_stateful"));
     assert_eq!(cloned.apply(&3), 6);
 }
+
+// ============================================================================
+// ConditionalStatefulFunction Debug and Display Tests
+// ============================================================================
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_box_conditional_stateful_function_debug_display() {
+    // Test Debug and Display for BoxConditionalStatefulFunction without name
+    let mut counter = 0;
+    let mut double = BoxStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalStatefulFunction("));
+    assert!(display_str.contains("BoxStatefulFunction"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = BoxStatefulFunction::new_with_name("stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalStatefulFunction("));
+    assert!(named_display_str.contains("BoxStatefulFunction(stateful_double)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_rc_conditional_stateful_function_debug_display() {
+    // Test Debug and Display for RcConditionalStatefulFunction without name
+    let mut counter = 0;
+    let mut double = RcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("RcConditionalStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("RcConditionalStatefulFunction("));
+    assert!(display_str.contains("RcStatefulFunction"));
+    assert!(display_str.contains("RcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for RcConditionalStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = RcStatefulFunction::new_with_name("rc_stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("RcConditionalStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("RcConditionalStatefulFunction("));
+    assert!(named_display_str.contains("RcStatefulFunction(rc_stateful_double)"));
+    assert!(named_display_str.contains("RcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_arc_conditional_stateful_function_debug_display() {
+    // Test Debug and Display for ArcConditionalStatefulFunction without name
+    let mut counter = 0;
+    let mut double = ArcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("ArcConditionalStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("ArcConditionalStatefulFunction("));
+    assert!(display_str.contains("ArcStatefulFunction"));
+    assert!(display_str.contains("ArcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for ArcConditionalStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("ArcConditionalStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("ArcConditionalStatefulFunction("));
+    assert!(named_display_str.contains("ArcStatefulFunction(arc_stateful_double)"));
+    assert!(named_display_str.contains("ArcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}

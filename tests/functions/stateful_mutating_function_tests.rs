@@ -1132,3 +1132,172 @@ fn test_arc_stateful_mutating_function_name_methods() {
     assert_eq!(cloned.apply(&mut value2), 6);
     assert_eq!(value2, 6);
 }
+
+// ============================================================================
+// ConditionalStatefulMutatingFunction Debug and Display Tests
+// ============================================================================
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_box_conditional_stateful_mutating_function_debug_display() {
+    // Test Debug and Display for BoxConditionalStatefulMutatingFunction without name
+    let mut counter = 0;
+    let mut double = BoxStatefulMutatingFunction::new(move |x: &mut i32| {
+        counter += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter variable
+    let mut test_val = 5;
+    let _result1 = double.apply(&mut test_val);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalStatefulMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalStatefulMutatingFunction("));
+    assert!(display_str.contains("BoxStatefulMutatingFunction"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalStatefulMutatingFunction with name
+    let mut counter2 = 0;
+    let mut named_double = BoxStatefulMutatingFunction::new_with_name("stateful_mutating_double", move |x: &mut i32| {
+        counter2 += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter2 variable
+    let mut test_val2 = 3;
+    let _result2 = named_double.apply(&mut test_val2);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalStatefulMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalStatefulMutatingFunction("));
+    assert!(named_display_str.contains("BoxStatefulMutatingFunction(stateful_mutating_double)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_rc_conditional_stateful_mutating_function_debug_display() {
+    // Test Debug and Display for RcConditionalStatefulMutatingFunction without name
+    let mut counter = 0;
+    let mut double = RcStatefulMutatingFunction::new(move |x: &mut i32| {
+        counter += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter variable
+    let mut test_val = 5;
+    let _result1 = double.apply(&mut test_val);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("RcConditionalStatefulMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("RcConditionalStatefulMutatingFunction("));
+    assert!(display_str.contains("RcStatefulMutatingFunction"));
+    assert!(display_str.contains("RcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for RcConditionalStatefulMutatingFunction with name
+    let mut counter2 = 0;
+    let mut named_double = RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating_double", move |x: &mut i32| {
+        counter2 += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter2 variable
+    let mut test_val2 = 3;
+    let _result2 = named_double.apply(&mut test_val2);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("RcConditionalStatefulMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("RcConditionalStatefulMutatingFunction("));
+    assert!(named_display_str.contains("RcStatefulMutatingFunction(rc_stateful_mutating_double)"));
+    assert!(named_display_str.contains("RcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_arc_conditional_stateful_mutating_function_debug_display() {
+    // Test Debug and Display for ArcConditionalStatefulMutatingFunction without name
+    let mut counter = 0;
+    let mut double = ArcStatefulMutatingFunction::new(move |x: &mut i32| {
+        counter += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter variable
+    let mut test_val = 5;
+    let _result1 = double.apply(&mut test_val);
+
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("ArcConditionalStatefulMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("ArcConditionalStatefulMutatingFunction("));
+    assert!(display_str.contains("ArcStatefulMutatingFunction"));
+    assert!(display_str.contains("ArcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for ArcConditionalStatefulMutatingFunction with name
+    let mut counter2 = 0;
+    let mut named_double = ArcStatefulMutatingFunction::new_with_name("arc_stateful_mutating_double", move |x: &mut i32| {
+        counter2 += 1;
+        *x = *x * 2;
+        *x
+    });
+    // Call apply to use the counter2 variable
+    let mut test_val2 = 3;
+    let _result2 = named_double.apply(&mut test_val2);
+
+    let named_conditional = named_double.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("ArcConditionalStatefulMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("ArcConditionalStatefulMutatingFunction("));
+    assert!(named_display_str.contains("ArcStatefulMutatingFunction(arc_stateful_mutating_double)"));
+    assert!(named_display_str.contains("ArcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
