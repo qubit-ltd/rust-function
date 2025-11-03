@@ -70,7 +70,7 @@ macro_rules! impl_predicate_debug_display {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match &self.name {
                     Some(name) => write!(f, "{}({})", stringify!($struct_name), name),
-                    None => write!(f, "{}", stringify!($struct_name)),
+                    None => write!(f, "{}({})", stringify!($struct_name), "unnamed"),
                 }
             }
         }
@@ -90,7 +90,7 @@ macro_rules! impl_predicate_debug_display {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match &self.name {
                     Some(name) => write!(f, "{}({})", stringify!($struct_name), name),
-                    None => write!(f, "{}", stringify!($struct_name)),
+                    None => write!(f, "{}({})", stringify!($struct_name), "unnamed"),
                 }
             }
         }
