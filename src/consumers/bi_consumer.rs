@@ -49,7 +49,10 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
@@ -465,7 +468,7 @@ impl<T, U> BiConsumer<T, U> for BoxBiConsumer<T, U> {
         T: 'static,
         U: 'static,
     {
-        RcBiConsumer::new(move |t, u| (self.function)(t, u))
+        RcBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
     }
 
     // do NOT override ReadonlyConsumer::into_arc() because ArcBiConsumer is not Send + Sync
@@ -568,7 +571,7 @@ impl<T, U> BiConsumer<T, U> for ArcBiConsumer<T, U> {
         T: 'static,
         U: 'static,
     {
-        BoxBiConsumer::new(move |t, u| (self.function)(t, u))
+        BoxBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
     }
 
     fn into_rc(self) -> RcBiConsumer<T, U>
@@ -576,7 +579,7 @@ impl<T, U> BiConsumer<T, U> for ArcBiConsumer<T, U> {
         T: 'static,
         U: 'static,
     {
-        RcBiConsumer::new(move |t, u| (self.function)(t, u))
+        RcBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
     }
 
     fn into_arc(self) -> ArcBiConsumer<T, U>
@@ -601,7 +604,7 @@ impl<T, U> BiConsumer<T, U> for ArcBiConsumer<T, U> {
         U: 'static,
     {
         let self_fn = self.function.clone();
-        BoxBiConsumer::new(move |t, u| self_fn(t, u))
+        BoxBiConsumer::new_with_optional_name(move |t, u| self_fn(t, u), self.name.clone())
     }
 
     fn to_rc(&self) -> RcBiConsumer<T, U>
@@ -610,7 +613,7 @@ impl<T, U> BiConsumer<T, U> for ArcBiConsumer<T, U> {
         U: 'static,
     {
         let self_fn = self.function.clone();
-        RcBiConsumer::new(move |t, u| self_fn(t, u))
+        RcBiConsumer::new_with_optional_name(move |t, u| self_fn(t, u), self.name.clone())
     }
 
     fn to_arc(&self) -> ArcBiConsumer<T, U>
@@ -723,7 +726,7 @@ impl<T, U> BiConsumer<T, U> for RcBiConsumer<T, U> {
         T: 'static,
         U: 'static,
     {
-        BoxBiConsumer::new(move |t, u| (self.function)(t, u))
+        BoxBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
     }
 
     fn into_rc(self) -> RcBiConsumer<T, U>
@@ -751,7 +754,7 @@ impl<T, U> BiConsumer<T, U> for RcBiConsumer<T, U> {
         U: 'static,
     {
         let self_fn = self.function.clone();
-        BoxBiConsumer::new(move |t, u| self_fn(t, u))
+        BoxBiConsumer::new_with_optional_name(move |t, u| self_fn(t, u), self.name.clone())
     }
 
     fn to_rc(&self) -> RcBiConsumer<T, U>

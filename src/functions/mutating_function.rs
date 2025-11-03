@@ -144,13 +144,16 @@ use crate::{
             impl_shared_function_methods,
         },
     },
+    macros::{
+        impl_common_name_methods,
+        impl_common_new_methods,
+    },
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
         Predicate,
         RcPredicate,
     },
-    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 // =======================================================================
@@ -1021,7 +1024,7 @@ impl_fn_ops_trait!(
     (Fn(&mut T) -> R),
     FnMutatingFunctionOps,
     BoxMutatingFunction,
-    Function,  // chains a non-mutating function after this mutating function
+    Function, // chains a non-mutating function after this mutating function
     BoxConditionalMutatingFunction
 );
 

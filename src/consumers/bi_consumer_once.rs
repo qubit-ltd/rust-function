@@ -45,11 +45,14 @@ use crate::{
         impl_consumer_common_methods,
         impl_consumer_debug_display,
     },
+    macros::{
+        impl_common_name_methods,
+        impl_common_new_methods,
+    },
     predicates::bi_predicate::{
         BiPredicate,
         BoxBiPredicate,
     },
-    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 // ==========================================================================

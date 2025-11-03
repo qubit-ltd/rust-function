@@ -49,7 +49,10 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -398,8 +401,7 @@ impl<T> Consumer<T> for BoxConsumer<T> {
     where
         T: 'static,
     {
-        let func = self.function;
-        RcConsumer::new(move |t| func(t))
+        RcConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     // do NOT override Consumer::into_arc() because BoxConsumer is not Send + Sync
@@ -495,7 +497,7 @@ impl<T> Consumer<T> for RcConsumer<T> {
     where
         T: 'static,
     {
-        BoxConsumer::new(move |t| (self.function)(t))
+        BoxConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_rc(self) -> RcConsumer<T>
@@ -520,7 +522,7 @@ impl<T> Consumer<T> for RcConsumer<T> {
         T: 'static,
     {
         let self_fn = self.function.clone();
-        BoxConsumer::new(move |t| self_fn(t))
+        BoxConsumer::new_with_optional_name(move |t| self_fn(t), self.name.clone())
     }
 
     fn to_rc(&self) -> RcConsumer<T>
@@ -628,14 +630,14 @@ impl<T> Consumer<T> for ArcConsumer<T> {
     where
         T: 'static,
     {
-        BoxConsumer::new(move |t| (self.function)(t))
+        BoxConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_rc(self) -> RcConsumer<T>
     where
         T: 'static,
     {
-        RcConsumer::new(move |t| (self.function)(t))
+        RcConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_arc(self) -> ArcConsumer<T>
@@ -657,7 +659,7 @@ impl<T> Consumer<T> for ArcConsumer<T> {
         T: 'static,
     {
         let self_fn = self.function.clone();
-        BoxConsumer::new(move |t| self_fn(t))
+        BoxConsumer::new_with_optional_name(move |t| self_fn(t), self.name.clone())
     }
 
     fn to_rc(&self) -> RcConsumer<T>
@@ -665,7 +667,7 @@ impl<T> Consumer<T> for ArcConsumer<T> {
         T: 'static,
     {
         let self_fn = self.function.clone();
-        RcConsumer::new(move |t| self_fn(t))
+        RcConsumer::new_with_optional_name(move |t| self_fn(t), self.name.clone())
     }
 
     fn to_arc(&self) -> ArcConsumer<T>

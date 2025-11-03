@@ -30,11 +30,14 @@ use crate::{
         impl_function_debug_display,
         impl_function_identity_method,
     },
+    macros::{
+        impl_common_name_methods,
+        impl_common_new_methods,
+    },
     predicates::predicate::{
         BoxPredicate,
         Predicate,
     },
-    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 // ============================================================================

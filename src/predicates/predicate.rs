@@ -174,18 +174,21 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::{
+    macros::{
+        impl_common_name_methods,
+        impl_common_new_methods,
+    },
     predicates::macros::{
         constants::{
             ALWAYS_FALSE_NAME,
             ALWAYS_TRUE_NAME,
         },
+        impl_box_predicate_methods,
         impl_predicate_clone,
         impl_predicate_common_methods,
         impl_predicate_debug_display,
-        impl_box_predicate_methods,
         impl_shared_predicate_methods,
     },
-    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 /// A predicate trait for testing whether a value satisfies a condition.
@@ -488,11 +491,7 @@ pub struct BoxPredicate<T> {
 
 impl<T: 'static> BoxPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(
-        BoxPredicate<T>,
-        (Fn(&T) -> bool + 'static),
-        |f| Box::new(f)
-    );
+    impl_predicate_common_methods!(BoxPredicate<T>, (Fn(&T) -> bool + 'static), |f| Box::new(f));
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_box_predicate_methods!(BoxPredicate<T>);
@@ -557,13 +556,8 @@ pub struct RcPredicate<T> {
 }
 
 impl<T: 'static> RcPredicate<T> {
-
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(
-        RcPredicate<T>,
-        (Fn(&T) -> bool + 'static),
-        |f| Rc::new(f)
-    );
+    impl_predicate_common_methods!(RcPredicate<T>, (Fn(&T) -> bool + 'static), |f| Rc::new(f));
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_shared_predicate_methods!(RcPredicate<T>, 'static);

@@ -137,7 +137,10 @@
 //!
 //! Haixing Hu
 
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::mutators::macros::{
     impl_box_conditional_mutator,
     impl_box_mutator_methods,

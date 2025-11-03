@@ -125,10 +125,14 @@ use std::sync::{
     Mutex,
 };
 
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
 use crate::functions::macros::impl_function_identity_method;
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::{
     functions::{
+        function::Function,
         macros::{
             impl_box_conditional_function,
             impl_box_function_methods,
@@ -141,7 +145,6 @@ use crate::{
             impl_shared_conditional_function,
             impl_shared_function_methods,
         },
-        function::Function,
     },
     predicates::predicate::{
         ArcPredicate,

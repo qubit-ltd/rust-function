@@ -146,6 +146,10 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -157,7 +161,6 @@ use crate::predicates::macros::{
     impl_predicate_debug_display,
     impl_shared_predicate_methods,
 };
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
 
 /// Type alias for bi-predicate function to simplify complex types.
 ///
@@ -533,7 +536,6 @@ pub struct RcBiPredicate<T, U> {
 }
 
 impl<T: 'static, U: 'static> RcBiPredicate<T, U> {
-
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
     impl_predicate_common_methods!(
         RcBiPredicate<T, U>,
@@ -656,7 +658,6 @@ pub struct ArcBiPredicate<T, U> {
 }
 
 impl<T: 'static, U: 'static> ArcBiPredicate<T, U> {
-
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
     impl_predicate_common_methods!(
         ArcBiPredicate<T, U>,

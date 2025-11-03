@@ -137,6 +137,7 @@
 //! Haixing Hu
 use crate::{
     functions::{
+        function_once::FunctionOnce,
         macros::{
             impl_box_conditional_function,
             impl_box_function_methods,
@@ -146,13 +147,15 @@ use crate::{
             impl_function_debug_display,
             impl_function_identity_method,
         },
-        function_once::FunctionOnce,
+    },
+    macros::{
+        impl_common_name_methods,
+        impl_common_new_methods,
     },
     predicates::predicate::{
         BoxPredicate,
         Predicate,
     },
-    macros::{impl_common_name_methods, impl_common_new_methods},
 };
 
 // =======================================================================

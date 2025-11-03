@@ -51,7 +51,10 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_common_name_methods, impl_common_new_methods};
+use crate::macros::{
+    impl_common_name_methods,
+    impl_common_new_methods,
+};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
