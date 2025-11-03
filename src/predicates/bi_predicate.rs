@@ -143,15 +143,17 @@
 //!
 //! Haixing Hu
 
-use std::fmt::{
-    Debug,
-    Display,
-};
 use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::predicates::macros::{
-    impl_box_predicate_methods, impl_predicate_clone, impl_predicate_common_methods, impl_predicate_debug_display, impl_shared_predicate_methods
+    impl_box_predicate_methods,
+    impl_predicate_clone,
+    impl_predicate_common_methods,
+    impl_predicate_debug_display,
+    impl_shared_predicate_methods,
+    ALWAYS_FALSE_NAME,
+    ALWAYS_TRUE_NAME,
 };
 
 /// Type alias for bi-predicate function to simplify complex types.
@@ -166,12 +168,6 @@ type BiPredicateFn<T, U> = dyn Fn(&T, &U) -> bool;
 /// with Send + Sync bounds for thread-safe usage. It is used to reduce type complexity
 /// in Arc-based struct definitions.
 type SendSyncBiPredicateFn<T, U> = dyn Fn(&T, &U) -> bool + Send + Sync;
-
-/// BiPredicate name constant for always-true bi-predicates
-const ALWAYS_TRUE_NAME: &str = "always_true";
-
-/// BiPredicate name constant for always-false bi-predicates
-const ALWAYS_FALSE_NAME: &str = "always_false";
 
 /// A bi-predicate trait for testing whether two values satisfy a
 /// condition.

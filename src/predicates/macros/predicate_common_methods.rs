@@ -194,9 +194,6 @@ macro_rules! impl_predicate_common_methods {
         ($($fn_trait_with_bounds:tt)+),
         $wrapper_ctor:path
     ) => {
-        // Constants for always_true/always_false methods
-        const ALWAYS_TRUE_NAME: &str = "always_true";
-        const ALWAYS_FALSE_NAME: &str = "always_false";
 
         impl_predicate_common_methods!(@new_methods
             ($($fn_trait_with_bounds)+),
@@ -237,9 +234,6 @@ macro_rules! impl_predicate_common_methods {
         ($($fn_trait_with_bounds:tt)+),
         $wrapper_ctor:path
     ) => {
-        // Constants for always_true/always_false methods
-        const ALWAYS_TRUE_NAME: &str = "always_true";
-        const ALWAYS_FALSE_NAME: &str = "always_false";
 
         impl_predicate_common_methods!(@new_methods
             ($($fn_trait_with_bounds)+),
