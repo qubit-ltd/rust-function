@@ -540,3 +540,50 @@ mod function_once_default_impl_tests {
         assert_eq!(func.apply(&10), 23); // 10 * 2 + 3
     }
 }
+
+// ============================================================================
+// FunctionOnce Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_function_once_debug_display() {
+    // Test Debug and Display for BoxFunctionOnce without name
+    let double = BoxFunctionOnce::new(|x: &i32| x * 2);
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("BoxFunctionOnce"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "BoxFunctionOnce");
+
+    // Test Debug and Display for BoxFunctionOnce with name
+    let named_double = BoxFunctionOnce::new_with_name("double", |x: &i32| x * 2);
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("BoxFunctionOnce"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "BoxFunctionOnce(double)");
+}
+
+// ============================================================================
+// FunctionOnce Name Management Tests
+// ============================================================================
+
+#[test]
+fn test_box_function_once_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut double = BoxFunctionOnce::new_with_name("double_func_once", |x: &i32| x * 2);
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("double_func_once"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_double_once");
+    assert_eq!(double.name(), Some("modified_double_once"));
+
+    // Test that function still works after name change
+    assert_eq!(double.apply(&5), 10);
+}

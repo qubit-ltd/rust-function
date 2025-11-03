@@ -167,6 +167,33 @@ macro_rules! impl_mutator_common_methods {
                 name: Some(name.to_string()),
             }
         }
+
+        #[doc = concat!("Creates a new named ", $type_desc, ".")]
+        ///
+        /// Wraps the provided closure and assigns it a name, which is
+        /// useful for debugging and logging purposes.
+        ///
+        /// # Type Parameters
+        ///
+        /// * `F` - The closure type
+        ///
+        /// # Parameters
+        ///
+        /// * `f` - The closure to wrap
+        #[doc = concat!("* `name` - The optional name for this ", $type_desc)]
+        ///
+        /// # Returns
+        ///
+        #[doc = concat!("Returns a new named ", $type_desc, " instance wrapping the closure.")]
+        pub fn new_with_optional_name<F>($f: F, name: Option<String>) -> Self
+        where
+            F: $($fn_trait_with_bounds)+,
+        {
+            Self {
+                function: $wrapper_expr,
+                name: name,
+            }
+        }
     };
 
     // Internal rule: generates name and set_name methods

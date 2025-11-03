@@ -635,6 +635,19 @@ mod test_closure {
         assert_eq!(fn_closure(&mut value), 10);
         assert_eq!(value, 10);
     }
+
+    #[test]
+    fn test_closure_into_fn() {
+        let closure = |x: &mut i32| {
+            *x *= 2;
+            *x
+        };
+        let fn_closure = closure.into_fn();
+
+        let mut value = 5;
+        assert_eq!(fn_closure(&mut value), 10);
+        assert_eq!(value, 10);
+    }
 }
 
 // ============================================================================
@@ -771,4 +784,158 @@ mod test_mutating_function_default_impl {
         assert_eq!(func.apply(&mut value2), 1);
         assert_eq!(value2, 5);
     }
+}
+
+// ============================================================================
+// MutatingFunction Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_mutating_function_debug_display() {
+    // Test Debug and Display for BoxMutatingFunction without name
+    let double = BoxMutatingFunction::new(|x: &mut i32| *x * 2);
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("BoxMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "BoxMutatingFunction");
+
+    // Test Debug and Display for BoxMutatingFunction with name
+    let named_double = BoxMutatingFunction::new_with_name("mutating_double", |x: &mut i32| *x * 2);
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("BoxMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "BoxMutatingFunction(mutating_double)");
+}
+
+#[test]
+fn test_rc_mutating_function_debug_display() {
+    // Test Debug and Display for RcMutatingFunction without name
+    let double = RcMutatingFunction::new(|x: &mut i32| *x * 2);
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("RcMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "RcMutatingFunction");
+
+    // Test Debug and Display for RcMutatingFunction with name
+    let named_double = RcMutatingFunction::new_with_name("rc_mutating_double", |x: &mut i32| *x * 2);
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("RcMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "RcMutatingFunction(rc_mutating_double)");
+}
+
+#[test]
+fn test_arc_mutating_function_debug_display() {
+    // Test Debug and Display for ArcMutatingFunction without name
+    let double = ArcMutatingFunction::new(|x: &mut i32| *x * 2);
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("ArcMutatingFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "ArcMutatingFunction");
+
+    // Test Debug and Display for ArcMutatingFunction with name
+    let named_double = ArcMutatingFunction::new_with_name("arc_mutating_double", |x: &mut i32| *x * 2);
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("ArcMutatingFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "ArcMutatingFunction(arc_mutating_double)");
+}
+
+// ============================================================================
+// MutatingFunction Name Management Tests
+// ============================================================================
+
+#[test]
+fn test_box_mutating_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut double = BoxMutatingFunction::new_with_name("box_mutating_func", |x: &mut i32| {
+        *x = *x * 2;
+        *x
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("box_mutating_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_box_mutating");
+    assert_eq!(double.name(), Some("modified_box_mutating"));
+
+    // Test that function still works after name change
+    let mut value = 5;
+    assert_eq!(double.apply(&mut value), 10);
+    assert_eq!(value, 10);
+}
+
+#[test]
+fn test_rc_mutating_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut double = RcMutatingFunction::new_with_name("rc_mutating_func", |x: &mut i32| {
+        *x = *x * 2;
+        *x
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("rc_mutating_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_rc_mutating");
+    assert_eq!(double.name(), Some("modified_rc_mutating"));
+
+    // Test that function still works after name change
+    let mut value = 5;
+    assert_eq!(double.apply(&mut value), 10);
+    assert_eq!(value, 10);
+
+    // Test cloning preserves name
+    let cloned = double.clone();
+    assert_eq!(cloned.name(), Some("modified_rc_mutating"));
+    let mut value2 = 3;
+    assert_eq!(cloned.apply(&mut value2), 6);
+    assert_eq!(value2, 6);
+}
+
+#[test]
+fn test_arc_mutating_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut double = ArcMutatingFunction::new_with_name("arc_mutating_func", |x: &mut i32| {
+        *x = *x * 2;
+        *x
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("arc_mutating_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_arc_mutating");
+    assert_eq!(double.name(), Some("modified_arc_mutating"));
+
+    // Test that function still works after name change
+    let mut value = 5;
+    assert_eq!(double.apply(&mut value), 10);
+    assert_eq!(value, 10);
+
+    // Test cloning preserves name
+    let cloned = double.clone();
+    assert_eq!(cloned.name(), Some("modified_arc_mutating"));
+    let mut value2 = 3;
+    assert_eq!(cloned.apply(&mut value2), 6);
+    assert_eq!(value2, 6);
 }

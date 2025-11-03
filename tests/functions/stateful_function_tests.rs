@@ -699,6 +699,54 @@ fn test_rc_stateful_function_into_fn() {
     assert_eq!(closure(&10), 11);
 }
 
+#[test]
+fn test_rc_stateful_function_to_box() {
+    // Test RcStatefulFunction::to_box conversion
+    let mut counter = 0;
+    let mut func = RcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x + counter
+    });
+    let mut boxed = func.to_box();
+    assert_eq!(boxed.apply(&10), 11);
+    // Original should still be usable since it was cloned
+    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+}
+
+#[test]
+fn test_rc_stateful_function_to_rc() {
+    // Test RcStatefulFunction::to_rc conversion (clone)
+    let mut counter = 0;
+    let mut func = RcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x + counter
+    });
+    let mut rc = func.to_rc();
+    assert_eq!(rc.apply(&10), 11);
+    // Original should still be usable since it was cloned
+    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+}
+
+#[test]
+fn test_rc_stateful_function_to_fn() {
+    // Test RcStatefulFunction::to_fn conversion
+    let mut counter = 0;
+    let mut func = RcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x + counter
+    });
+
+    // Test closure in a separate scope to avoid borrowing conflicts
+    {
+        let mut closure = func.to_fn();
+        assert_eq!(closure(&10), 11);
+    } // closure dropped here
+
+    // Original should still be usable since it was cloned
+    // Note: counter state is shared, so it continues from 1
+    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+}
+
 // ============================================================================
 // Edge Cases and Boundary Tests
 // ============================================================================
@@ -1057,4 +1105,205 @@ fn test_rc_conditional_stateful_function_clone() {
 
     assert_eq!(func_clone2.apply(&12), 24); // 12 > 10, apply * 2
     assert_eq!(*counter.borrow(), 3);
+}
+
+// ============================================================================
+// StatefulFunction Debug and Display Tests
+// ============================================================================
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_box_stateful_function_debug_display() {
+    // Test Debug and Display for BoxStatefulFunction without name
+    let mut counter = 0;
+    let mut double = BoxStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("BoxStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "BoxStatefulFunction");
+
+    // Test Debug and Display for BoxStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = BoxStatefulFunction::new_with_name("stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("BoxStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "BoxStatefulFunction(stateful_double)");
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_rc_stateful_function_debug_display() {
+    // Test Debug and Display for RcStatefulFunction without name
+    let mut counter = 0;
+    let mut double = RcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("RcStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "RcStatefulFunction");
+
+    // Test Debug and Display for RcStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = RcStatefulFunction::new_with_name("rc_stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("RcStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "RcStatefulFunction(rc_stateful_double)");
+}
+
+// Allow unused variables in debug/display tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_arc_stateful_function_debug_display() {
+    // Test Debug and Display for ArcStatefulFunction without name
+    let mut counter = 0;
+    let mut double = ArcStatefulFunction::new(move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+    // Call apply to use the counter variable
+    let _result1 = double.apply(&5);
+
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("ArcStatefulFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "ArcStatefulFunction");
+
+    // Test Debug and Display for ArcStatefulFunction with name
+    let mut counter2 = 0;
+    let mut named_double = ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
+        counter2 += 1;
+        x * 2
+    });
+    // Call apply to use the counter2 variable
+    let _result2 = named_double.apply(&3);
+
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("ArcStatefulFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "ArcStatefulFunction(arc_stateful_double)");
+}
+
+// ============================================================================
+// StatefulFunction Name Management Tests
+// ============================================================================
+
+// Allow unused variables in tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_box_stateful_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut counter = 0;
+    let mut double = BoxStatefulFunction::new_with_name("box_stateful_func", move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("box_stateful_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_box_stateful");
+    assert_eq!(double.name(), Some("modified_box_stateful"));
+
+    // Test that function still works after name change
+    assert_eq!(double.apply(&5), 10);
+}
+
+// Allow unused variables in tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_rc_stateful_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut counter = 0;
+    let mut double = RcStatefulFunction::new_with_name("rc_stateful_func", move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("rc_stateful_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_rc_stateful");
+    assert_eq!(double.name(), Some("modified_rc_stateful"));
+
+    // Test that function still works after name change
+    assert_eq!(double.apply(&5), 10);
+
+    // Test cloning preserves name
+    let mut cloned = double.clone();
+    assert_eq!(cloned.name(), Some("modified_rc_stateful"));
+    assert_eq!(cloned.apply(&3), 6);
+}
+
+// Allow unused variables in tests since they are used in closures
+#[allow(unused_variables)]
+#[test]
+fn test_arc_stateful_function_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut counter = 0;
+    let mut double = ArcStatefulFunction::new_with_name("arc_stateful_func", move |x: &i32| {
+        counter += 1;
+        x * 2
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("arc_stateful_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_arc_stateful");
+    assert_eq!(double.name(), Some("modified_arc_stateful"));
+
+    // Test that function still works after name change
+    assert_eq!(double.apply(&5), 10);
+
+    // Test cloning preserves name
+    let mut cloned = double.clone();
+    assert_eq!(cloned.name(), Some("modified_arc_stateful"));
+    assert_eq!(cloned.apply(&3), 6);
 }

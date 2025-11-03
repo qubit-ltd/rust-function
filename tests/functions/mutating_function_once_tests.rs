@@ -402,3 +402,55 @@ mod test_closure {
         assert_eq!(target, vec![0, 1, 2, 3]);
     }
 }
+
+// ============================================================================
+// MutatingFunctionOnce Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_mutating_function_once_debug_display() {
+    // Test Debug and Display for BoxMutatingFunctionOnce without name
+    let double = BoxMutatingFunctionOnce::new(|x: &mut i32| *x * 2);
+    let debug_str = format!("{:?}", double);
+    assert!(debug_str.contains("BoxMutatingFunctionOnce"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+
+    let display_str = format!("{}", double);
+    assert_eq!(display_str, "BoxMutatingFunctionOnce");
+
+    // Test Debug and Display for BoxMutatingFunctionOnce with name
+    let named_double = BoxMutatingFunctionOnce::new_with_name("mutating_once_double", |x: &mut i32| *x * 2);
+    let named_debug_str = format!("{:?}", named_double);
+    assert!(named_debug_str.contains("BoxMutatingFunctionOnce"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+
+    let named_display_str = format!("{}", named_double);
+    assert_eq!(named_display_str, "BoxMutatingFunctionOnce(mutating_once_double)");
+}
+
+// ============================================================================
+// MutatingFunctionOnce Name Management Tests
+// ============================================================================
+
+#[test]
+fn test_box_mutating_function_once_name_methods() {
+    // Test new_with_name, name(), and set_name()
+    let mut double = BoxMutatingFunctionOnce::new_with_name("box_mutating_once_func", |x: &mut i32| {
+        *x = *x * 2;
+        *x
+    });
+
+    // Test name() returns the initial name
+    assert_eq!(double.name(), Some("box_mutating_once_func"));
+
+    // Test set_name() changes the name
+    double.set_name("modified_box_mutating_once");
+    assert_eq!(double.name(), Some("modified_box_mutating_once"));
+
+    // Test that function still works after name change
+    let mut value = 5;
+    assert_eq!(double.apply(&mut value), 10);
+    assert_eq!(value, 10);
+}

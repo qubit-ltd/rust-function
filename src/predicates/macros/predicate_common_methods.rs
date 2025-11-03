@@ -103,105 +103,20 @@
 /// * `always_true()` - Creates a predicate that always returns true
 /// * `always_false()` - Creates a predicate that always returns false
 macro_rules! impl_predicate_common_methods {
-    // Internal rule: generates new and new_with_name methods
-    // Parameters:
-    //   $fn_trait_with_bounds - Function trait bounds
-    //   $f - Closure parameter name
-    //   $wrapper_ctor - Wrapper constructor function
-    //   $type_desc - Type description for docs (e.g., "predicate" or "bi-predicate")
-    (@new_methods
-        ($($fn_trait_with_bounds:tt)+),
-        |$f:ident| $wrapper_ctor:path,
-        $type_desc:literal
-    ) => {
-        #[doc = concat!("Creates a new ", $type_desc, ".")]
-        ///
-        #[doc = concat!("Wraps the provided closure in the appropriate smart pointer type for this ", $type_desc, " implementation.")]
-        ///
-        /// # Type Parameters
-        ///
-        /// * `F` - The closure type
-        ///
-        /// # Parameters
-        ///
-        /// * `f` - The closure to wrap
-        ///
-        /// # Returns
-        ///
-        #[doc = concat!("Returns a new ", $type_desc, " instance wrapping the closure.")]
-        pub fn new<F>($f: F) -> Self
-        where
-            F: $($fn_trait_with_bounds)+,
-        {
-            Self {
-                function: $wrapper_ctor($f),
-                name: None,
-            }
-        }
-
-        #[doc = concat!("Creates a new named ", $type_desc, ".")]
-        ///
-        /// Wraps the provided closure and assigns it a name, which is
-        /// useful for debugging and logging purposes.
-        ///
-        /// # Type Parameters
-        ///
-        /// * `F` - The closure type
-        ///
-        /// # Parameters
-        ///
-        #[doc = concat!("* `name` - The name for this ", $type_desc)]
-        /// * `f` - The closure to wrap
-        ///
-        /// # Returns
-        ///
-        #[doc = concat!("Returns a new named ", $type_desc, " instance wrapping the closure.")]
-        pub fn new_with_name<F>(name: &str, $f: F) -> Self
-        where
-            F: $($fn_trait_with_bounds)+,
-        {
-            Self {
-                function: $wrapper_ctor($f),
-                name: Some(name.to_string()),
-            }
-        }
-    };
-
-    // Internal rule: generates name and set_name methods
-    (@name_methods $type_desc:literal) => {
-        #[doc = concat!("Gets the name of this ", $type_desc, ".")]
-        ///
-        /// # Returns
-        ///
-        /// Returns `Some(&str)` if a name was set, `None` otherwise.
-        pub fn name(&self) -> Option<&str> {
-            self.name.as_deref()
-        }
-
-        #[doc = concat!("Sets the name of this ", $type_desc, ".")]
-        ///
-        /// # Parameters
-        ///
-        #[doc = concat!("* `name` - The name to set for this ", $type_desc)]
-        pub fn set_name(&mut self, name: &str) {
-            self.name = Some(name.to_string());
-        }
-    };
-
     // Single generic parameter - Predicate types
     (
         $struct_name:ident < $t:ident >,
         ($($fn_trait_with_bounds:tt)+),
-        $wrapper_ctor:path
+        |$f:ident| $wrapper_expr:expr
     ) => {
 
-        impl_predicate_common_methods!(@new_methods
+        impl_common_new_methods!(
             ($($fn_trait_with_bounds)+),
-            |f| $wrapper_ctor,
+            |$f| $wrapper_expr,
             "predicate"
         );
 
-        impl_predicate_common_methods!(@name_methods "predicate");
+        impl_common_name_methods!("predicate");
 
         /// Creates a predicate that always returns `true`.
         ///
@@ -209,10 +124,7 @@ macro_rules! impl_predicate_common_methods {
         ///
         #[doc = concat!("A new `", stringify!($struct_name), "` that always returns `true`.")]
         pub fn always_true() -> Self {
-            Self {
-                function: $wrapper_ctor(|_| true),
-                name: Some(ALWAYS_TRUE_NAME.to_string()),
-            }
+            Self::new_with_name(ALWAYS_TRUE_NAME, |_| true)
         }
 
         /// Creates a predicate that always returns `false`.
@@ -221,10 +133,7 @@ macro_rules! impl_predicate_common_methods {
         ///
         #[doc = concat!("A new `", stringify!($struct_name), "` that always returns `false`.")]
         pub fn always_false() -> Self {
-            Self {
-                function: $wrapper_ctor(|_| false),
-                name: Some(ALWAYS_FALSE_NAME.to_string()),
-            }
+            Self::new_with_name(ALWAYS_FALSE_NAME, |_| false)
         }
     };
 
@@ -232,16 +141,16 @@ macro_rules! impl_predicate_common_methods {
     (
         $struct_name:ident < $t:ident, $u:ident >,
         ($($fn_trait_with_bounds:tt)+),
-        $wrapper_ctor:path
+        |$f:ident| $wrapper_expr:expr
     ) => {
 
-        impl_predicate_common_methods!(@new_methods
+        impl_common_new_methods!(
             ($($fn_trait_with_bounds)+),
-            |f| $wrapper_ctor,
+            |$f| $wrapper_expr,
             "bi-predicate"
         );
 
-        impl_predicate_common_methods!(@name_methods "bi-predicate");
+        impl_common_name_methods!("bi-predicate");
 
         /// Creates a bi-predicate that always returns `true`.
         ///
@@ -249,10 +158,7 @@ macro_rules! impl_predicate_common_methods {
         ///
         #[doc = concat!("A new `", stringify!($struct_name), "` that always returns `true`.")]
         pub fn always_true() -> Self {
-            Self {
-                function: $wrapper_ctor(|_, _| true),
-                name: Some(ALWAYS_TRUE_NAME.to_string()),
-            }
+            Self::new_with_name(ALWAYS_TRUE_NAME, |_, _| true)
         }
 
         /// Creates a bi-predicate that always returns `false`.
@@ -261,10 +167,7 @@ macro_rules! impl_predicate_common_methods {
         ///
         #[doc = concat!("A new `", stringify!($struct_name), "` that always returns `false`.")]
         pub fn always_false() -> Self {
-            Self {
-                function: $wrapper_ctor(|_, _| false),
-                name: Some(ALWAYS_FALSE_NAME.to_string()),
-            }
+            Self::new_with_name(ALWAYS_FALSE_NAME, |_, _| false)
         }
     };
 }

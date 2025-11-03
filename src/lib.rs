@@ -27,6 +27,9 @@
 //!
 //! Haixing Hu
 
+#[macro_use]
+pub mod macros;
+
 // Module declarations
 pub mod comparator;
 pub mod consumers;
