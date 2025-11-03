@@ -350,6 +350,69 @@ mod test_box_mutator {
         assert_eq!(value, 10);
     }
 
+    #[test]
+    fn test_new_with_name() {
+        let mutator = BoxMutator::new_with_name("test_mutator", |x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), Some("test_mutator"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_some() {
+        let mutator = BoxMutator::new_with_optional_name(|x: &mut i32| *x += 1, Some("optional_name".to_string()));
+        assert_eq!(mutator.name(), Some("optional_name"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_none() {
+        let mutator = BoxMutator::new_with_optional_name(|x: &mut i32| *x += 1, None);
+        assert_eq!(mutator.name(), None);
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_name_and_set_name() {
+        let mut mutator = BoxMutator::new(|x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), None);
+
+        mutator.set_name("set_name_test");
+        assert_eq!(mutator.name(), Some("set_name_test"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_box_mutator_debug() {
+        let mutator = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let debug_str = format!("{:?}", mutator);
+        assert!(debug_str.contains("BoxMutator"));
+        assert!(debug_str.contains("name"));
+        assert!(debug_str.contains("function"));
+    }
+
+    #[test]
+    fn test_box_mutator_display() {
+        let mutator = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let display_str = format!("{}", mutator);
+        assert_eq!(display_str, "BoxMutator");
+
+        let named_mutator = BoxMutator::new_with_name("test_mutator", |x: &mut i32| *x *= 2);
+        let named_display_str = format!("{}", named_mutator);
+        assert_eq!(named_display_str, "BoxMutator(test_mutator)");
+    }
+
     // Note: BoxMutator cannot be safely converted to ArcMutator because the
     // inner function may not be Send. This test has been removed.
 }
@@ -734,6 +797,49 @@ mod test_arc_mutator {
         clone.apply(&mut value2);
         assert_eq!(value2, 6);
     }
+
+    #[test]
+    fn test_new_with_name() {
+        let mutator = ArcMutator::new_with_name("arc_test_mutator", |x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), Some("arc_test_mutator"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_some() {
+        let mutator = ArcMutator::new_with_optional_name(|x: &mut i32| *x += 1, Some("arc_optional".to_string()));
+        assert_eq!(mutator.name(), Some("arc_optional"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_none() {
+        let mutator = ArcMutator::new_with_optional_name(|x: &mut i32| *x += 1, None);
+        assert_eq!(mutator.name(), None);
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_name_and_set_name() {
+        let mut mutator = ArcMutator::new(|x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), None);
+
+        mutator.set_name("arc_set_name");
+        assert_eq!(mutator.name(), Some("arc_set_name"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
 }
 
 // ============================================================================
@@ -1025,6 +1131,49 @@ mod test_rc_mutator {
         clone.apply(&mut value2);
         assert_eq!(value2, 6);
     }
+
+    #[test]
+    fn test_new_with_name() {
+        let mutator = RcMutator::new_with_name("rc_test_mutator", |x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), Some("rc_test_mutator"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_some() {
+        let mutator = RcMutator::new_with_optional_name(|x: &mut i32| *x += 1, Some("rc_optional".to_string()));
+        assert_eq!(mutator.name(), Some("rc_optional"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_new_with_optional_name_none() {
+        let mutator = RcMutator::new_with_optional_name(|x: &mut i32| *x += 1, None);
+        assert_eq!(mutator.name(), None);
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
+
+    #[test]
+    fn test_name_and_set_name() {
+        let mut mutator = RcMutator::new(|x: &mut i32| *x += 1);
+        assert_eq!(mutator.name(), None);
+
+        mutator.set_name("rc_set_name");
+        assert_eq!(mutator.name(), Some("rc_set_name"));
+
+        let mut value = 5;
+        mutator.apply(&mut value);
+        assert_eq!(value, 6);
+    }
 }
 
 // ============================================================================
@@ -1249,5 +1398,176 @@ mod test_unified_interface {
     fn test_with_closure() {
         let closure = |x: &mut i32| *x *= 2;
         assert_eq!(apply_mutator(&closure, 5), 10);
+    }
+}
+
+// ============================================================================
+// Conditional Mutator and_then Tests
+// ============================================================================
+
+#[cfg(test)]
+mod test_conditional_mutator_and_then {
+    use super::*;
+
+    #[test]
+    fn test_box_conditional_mutator_and_then_with_closure() {
+        let mutator = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+        let chained = conditional.and_then(|x: &mut i32| *x += 10);
+
+        let mut positive = 5;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 20); // 5 * 2 + 10
+
+        let mut negative = -5;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 5); // -5 + 10 (condition not met)
+    }
+
+    #[test]
+    fn test_box_conditional_mutator_and_then_with_box_mutator() {
+        let mutator1 = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator1.when(|x: &i32| *x > 0);
+        let mutator2 = BoxMutator::new(|x: &mut i32| *x += 100);
+        let chained = conditional.and_then(mutator2);
+
+        let mut positive = 10;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 120); // 10 * 2 + 100
+
+        let mut negative = -10;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 90); // -10 + 100 (condition not met)
+    }
+
+    #[test]
+    fn test_rc_conditional_mutator_and_then_with_closure() {
+        let mutator = RcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+        let chained = conditional.and_then(|x: &mut i32| *x += 10);
+
+        let mut positive = 5;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 20); // 5 * 2 + 10
+
+        let mut negative = -5;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 5); // -5 + 10 (condition not met)
+    }
+
+    #[test]
+    fn test_rc_conditional_mutator_and_then_with_rc_mutator() {
+        let mutator1 = RcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator1.when(|x: &i32| *x > 0);
+        let mutator2 = RcMutator::new(|x: &mut i32| *x += 100);
+        let chained = conditional.and_then(mutator2);
+
+        let mut positive = 10;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 120); // 10 * 2 + 100
+
+        let mut negative = -10;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 90); // -10 + 100 (condition not met)
+    }
+
+    #[test]
+    fn test_arc_conditional_mutator_and_then_with_closure() {
+        let mutator = ArcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+        let chained = conditional.and_then(|x: &mut i32| *x += 10);
+
+        let mut positive = 5;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 20); // 5 * 2 + 10
+
+        let mut negative = -5;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 5); // -5 + 10 (condition not met)
+    }
+
+    #[test]
+    fn test_arc_conditional_mutator_and_then_with_arc_mutator() {
+        let mutator1 = ArcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator1.when(|x: &i32| *x > 0);
+        let mutator2 = ArcMutator::new(|x: &mut i32| *x += 100);
+        let chained = conditional.and_then(mutator2);
+
+        let mut positive = 10;
+        chained.apply(&mut positive);
+        assert_eq!(positive, 120); // 10 * 2 + 100
+
+        let mut negative = -10;
+        chained.apply(&mut negative);
+        assert_eq!(negative, 90); // -10 + 100 (condition not met)
+    }
+}
+
+// ============================================================================
+// Conditional Mutator Debug/Display Tests
+// ============================================================================
+
+#[cfg(test)]
+mod test_conditional_mutator_debug_display {
+    use super::*;
+
+    #[test]
+    fn test_box_conditional_mutator_debug() {
+        let mutator = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let debug_str = format!("{:?}", conditional);
+        assert!(debug_str.contains("BoxConditionalMutator"));
+        assert!(debug_str.contains("BoxMutator"));
+        assert!(debug_str.contains("BoxPredicate"));
+    }
+
+    #[test]
+    fn test_box_conditional_mutator_display() {
+        let mutator = BoxMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let display_str = format!("{}", conditional);
+        assert!(display_str.contains("BoxConditionalMutator"));
+    }
+
+    #[test]
+    fn test_rc_conditional_mutator_debug() {
+        let mutator = RcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let debug_str = format!("{:?}", conditional);
+        assert!(debug_str.contains("RcConditionalMutator"));
+        assert!(debug_str.contains("RcMutator"));
+        assert!(debug_str.contains("RcPredicate"));
+    }
+
+    #[test]
+    fn test_rc_conditional_mutator_display() {
+        let mutator = RcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let display_str = format!("{}", conditional);
+        assert!(display_str.contains("RcConditionalMutator"));
+    }
+
+    #[test]
+    fn test_arc_conditional_mutator_debug() {
+        let mutator = ArcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let debug_str = format!("{:?}", conditional);
+        assert!(debug_str.contains("ArcConditionalMutator"));
+        assert!(debug_str.contains("ArcMutator"));
+        assert!(debug_str.contains("ArcPredicate"));
+    }
+
+    #[test]
+    fn test_arc_conditional_mutator_display() {
+        let mutator = ArcMutator::new(|x: &mut i32| *x *= 2);
+        let conditional = mutator.when(|x: &i32| *x > 0);
+
+        let display_str = format!("{}", conditional);
+        assert!(display_str.contains("ArcConditionalMutator"));
     }
 }
