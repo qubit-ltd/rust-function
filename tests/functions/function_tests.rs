@@ -928,6 +928,115 @@ fn test_arc_conditional_function_clone_multiple() {
 }
 
 // ============================================================================
+// ConditionalFunction Debug and Display Tests
+// ============================================================================
+
+#[test]
+fn test_box_conditional_function_debug_display() {
+    // Test Debug and Display for BoxConditionalFunction without name
+    let double = BoxFunction::new(|x: &i32| x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("BoxConditionalFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("BoxConditionalFunction("));
+    assert!(display_str.contains("BoxFunction"));
+    assert!(display_str.contains("BoxPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for BoxConditionalFunction with name
+    let triple = BoxFunction::new_with_name("triple_func", |x: &i32| x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("BoxConditionalFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("BoxConditionalFunction("));
+    assert!(named_display_str.contains("BoxFunction(triple_func)"));
+    assert!(named_display_str.contains("BoxPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+#[test]
+fn test_rc_conditional_function_debug_display() {
+    // Test Debug and Display for RcConditionalFunction without name
+    let double = RcFunction::new(|x: &i32| x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("RcConditionalFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("RcConditionalFunction("));
+    assert!(display_str.contains("RcFunction"));
+    assert!(display_str.contains("RcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for RcConditionalFunction with name
+    let triple = RcFunction::new_with_name("rc_triple_func", |x: &i32| x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("RcConditionalFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("RcConditionalFunction("));
+    assert!(named_display_str.contains("RcFunction(rc_triple_func)"));
+    assert!(named_display_str.contains("RcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+#[test]
+fn test_arc_conditional_function_debug_display() {
+    // Test Debug and Display for ArcConditionalFunction without name
+    let double = ArcFunction::new(|x: &i32| x * 2);
+    let conditional = double.when(|x: &i32| *x > 0);
+
+    let debug_str = format!("{:?}", conditional);
+    assert!(debug_str.contains("ArcConditionalFunction"));
+    assert!(debug_str.contains("name"));
+    assert!(debug_str.contains("function"));
+    assert!(debug_str.contains("predicate"));
+
+    let display_str = format!("{}", conditional);
+    assert!(display_str.starts_with("ArcConditionalFunction("));
+    assert!(display_str.contains("ArcFunction"));
+    assert!(display_str.contains("ArcPredicate"));
+    assert!(display_str.ends_with(")"));
+
+    // Test Debug and Display for ArcConditionalFunction with name
+    let triple = ArcFunction::new_with_name("arc_triple_func", |x: &i32| x * 3);
+    let named_conditional = triple.when(|x: &i32| *x % 2 == 0);
+
+    let named_debug_str = format!("{:?}", named_conditional);
+    assert!(named_debug_str.contains("ArcConditionalFunction"));
+    assert!(named_debug_str.contains("name"));
+    assert!(named_debug_str.contains("function"));
+    assert!(named_debug_str.contains("predicate"));
+
+    let named_display_str = format!("{}", named_conditional);
+    assert!(named_display_str.starts_with("ArcConditionalFunction("));
+    assert!(named_display_str.contains("ArcFunction(arc_triple_func)"));
+    assert!(named_display_str.contains("ArcPredicate"));
+    assert!(named_display_str.ends_with(")"));
+}
+
+// ============================================================================
 // RcConditionalFunction Clone Tests
 // ============================================================================
 
@@ -975,3 +1084,4 @@ fn test_rc_conditional_function_clone_multiple() {
     assert_eq!(result3.apply(&5), 5);
     assert_eq!(result4.apply(&5), 5);
 }
+
