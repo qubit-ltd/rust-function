@@ -979,6 +979,23 @@ mod tests {
         }
 
         #[test]
+        fn test_arc_to_rc_non_consuming() {
+            let arc_pred = ArcBiPredicate::new(|x: &i32, y: &i32| x + y > 0);
+            let rc_pred = arc_pred.to_rc();
+            assert!(rc_pred.test(&5, &3));
+            // Ensure original ArcBiPredicate is still usable
+            assert!(arc_pred.test(&5, &3));
+        }
+
+        #[test]
+        fn test_arc_to_rc_non_consuming_preserves_name() {
+            let arc_pred = ArcBiPredicate::new_with_name("test", |x: &i32, y: &i32| x + y > 0);
+            let rc_pred = arc_pred.to_rc();
+            assert_eq!(rc_pred.name(), Some("test"));
+            assert_eq!(arc_pred.name(), Some("test"));
+        }
+
+        #[test]
         fn test_rc_to_rc_zero_cost() {
             let pred = RcBiPredicate::new(|x: &i32, y: &i32| x + y > 0);
             let same_pred = pred.into_rc();
