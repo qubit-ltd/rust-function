@@ -456,10 +456,10 @@ mod function_once_default_impl_tests {
         fn apply(self, input: &i32) -> i32 {
             input * self.multiplier
         }
-        // 不覆盖任何 to_xxx_once() 方法，测试默认实现
+        // Does not override any to_xxx_once() methods, testing default implementations
     }
 
-    /// 可克隆的自定义一次性函数，用于测试 to_xxx_once() 方法
+    /// Cloneable custom one-time function for testing to_xxx_once() methods
     #[derive(Clone)]
     struct CloneableCustomFunctionOnce {
         multiplier: i32,
@@ -469,7 +469,7 @@ mod function_once_default_impl_tests {
         fn apply(self, input: &i32) -> i32 {
             input * self.multiplier
         }
-        // 不覆盖任何 to_xxx_once() 方法，测试默认实现
+        // Does not override any to_xxx_once() methods, testing default implementations
     }
 
     #[test]
@@ -495,7 +495,7 @@ mod function_once_default_impl_tests {
 
         assert_eq!(boxed.apply(&14), 42);
 
-        // 原始函数仍然可用（因为 to_box 只借用）
+        // Original function is still usable (because to_box only borrows)
         assert_eq!(custom.apply(&10), 30);
     }
 
@@ -506,7 +506,7 @@ mod function_once_default_impl_tests {
 
         assert_eq!(func(&7), 42);
 
-        // 原始函数仍然可用（因为 to_fn 只借用）
+        // Original function is still usable (because to_fn only borrows)
         assert_eq!(custom.apply(&5), 30);
     }
 

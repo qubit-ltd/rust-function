@@ -1657,8 +1657,8 @@ mod stateful_bi_transformer_default_impl_tests {
         StatefulBiTransformer,
     };
 
-    /// 自定义结构体，只实现 StatefulBiTransformer trait 的核心 apply 方法
-    /// 所有 into_xxx() 和 to_xxx() 方法都使用默认实现
+    /// Custom struct that only implements the core apply method of StatefulBiTransformer trait
+    /// All into_xxx() and to_xxx() methods use default implementations
     struct CustomStatefulBiTransformer {
         multiplier: i32,
         counter: i32,
@@ -1669,10 +1669,10 @@ mod stateful_bi_transformer_default_impl_tests {
             self.counter += 1;
             (first + second) * self.multiplier + self.counter
         }
-        // 不覆盖任何 into_xxx() 或 to_xxx() 方法，测试默认实现
+        // Does not override any into_xxx() or to_xxx() methods, testing default implementations
     }
 
-    /// 可克隆的自定义有状态双参数转换器，用于测试 to_xxx() 方法
+    /// Cloneable custom stateful bi-transformer for testing to_xxx() methods
     #[derive(Clone)]
     struct CloneableCustomStatefulBiTransformer {
         multiplier: i32,
@@ -1684,7 +1684,7 @@ mod stateful_bi_transformer_default_impl_tests {
             self.counter += 1;
             (first + second) * self.multiplier + self.counter
         }
-        // 不覆盖任何 into_xxx() 或 to_xxx() 方法，测试默认实现
+        // Does not override any into_xxx() or to_xxx() methods, testing default implementations
     }
 
     #[test]
@@ -1710,7 +1710,7 @@ mod stateful_bi_transformer_default_impl_tests {
         assert_eq!(rc.apply(2, 3), 16); // (2 + 3) * 3 + 1
         assert_eq!(rc.apply(2, 3), 17); // (2 + 3) * 3 + 2
 
-        // 测试克隆（共享状态）
+        // Test cloning (shared state)
         let mut rc_clone = rc.clone();
         assert_eq!(rc_clone.apply(2, 3), 18); // (2 + 3) * 3 + 3
         assert_eq!(rc.apply(2, 3), 19); // (2 + 3) * 3 + 4
@@ -1727,7 +1727,7 @@ mod stateful_bi_transformer_default_impl_tests {
         assert_eq!(arc.apply(1, 2), 13); // (1 + 2) * 4 + 1
         assert_eq!(arc.apply(1, 2), 14); // (1 + 2) * 4 + 2
 
-        // 测试克隆（共享状态）
+        // Test cloning (shared state)
         let mut arc_clone = arc.clone();
         assert_eq!(arc_clone.apply(1, 2), 15); // (1 + 2) * 4 + 3
         assert_eq!(arc.apply(1, 2), 16); // (1 + 2) * 4 + 4
@@ -1755,7 +1755,7 @@ mod stateful_bi_transformer_default_impl_tests {
 
         assert_eq!(boxed.apply(5, 10), 31); // (5 + 10) * 2 + 1
 
-        // 原始转换器仍然可用
+        // Original transformer is still usable
         let mut custom_copy = custom.clone();
         assert_eq!(custom_copy.apply(3, 7), 21); // (3 + 7) * 2 + 1
     }
@@ -1770,7 +1770,7 @@ mod stateful_bi_transformer_default_impl_tests {
 
         assert_eq!(rc.apply(2, 3), 16); // (2 + 3) * 3 + 1
 
-        // 原始转换器仍然可用
+        // Original transformer is still usable
         let mut custom_copy = custom.clone();
         assert_eq!(custom_copy.apply(1, 1), 7); // (1 + 1) * 3 + 1
     }
@@ -1785,7 +1785,7 @@ mod stateful_bi_transformer_default_impl_tests {
 
         assert_eq!(arc.apply(1, 2), 13); // (1 + 2) * 4 + 1
 
-        // 原始转换器仍然可用
+        // Original transformer is still usable
         let mut custom_copy = custom.clone();
         assert_eq!(custom_copy.apply(2, 2), 17); // (2 + 2) * 4 + 1
     }
@@ -1800,7 +1800,7 @@ mod stateful_bi_transformer_default_impl_tests {
 
         assert_eq!(func(2, 2), 21); // (2 + 2) * 5 + 1
 
-        // 原始转换器仍然可用
+        // Original transformer is still usable
         let mut custom_copy = custom.clone();
         assert_eq!(custom_copy.apply(1, 1), 11); // (1 + 1) * 5 + 1
     }
@@ -1816,12 +1816,12 @@ mod stateful_bi_transformer_default_impl_tests {
             counter: 0,
         };
 
-        // 测试 into_box -> into_rc 链式转换
+        // Test into_box -> into_rc chained conversion
         let boxed: BoxStatefulBiTransformer<i32, i32, i32> = custom1.into_box();
         let mut rc = boxed.into_rc();
         assert_eq!(rc.apply(10, 11), 43); // (10 + 11) * 2 + 1
 
-        // 测试 into_arc 直接转换
+        // Test into_arc direct conversion
         let mut arc: ArcStatefulBiTransformer<i32, i32, i32> = custom2.into_arc();
         assert_eq!(arc.apply(5, 9), 43); // (5 + 9) * 3 + 1
     }
@@ -1834,11 +1834,11 @@ mod stateful_bi_transformer_default_impl_tests {
         };
         let mut boxed = custom.to_box();
 
-        // 验证状态在多次调用中保持
+        // Verify state persists across multiple calls
         assert_eq!(boxed.apply(1, 1), 7); // (1 + 1) * 3 + 1
         assert_eq!(boxed.apply(1, 1), 8); // (1 + 1) * 3 + 2
         assert_eq!(boxed.apply(1, 1), 9); // (1 + 1) * 3 + 3
-        assert_eq!(boxed.apply(2, 2), 16); // (2 + 2) * 3 + 4 (counter 已经是 4)
+        assert_eq!(boxed.apply(2, 2), 16); // (2 + 2) * 3 + 4 (counter is already 4)
     }
 
     #[test]
@@ -1850,7 +1850,7 @@ mod stateful_bi_transformer_default_impl_tests {
             counter: 0,
         };
 
-        // 创建一个单参数转换器用于组合
+        // Create a single-parameter transformer for composition
         let mut counter = 0;
         let single_transformer = BoxStatefulTransformer::new(move |x: i32| {
             counter += 1;
@@ -1858,9 +1858,9 @@ mod stateful_bi_transformer_default_impl_tests {
         });
 
         let mut composed = custom1.to_box().and_then(single_transformer);
-        // 第一次: (3 + 4) * 2 + 1 = 15, 然后 15 + 1 = 16
+        // First: (3 + 4) * 2 + 1 = 15, then 15 + 1 = 16
         assert_eq!(composed.apply(3, 4), 16);
-        // 第二次: (3 + 4) * 2 + 2 = 16, 然后 16 + 2 = 18
+        // Second: (3 + 4) * 2 + 2 = 16, then 16 + 2 = 18
         assert_eq!(composed.apply(3, 4), 18);
     }
 }

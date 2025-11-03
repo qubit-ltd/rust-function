@@ -259,10 +259,10 @@ mod test_closure {
 
         let chained = (move |x: &mut Vec<i32>| {
             x.extend(data1);
-            x.len() // 返回 usize
+            x.len() // returns usize
         })
         .and_then(move |len: &usize| {
-            // 基于前一个函数返回的长度进行计算
+            // Calculate based on the length returned by the previous function
             *len + data2.len()
         });
 

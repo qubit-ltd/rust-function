@@ -749,10 +749,10 @@ mod function_default_impl_tests {
         fn apply(&self, input: &i32) -> i32 {
             input * self.multiplier
         }
-        // 不覆盖任何 into_xxx() 或 to_xxx() 方法，测试默认实现
+        // Does not override any into_xxx() or to_xxx() methods, testing default implementations
     }
 
-    /// 可克隆的自定义函数，用于测试 to_xxx() 方法
+    /// Cloneable custom function for testing to_xxx() methods
     #[derive(Clone)]
     struct CloneableCustomFunction {
         multiplier: i32,
@@ -762,7 +762,7 @@ mod function_default_impl_tests {
         fn apply(&self, input: &i32) -> i32 {
             input * self.multiplier
         }
-        // 不覆盖任何 into_xxx() 或 to_xxx() 方法，测试默认实现
+        // Does not override any into_xxx() or to_xxx() methods, testing default implementations
     }
 
     #[test]
@@ -782,7 +782,7 @@ mod function_default_impl_tests {
         assert_eq!(rc.apply(&4), 20);
         assert_eq!(rc.apply(&6), 30);
 
-        // 测试克隆
+        // Test cloning
         let rc_clone = rc.clone();
         assert_eq!(rc_clone.apply(&2), 10);
     }
@@ -795,7 +795,7 @@ mod function_default_impl_tests {
         assert_eq!(arc.apply(&3), 21);
         assert_eq!(arc.apply(&5), 35);
 
-        // 测试克隆
+        // Test cloning
         let arc_clone = arc.clone();
         assert_eq!(arc_clone.apply(&2), 14);
     }
@@ -816,7 +816,7 @@ mod function_default_impl_tests {
 
         assert_eq!(boxed.apply(&7), 21);
 
-        // 原始函数仍然可用
+        // Original function is still usable
         assert_eq!(custom.apply(&10), 30);
     }
 
@@ -827,7 +827,7 @@ mod function_default_impl_tests {
 
         assert_eq!(rc.apply(&4), 20);
 
-        // 原始函数仍然可用
+        // Original function is still usable
         assert_eq!(custom.apply(&6), 30);
     }
 
@@ -838,7 +838,7 @@ mod function_default_impl_tests {
 
         assert_eq!(arc.apply(&3), 21);
 
-        // 原始函数仍然可用
+        // Original function is still usable
         assert_eq!(custom.apply(&5), 35);
     }
 
@@ -849,7 +849,7 @@ mod function_default_impl_tests {
 
         assert_eq!(func(&5), 20);
 
-        // 原始函数仍然可用
+        // Original function is still usable
         assert_eq!(custom.apply(&10), 40);
     }
 
@@ -858,12 +858,12 @@ mod function_default_impl_tests {
         let custom1 = CustomFunction { multiplier: 2 };
         let custom2 = CustomFunction { multiplier: 3 };
 
-        // 测试 into_box -> into_rc 链式转换
+        // Test into_box -> into_rc chained conversion
         let boxed: BoxFunction<i32, i32> = custom1.into_box();
         let rc = boxed.into_rc();
         assert_eq!(rc.apply(&21), 42);
 
-        // 测试 into_arc 直接转换
+        // Test into_arc direct conversion
         let arc: ArcFunction<i32, i32> = custom2.into_arc();
         assert_eq!(arc.apply(&14), 42);
     }
@@ -887,17 +887,17 @@ fn test_arc_conditional_function_clone() {
     let double = ArcFunction::new(|x: &i32| x * 2);
     let conditional = double.when(|x: &i32| *x > 0);
 
-    // 克隆条件函数
+    // Clone conditional function
     let conditional_clone = conditional.clone();
 
-    // 两个克隆的条件函数都能正常工作
+    // Both cloned conditional functions work properly
     let result1 = conditional.or_else(|x: &i32| -(*x));
     let result2 = conditional_clone.or_else(|x: &i32| x + 100);
 
-    assert_eq!(result1.apply(&5), 10); // 条件满足: 5 * 2
-    assert_eq!(result1.apply(&-5), 5); // 条件不满足: -(-5)
-    assert_eq!(result2.apply(&5), 10); // 条件满足: 5 * 2
-    assert_eq!(result2.apply(&-5), 95); // 条件不满足: -5 + 100
+    assert_eq!(result1.apply(&5), 10); // Condition met: 5 * 2
+    assert_eq!(result1.apply(&-5), 5); // Condition not met: -(-5)
+    assert_eq!(result2.apply(&5), 10); // Condition met: 5 * 2
+    assert_eq!(result2.apply(&-5), 95); // Condition not met: -5 + 100
 }
 
 #[test]
@@ -905,7 +905,7 @@ fn test_arc_conditional_function_clone_multiple() {
     let triple = ArcFunction::new(|x: &i32| x * 3);
     let conditional = triple.when(|x: &i32| *x % 2 == 0);
 
-    // 创建多个克隆
+    // Create multiple clones
     let clone1 = conditional.clone();
     let clone2 = conditional.clone();
     let clone3 = conditional.clone();
@@ -915,13 +915,13 @@ fn test_arc_conditional_function_clone_multiple() {
     let result3 = clone2.or_else(|x: &i32| *x);
     let result4 = clone3.or_else(|x: &i32| *x);
 
-    // 所有克隆都能正常工作
-    assert_eq!(result1.apply(&4), 12); // 偶数: 4 * 3
+    // All clones work properly
+    assert_eq!(result1.apply(&4), 12); // Even number: 4 * 3
     assert_eq!(result2.apply(&4), 12);
     assert_eq!(result3.apply(&4), 12);
     assert_eq!(result4.apply(&4), 12);
 
-    assert_eq!(result1.apply(&5), 5); // 奇数: 5
+    assert_eq!(result1.apply(&5), 5); // Odd number: 5
     assert_eq!(result2.apply(&5), 5);
     assert_eq!(result3.apply(&5), 5);
     assert_eq!(result4.apply(&5), 5);
@@ -936,17 +936,17 @@ fn test_rc_conditional_function_clone() {
     let double = RcFunction::new(|x: &i32| x * 2);
     let conditional = double.when(|x: &i32| *x > 0);
 
-    // 克隆条件函数
+    // Clone conditional function
     let conditional_clone = conditional.clone();
 
-    // 两个克隆的条件函数都能正常工作
+    // Both cloned conditional functions work properly
     let result1 = conditional.or_else(|x: &i32| -(*x));
     let result2 = conditional_clone.or_else(|x: &i32| x + 100);
 
-    assert_eq!(result1.apply(&5), 10); // 条件满足: 5 * 2
-    assert_eq!(result1.apply(&-5), 5); // 条件不满足: -(-5)
-    assert_eq!(result2.apply(&5), 10); // 条件满足: 5 * 2
-    assert_eq!(result2.apply(&-5), 95); // 条件不满足: -5 + 100
+    assert_eq!(result1.apply(&5), 10); // Condition met: 5 * 2
+    assert_eq!(result1.apply(&-5), 5); // Condition not met: -(-5)
+    assert_eq!(result2.apply(&5), 10); // Condition met: 5 * 2
+    assert_eq!(result2.apply(&-5), 95); // Condition not met: -5 + 100
 }
 
 #[test]
@@ -954,7 +954,7 @@ fn test_rc_conditional_function_clone_multiple() {
     let triple = RcFunction::new(|x: &i32| x * 3);
     let conditional = triple.when(|x: &i32| *x % 2 == 0);
 
-    // 创建多个克隆
+    // Create multiple clones
     let clone1 = conditional.clone();
     let clone2 = conditional.clone();
     let clone3 = conditional.clone();
@@ -964,13 +964,13 @@ fn test_rc_conditional_function_clone_multiple() {
     let result3 = clone2.or_else(|x: &i32| *x);
     let result4 = clone3.or_else(|x: &i32| *x);
 
-    // 所有克隆都能正常工作
-    assert_eq!(result1.apply(&4), 12); // 偶数: 4 * 3
+    // All clones work properly
+    assert_eq!(result1.apply(&4), 12); // Even number: 4 * 3
     assert_eq!(result2.apply(&4), 12);
     assert_eq!(result3.apply(&4), 12);
     assert_eq!(result4.apply(&4), 12);
 
-    assert_eq!(result1.apply(&5), 5); // 奇数: 5
+    assert_eq!(result1.apply(&5), 5); // Odd number: 5
     assert_eq!(result2.apply(&5), 5);
     assert_eq!(result3.apply(&5), 5);
     assert_eq!(result4.apply(&5), 5);

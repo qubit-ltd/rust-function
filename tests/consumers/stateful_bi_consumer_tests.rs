@@ -449,7 +449,7 @@ mod box_conditional_bi_consumer_tests {
         func(&5, &3);
         assert_eq!(*log.lock().unwrap(), vec![8]);
         func(&-5, &3);
-        assert_eq!(*log.lock().unwrap(), vec![8, -2]); // 行452: 修复断言，匹配实际执行结果 (-5 + 3 = -2)
+        assert_eq!(*log.lock().unwrap(), vec![8, -2]); // Line 452: Fix assertion to match actual execution result (-5 + 3 = -2)
     }
 
     // Test with always true predicate
