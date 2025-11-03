@@ -74,7 +74,7 @@
 /// * `$struct_name<$generics>` - Struct name with generic parameters
 /// * `$fn_trait_with_bounds` - Closure trait with complete bounds
 ///   (e.g., `Fn(&T) -> bool + 'static`)
-/// * `$wrapper_ctor` - Wrapper constructor function (e.g., `Box::new`, `Rc::new`, `Arc::new`)
+/// * `$wrapper_expr` - Wrapper expression (uses `f` for the closure)
 ///
 /// # Usage
 ///
@@ -83,14 +83,14 @@
 /// impl_predicate_common_methods!(
 ///     BoxPredicate<T>,
 ///     (Fn(&T) -> bool + 'static),
-///     Box::new
+///     |f| Box::new(f)
 /// );
 ///
 /// // Two generic parameters - BiPredicate
 /// impl_predicate_common_methods!(
 ///     BoxBiPredicate<T, U>,
 ///     (Fn(&T, &U) -> bool + 'static),
-///     Box::new
+///     |f| Box::new(f)
 /// );
 /// ```
 ///
@@ -107,11 +107,11 @@ macro_rules! impl_predicate_common_methods {
     // Parameters:
     //   $fn_trait_with_bounds - Function trait bounds
     //   $f - Closure parameter name
-    //   $wrapper_ctor - Wrapper constructor function
+    //   $wrapper_expr - Wrapper expression
     //   $type_desc - Type description for docs (e.g., "predicate" or "bi-predicate")
     (@new_methods
         ($($fn_trait_with_bounds:tt)+),
-        |$f:ident| $wrapper_ctor:path,
+        |$f:ident| $wrapper_expr:expr,
         $type_desc:literal
     ) => {
         #[doc = concat!("Creates a new ", $type_desc, ".")]
@@ -134,7 +134,7 @@ macro_rules! impl_predicate_common_methods {
             F: $($fn_trait_with_bounds)+,
         {
             Self {
-                function: $wrapper_ctor($f),
+                function: $wrapper_expr,
                 name: None,
             }
         }
@@ -161,7 +161,7 @@ macro_rules! impl_predicate_common_methods {
             F: $($fn_trait_with_bounds)+,
         {
             Self {
-                function: $wrapper_ctor($f),
+                function: $wrapper_expr,
                 name: Some(name.to_string()),
             }
         }
@@ -192,12 +192,12 @@ macro_rules! impl_predicate_common_methods {
     (
         $struct_name:ident < $t:ident >,
         ($($fn_trait_with_bounds:tt)+),
-        $wrapper_ctor:path
+        |$f:ident| $wrapper_expr:expr
     ) => {
 
         impl_predicate_common_methods!(@new_methods
             ($($fn_trait_with_bounds)+),
-            |f| $wrapper_ctor,
+            |$f| $wrapper_expr,
             "predicate"
         );
 
@@ -226,12 +226,12 @@ macro_rules! impl_predicate_common_methods {
     (
         $struct_name:ident < $t:ident, $u:ident >,
         ($($fn_trait_with_bounds:tt)+),
-        $wrapper_ctor:path
+        |$f:ident| $wrapper_expr:expr
     ) => {
 
         impl_predicate_common_methods!(@new_methods
             ($($fn_trait_with_bounds)+),
-            |f| $wrapper_ctor,
+            |$f| $wrapper_expr,
             "bi-predicate"
         );
 

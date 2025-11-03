@@ -486,7 +486,7 @@ impl<T: 'static> BoxPredicate<T> {
     impl_predicate_common_methods!(
         BoxPredicate<T>,
         (Fn(&T) -> bool + 'static),
-        Box::new
+        |f| Box::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
@@ -557,7 +557,7 @@ impl<T: 'static> RcPredicate<T> {
     impl_predicate_common_methods!(
         RcPredicate<T>,
         (Fn(&T) -> bool + 'static),
-        Rc::new
+        |f| Rc::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
@@ -655,7 +655,7 @@ impl<T: 'static> ArcPredicate<T> {
     impl_predicate_common_methods!(
         ArcPredicate<T>,
         (Fn(&T) -> bool + Send + Sync + 'static),
-        Arc::new
+        |f| Arc::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()

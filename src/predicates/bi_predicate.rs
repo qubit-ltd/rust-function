@@ -450,7 +450,7 @@ impl<T, U> BoxBiPredicate<T, U> {
     impl_predicate_common_methods!(
         BoxBiPredicate<T, U>,
         (Fn(&T, &U) -> bool + 'static),
-        Box::new
+        |f| Box::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
@@ -535,7 +535,7 @@ impl<T: 'static, U: 'static> RcBiPredicate<T, U> {
     impl_predicate_common_methods!(
         RcBiPredicate<T, U>,
         (Fn(&T, &U) -> bool + 'static),
-        Rc::new
+        |f| Rc::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
@@ -658,7 +658,7 @@ impl<T: 'static, U: 'static> ArcBiPredicate<T, U> {
     impl_predicate_common_methods!(
         ArcBiPredicate<T, U>,
         (Fn(&T, &U) -> bool + Send + Sync + 'static),
-        Arc::new
+        |f| Arc::new(f)
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
