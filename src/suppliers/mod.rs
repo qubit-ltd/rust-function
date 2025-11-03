@@ -15,6 +15,7 @@
 //!
 //! Haixing Hu
 
+pub mod macros;
 pub mod stateful_supplier;
 pub mod supplier;
 pub mod supplier_once;

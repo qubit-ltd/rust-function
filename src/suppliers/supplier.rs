@@ -122,6 +122,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::suppliers::macros::impl_supplier_common_methods;
 use crate::transformers::transformer::Transformer;
 
 // ======================================================================
@@ -496,11 +497,103 @@ impl<T> BoxSupplier<T>
 where
     T: 'static,
 {
-    impl_supplier_common_methods!(
-        BoxSupplier<T>,
-        (Fn() -> T + 'static),
-        |f| Box::new(f)
-    );
+    /// Creates a new `BoxSupplier`.
+    ///
+    /// # Parameters
+    ///
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new `BoxSupplier<T>` instance
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{BoxSupplier, Supplier};
+    ///
+    /// let supplier = BoxSupplier::new(|| 42);
+    /// assert_eq!(supplier.get(), 42);
+    /// ```
+    pub fn new<F>(f: F) -> Self
+    where
+        F: Fn() -> T + 'static,
+    {
+        BoxSupplier {
+            function: Box::new(f),
+            name: None,
+        }
+    }
+
+    /// Creates a new named supplier.
+    ///
+    /// Wraps the provided closure and assigns it a name, which is
+    /// useful for debugging and logging purposes.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name for this supplier
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new named `BoxSupplier<T>` instance wrapping the closure.
+    pub fn new_with_name<F>(name: &str, f: F) -> Self
+    where
+        F: Fn() -> T + 'static,
+    {
+        BoxSupplier {
+            function: Box::new(f),
+            name: Some(name.to_string()),
+        }
+    }
+
+    /// Gets the name of this supplier.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&str)` if a name was set, `None` otherwise.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Sets the name of this supplier.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name to set for this supplier
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_string());
+    }
+
+    /// Creates a constant supplier.
+    ///
+    /// Returns a supplier that always produces the same value (via
+    /// cloning).
+    ///
+    /// # Parameters
+    ///
+    /// * `value` - The constant value to return
+    ///
+    /// # Returns
+    ///
+    /// A constant supplier
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{BoxSupplier, Supplier};
+    ///
+    /// let constant = BoxSupplier::constant(42);
+    /// assert_eq!(constant.get(), 42);
+    /// assert_eq!(constant.get(), 42);
+    /// ```
+    pub fn constant(value: T) -> Self
+    where
+        T: Clone + 'static,
+    {
+        BoxSupplier::new(move || value.clone())
+    }
 
     /// Maps the output using a transformation function.
     ///
