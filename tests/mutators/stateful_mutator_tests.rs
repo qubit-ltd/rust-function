@@ -1355,27 +1355,27 @@ mod test_custom_mutator_default_impl {
         // Test non-consuming conversions provided by default impls (to_box/to_rc/to_arc/to_fn)
         let mutator = DoubleStatefulMutator::new(2);
 
-        // to_box
+        // to_box - this exercises cloned.apply(t) in the default to_box implementation
         let mut b = mutator.to_box();
         let mut v = 5;
         b.apply(&mut v);
         assert_eq!(v, 10);
 
-        // to_rc (from custom mutator, not from BoxStatefulMutator)
+        // to_rc (from custom mutator, not from BoxStatefulMutator) - exercises cloned.apply(t) in to_rc
         let mutator2 = DoubleStatefulMutator::new(2);
         let r = mutator2.to_rc();
         let mut r1 = r.clone();
         r1.apply(&mut v);
         assert_eq!(v, 20);
 
-        // to_arc (from custom mutator, not from RcStatefulMutator)
+        // to_arc (from custom mutator, not from RcStatefulMutator) - exercises cloned.apply(t) in to_arc
         let mutator3 = DoubleStatefulMutator::new(2);
         let a = mutator3.to_arc();
         let mut a1 = a.clone();
         a1.apply(&mut v);
         assert_eq!(v, 40);
 
-        // to_fn
+        // to_fn - exercises cloned.apply(t) in the default to_fn implementation
         let mutator4 = DoubleStatefulMutator::new(2);
         let mut values = vec![1, 1];
         values.iter_mut().for_each(mutator4.to_fn());
