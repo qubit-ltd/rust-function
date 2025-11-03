@@ -19,6 +19,7 @@
 
 pub mod bi_transformer;
 pub mod bi_transformer_once;
+pub mod macros;
 pub mod stateful_bi_transformer;
 pub mod stateful_transformer;
 pub mod transformer;
