@@ -6,45 +6,46 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Box Conditional Transformer Macro
+//! # Box Conditional Transformer Macro
 //!
-// Generates Box-based Conditional Transformer implementations
+//! Generates Box-based Conditional Transformer implementations
 //!
-// For Box-based conditional transformers, generates `and_then` and `or_else` methods,
-// as well as complete Transformer/BiTransformer trait implementations.
+//! For Box-based conditional transformers, generates `and_then` and `or_else`
+//! methods, as well as complete Transformer/BiTransformer trait
+//! implementations.
 //!
-// Box type characteristics:
-// - `and_then` and `or_else` consume self (because Box cannot Clone)
-// - Does not implement `into_arc()` (because Box types are not Send + Sync)
-// - Does not implement `to_xxx()` methods (because Box types cannot Clone)
+//! Box type characteristics:
+//! - `and_then` and `or_else` consume self (because Box cannot Clone)
+//! - Does not implement `into_arc()` (because Box types are not Send + Sync)
+//! - Does not implement `to_xxx()` methods (because Box types cannot Clone)
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name<$generics>` - Struct name with generic parameters
-// * `$transformer_type` - Transformer wrapper type name
-// * `$transformer_trait` - Transformer trait name
+//! * `$struct_name<$generics>` - Struct name with generic parameters
+//! * `$transformer_type` - Transformer wrapper type name
+//! * `$transformer_trait` - Transformer trait name
 //!
-// # Usage Examples
+//! # Usage Examples
 //!
-// ```ignore
-// // Two-parameter Transformer
-// impl_box_conditional_transformer!(
-//     BoxConditionalTransformer<T, U>,
-//     BoxTransformer,
-//     Transformer
-// );
+//! ```ignore
+//! // Two-parameter Transformer
+//! impl_box_conditional_transformer!(
+//!     BoxConditionalTransformer<T, U>,
+//!     BoxTransformer,
+//!     Transformer
+//! );
 //!
-// // Three-parameter BiTransformer
-// impl_box_conditional_transformer!(
-//     BoxConditionalBiTransformer<T, U, V>,
-//     BoxBiTransformer,
-//     BiTransformer
-// );
-// ```
+//! // Three-parameter BiTransformer
+//! impl_box_conditional_transformer!(
+//!     BoxConditionalBiTransformer<T, U, V>,
+//!     BoxBiTransformer,
+//!     BiTransformer
+//! );
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Box-based Conditional Transformer implementations
 ///
@@ -61,10 +62,10 @@
 /// # Parameters
 ///
 /// * `$struct_name<$generics>` - Struct name with generic parameters
-// * `$transformer_type` - Transformer wrapper type name
-// * `$transformer_trait` - Transformer trait name
+/// * `$transformer_type` - Transformer wrapper type name
+/// * `$transformer_trait` - Transformer trait name
 ///
-// # Usage Examples
+/// # Usage Examples
 ///
 /// ```ignore
 /// // Two-parameter Transformer
@@ -80,7 +81,7 @@
 ///     BoxBiTransformer,
 ///     BiTransformer
 /// );
-// ```
+/// ```
 macro_rules! impl_box_conditional_transformer {
     // Two generic parameters - Transformer
     (

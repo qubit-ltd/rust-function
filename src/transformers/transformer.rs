@@ -33,8 +33,13 @@ use crate::predicates::predicate::{
     Predicate,
     RcPredicate,
 };
-use crate::transformers::transformer_once::BoxTransformerOnce;
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::transformer_once::{BoxTransformerOnce, TransformerOnce};
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
+    impl_transformer_clone,
+};
 
 // ============================================================================
 // Core Trait
@@ -541,25 +546,10 @@ where
     }
 }
 
-impl<T, R> BoxTransformer<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxTransformer, Transformer};
-    ///
-    /// let constant = BoxTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxTransformer<T, R> {
-        BoxTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(BoxTransformer<T, R>);
+
+// Implement Debug and Display for BoxTransformer
+impl_transformer_debug_display!(BoxTransformer<T, R>);
 
 impl<T, R> Transformer<T, R> for BoxTransformer<T, R> {
     fn apply(&self, input: T) -> R {
@@ -620,44 +610,6 @@ impl<T, R> Transformer<T, R> for BoxTransformer<T, R> {
     //    guides users to the correct usage pattern
 }
 
-// ============================================================================
-// BoxTransformer TransformerOnce implementation
-// ============================================================================
-
-use crate::transformers::transformer_once::TransformerOnce;
-
-impl<T, R> TransformerOnce<T, R> for BoxTransformer<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
-    /// Transforms the input value, consuming both self and input
-    ///
-    /// # Parameters
-    ///
-    /// * `input` - The input value (consumed)
-    ///
-    /// # Returns
-    ///
-    /// The transformed output value
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxTransformer, TransformerOnce};
-    ///
-    /// let double = BoxTransformer::new(|x: i32| x * 2);
-    /// let result = double.apply_once(21);
-    /// assert_eq!(result, 42);
-    /// ```
-    ///
-    /// # Author
-    ///
-    /// Haixing Hu
-    fn apply_once(self, input: T) -> R {
-        (self.function)(input)
-    }
-}
 
 // ============================================================================
 // BoxConditionalTransformer - Box-based Conditional Transformer
@@ -776,6 +728,8 @@ pub struct ArcTransformer<T, R> {
     function: Arc<dyn Fn(T) -> R + Send + Sync>,
     name: Option<String>,
 }
+
+impl_transformer_debug_display!(ArcTransformer<T, R>);
 
 impl<T, R> ArcTransformer<T, R>
 where
@@ -1002,28 +956,7 @@ where
     }
 }
 
-impl<T, R> ArcTransformer<T, R>
-where
-    T: Send + Sync + 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcTransformer, Transformer};
-    ///
-    /// let constant = ArcTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> ArcTransformer<T, R>
-    where
-        R: Send + Sync,
-    {
-        ArcTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(thread_safe ArcTransformer<T, R>);
 
 impl<T, R> Transformer<T, R> for ArcTransformer<T, R> {
     fn apply(&self, input: T) -> R {
@@ -1389,6 +1322,8 @@ pub struct RcTransformer<T, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(RcTransformer<T, R>);
+
 impl<T, R> RcTransformer<T, R>
 where
     T: 'static,
@@ -1615,25 +1550,7 @@ where
     }
 }
 
-impl<T, R> RcTransformer<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcTransformer, Transformer};
-    ///
-    /// let constant = RcTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> RcTransformer<T, R> {
-        RcTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(RcTransformer<T, R>);
 
 impl<T, R> Transformer<T, R> for RcTransformer<T, R> {
     fn apply(&self, input: T) -> R {

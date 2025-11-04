@@ -25,7 +25,11 @@ use crate::predicates::predicate::{
     BoxPredicate,
     Predicate,
 };
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
+};
 
 // ============================================================================
 // Core Trait
@@ -203,6 +207,8 @@ pub struct BoxTransformerOnce<T, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(BoxTransformerOnce<T, R>);
+
 impl<T, R> BoxTransformerOnce<T, R>
 where
     T: 'static,
@@ -377,25 +383,7 @@ where
     }
 }
 
-impl<T, R> BoxTransformerOnce<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxTransformerOnce, TransformerOnce};
-    ///
-    /// let constant = BoxTransformerOnce::constant("hello");
-    /// assert_eq!(constant.apply_once(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxTransformerOnce<T, R> {
-        BoxTransformerOnce::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(BoxTransformerOnce<T, R>);
 
 impl<T, R> TransformerOnce<T, R> for BoxTransformerOnce<T, R> {
     fn apply_once(self, input: T) -> R {

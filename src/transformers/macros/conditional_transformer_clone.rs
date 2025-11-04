@@ -6,34 +6,34 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Conditional Transformer Clone Macro
+//! # Conditional Transformer Clone Macro
 //!
-// Generates Clone trait implementation for Conditional Transformer types
+//! Generates Clone trait implementation for Conditional Transformer types
 //!
-// Generates Clone implementation for Conditional Transformer structs that have
-// `transformer` and `predicate` fields. Both fields are cloned using their
-// respective Clone implementations.
+//! Generates Clone implementation for Conditional Transformer structs that have
+//! `transformer` and `predicate` fields. Both fields are cloned using their
+//! respective Clone implementations.
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name` - The struct name
-// * `$generic` - Generic parameter list (two or three type parameters)
+//! * `$struct_name` - The struct name
+//! * `$generic` - Generic parameter list (two or three type parameters)
 //!
-// # Examples
+//! # Examples
 //!
-// ```ignore
-// // For two type parameters
-// impl_conditional_transformer_clone!(ArcConditionalTransformer<T, U>);
-// impl_conditional_transformer_clone!(RcConditionalTransformer<T, U>);
+//! ```ignore
+//! // For two type parameters
+//! impl_conditional_transformer_clone!(ArcConditionalTransformer<T, U>);
+//! impl_conditional_transformer_clone!(RcConditionalTransformer<T, U>);
 //!
-// // For three type parameters
-// impl_conditional_transformer_clone!(ArcConditionalBiTransformer<T, U, V>);
-// impl_conditional_transformer_clone!(RcConditionalBiTransformer<T, U, V>);
-// ```
+//! // For three type parameters
+//! impl_conditional_transformer_clone!(ArcConditionalBiTransformer<T, U, V>);
+//! impl_conditional_transformer_clone!(RcConditionalBiTransformer<T, U, V>);
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Clone trait implementation for Conditional Transformer types
 ///

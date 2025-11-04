@@ -25,7 +25,11 @@ use crate::predicates::bi_predicate::{
     BiPredicate,
     BoxBiPredicate,
 };
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
+};
 
 // ============================================================================
 // Core Trait
@@ -177,6 +181,8 @@ pub struct BoxBiTransformerOnce<T, U, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(BoxBiTransformerOnce<T, U, R>);
+
 impl<T, U, R> BoxBiTransformerOnce<T, U, R>
 where
     T: 'static,
@@ -310,26 +316,7 @@ where
     }
 }
 
-impl<T, U, R> BoxBiTransformerOnce<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxBiTransformerOnce, BiTransformerOnce};
-    ///
-    /// let constant = BoxBiTransformerOnce::constant("hello");
-    /// assert_eq!(constant.apply_once(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxBiTransformerOnce<T, U, R> {
-        BoxBiTransformerOnce::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(BoxBiTransformerOnce<T, U, R>);
 
 impl<T, U, R> BiTransformerOnce<T, U, R> for BoxBiTransformerOnce<T, U, R> {
     fn apply_once(self, first: T, second: U) -> R {

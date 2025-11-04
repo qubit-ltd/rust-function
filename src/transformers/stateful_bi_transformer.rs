@@ -40,7 +40,10 @@ use crate::transformers::bi_transformer_once::{
     BiTransformerOnce,
     BoxBiTransformerOnce,
 };
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+};
 use crate::transformers::stateful_transformer::StatefulTransformer;
 
 // ============================================================================
@@ -403,26 +406,7 @@ where
     }
 }
 
-impl<T, U, R> BoxStatefulBiTransformer<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulBiTransformer, StatefulBiTransformer};
-    ///
-    /// let constant = BoxStatefulBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxStatefulBiTransformer<T, U, R> {
-        BoxStatefulBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful BoxStatefulBiTransformer<T, U, R>);
 
 impl<T, U, R> StatefulBiTransformer<T, U, R> for BoxStatefulBiTransformer<T, U, R> {
     fn apply(&mut self, first: T, second: U) -> R {
@@ -791,29 +775,7 @@ where
     }
 }
 
-impl<T, U, R> ArcStatefulBiTransformer<T, U, R>
-where
-    T: Send + Sync + 'static,
-    U: Send + Sync + 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulBiTransformer, StatefulBiTransformer};
-    ///
-    /// let constant = ArcStatefulBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> ArcStatefulBiTransformer<T, U, R>
-    where
-        R: Send + Sync,
-    {
-        ArcStatefulBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful thread_safe ArcStatefulBiTransformer<T, U, R>);
 
 impl<T, U, R> StatefulBiTransformer<T, U, R> for ArcStatefulBiTransformer<T, U, R> {
     fn apply(&mut self, first: T, second: U) -> R {
@@ -1255,26 +1217,7 @@ where
     }
 }
 
-impl<T, U, R> RcStatefulBiTransformer<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulBiTransformer, StatefulBiTransformer};
-    ///
-    /// let constant = RcStatefulBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> RcStatefulBiTransformer<T, U, R> {
-        RcStatefulBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful RcStatefulBiTransformer<T, U, R>);
 
 impl<T, U, R> StatefulBiTransformer<T, U, R> for RcStatefulBiTransformer<T, U, R> {
     fn apply(&mut self, first: T, second: U) -> R {

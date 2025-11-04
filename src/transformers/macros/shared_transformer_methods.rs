@@ -6,64 +6,75 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Shared Transformer Methods Macro
+//! # Shared Transformer Methods Macro
+//!
+//! Generates when and and_then method implementations for Arc/Rc-based Transformer
 //
-// Generates when and and_then method implementations for Arc/Rc-based Transformer
+//! Generates conditional execution when method and chaining and_then method
+//! for Arc/Rc-based transformers that borrow &self (because Arc/Rc can be cloned).
+//!
+//! This macro supports both two-parameter and three-parameter transformers through
+//! pattern matching on the struct signature.
+//!
+//! # Parameters
 //
-// Generates conditional execution when method and chaining and_then method
-// for Arc/Rc-based transformers that borrow &self (because Arc/Rc can be cloned).
+//! * `$struct_name<$generics>` - The struct name with its generic parameters
+//!   - Two parameters: `ArcTransformer<T, U>`
+//!   - Three parameters: `ArcBiTransformer<T, U, V>`
+//! * `$return_type` - The return type for when (e.g., ArcConditionalTransformer)
+//! * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
+//! * `$transformer_trait` - Transformer trait name (e.g., Transformer, BiTransformer)
+//! * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+//!
+//! # All Macro Invocations
+//!
+//! | Transformer Type | Struct Signature | `$return_type` |
+//! |------------------|------------------|----------------|
+//! | **ArcTransformer** | `ArcTransformer<T, U>` | ArcConditionalTransformer |
+//! | **RcTransformer** | `RcTransformer<T, U>` | RcConditionalTransformer |
+//! | **ArcStatefulTransformer** | `ArcStatefulTransformer<T, U>` | ArcConditionalStatefulTransformer |
+//! | **RcStatefulTransformer** | `RcStatefulTransformer<T, U>` | RcConditionalStatefulTransformer |
+//! | **ArcBiTransformer** | `ArcBiTransformer<T, U, V>` | ArcConditionalBiTransformer |
+//! | **RcBiTransformer** | `RcBiTransformer<T, U, V>` | RcConditionalBiTransformer |
+//! | **ArcStatefulBiTransformer** | `ArcStatefulBiTransformer<T, U, V>` | ArcConditionalStatefulBiTransformer |
+//! | **RcStatefulBiTransformer** | `RcStatefulBiTransformer<T, U, V>` | RcConditionalStatefulBiTransformer |
+//!
+//! | `$predicate_conversion` | `$transformer_trait` | `$extra_bounds` |
+//! |-------------------------|---------------------|----------------|
+//! | into_arc | Transformer | Send + Sync + 'static |
+//! | into_rc | Transformer | 'static |
+//! | into_arc | StatefulTransformer | Send + Sync + 'static |
+//! | into_rc | StatefulTransformer | 'static |
+//! | into_arc | BiTransformer | Send + Sync + 'static |
+//! | into_rc | BiTransformer | 'static |
+//! | into_arc | StatefulBiTransformer | Send + Sync + 'static |
+//! | into_rc | StatefulBiTransformer | 'static |
 //
-// This macro supports both two-parameter and three-parameter transformers through
-// pattern matching on the struct signature.
-//
-// # Parameters
-//
-// * `$struct_name<$generics>` - The struct name with its generic parameters
-//   - Two parameters: `ArcTransformer<T, U>`
-//   - Three parameters: `ArcBiTransformer<T, U, V>`
-// * `$return_type` - The return type for when (e.g., ArcConditionalTransformer)
-// * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
-// * `$transformer_trait` - Transformer trait name (e.g., Transformer, BiTransformer)
-// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
-//
-// # All Macro Invocations
-//
-// | Transformer Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$transformer_trait` | `$extra_bounds` |
-// |------------------|------------------|----------------|-------------------------|---------------------|----------------|
-// | **ArcTransformer** | `ArcTransformer<T, U>` | ArcConditionalTransformer | into_arc | Transformer | Send + Sync + 'static |
-// | **RcTransformer** | `RcTransformer<T, U>` | RcConditionalTransformer | into_rc | Transformer | 'static |
-// | **ArcStatefulTransformer** | `ArcStatefulTransformer<T, U>` | ArcConditionalStatefulTransformer | into_arc | StatefulTransformer | Send + Sync + 'static |
-// | **RcStatefulTransformer** | `RcStatefulTransformer<T, U>` | RcConditionalStatefulTransformer | into_rc | StatefulTransformer | 'static |
-// | **ArcBiTransformer** | `ArcBiTransformer<T, U, V>` | ArcConditionalBiTransformer | into_arc | BiTransformer | Send + Sync + 'static |
-// | **RcBiTransformer** | `RcBiTransformer<T, U, V>` | RcConditionalBiTransformer | into_rc | BiTransformer | 'static |
-// | **ArcStatefulBiTransformer** | `ArcStatefulBiTransformer<T, U, V>` | ArcConditionalStatefulBiTransformer | into_arc | StatefulBiTransformer | Send + Sync + 'static |
-// | **RcStatefulBiTransformer** | `RcStatefulBiTransformer<T, U, V>` | RcConditionalStatefulBiTransformer | into_rc | StatefulBiTransformer | 'static |
-//
-// # Examples
-//
-// ```ignore
-// // Two-parameter with Arc
-// impl_shared_transformer_methods!(
-//     ArcTransformer<T, U>,
-//     ArcConditionalTransformer,
-//     into_arc,
-//     Transformer,
-//     Send + Sync + 'static
-// );
-//
-// // Three-parameter with Rc
-// impl_shared_transformer_methods!(
-//     RcBiTransformer<T, U, V>,
-//     RcConditionalBiTransformer,
-//     into_rc,
-//     BiTransformer,
-//     'static
-// );
-// ```
-//
-// # Author
-//
-// Haixing Hu
+//! # Examples
+//!
+//! ```ignore
+//! // Two-parameter with Arc
+//! impl_shared_transformer_methods!(
+//!     ArcTransformer<T, U>,
+//!     ArcConditionalTransformer,
+//!     into_arc,
+//!     Transformer,
+//!     Send + Sync + 'static
+//! );
+//!
+//! // Three-parameter with Rc
+//! impl_shared_transformer_methods!(
+//!     RcBiTransformer<T, U, V>,
+//!     RcConditionalBiTransformer,
+//!     into_rc,
+//!     BiTransformer,
+//!     'static
+//! );
+//! ```
+//!
+//! # Author
+//!
+//! Haixing Hu
 
 /// Generates when and and_then method implementations for Arc/Rc-based Transformer
 ///

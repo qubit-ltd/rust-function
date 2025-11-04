@@ -6,56 +6,65 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Box Transformer Methods Macro
-//
-// Generates when and and_then method implementations for Box-based Transformer
-//
-// Generates conditional execution when method and chaining and_then method
-// for Box-based transformers that consume self (because Box cannot be cloned).
-//
-// This macro supports both single-parameter and two-parameter transformers through
-// pattern matching on the struct signature.
-//
-// # Parameters
-//
-// * `$struct_name<$generics>` - The struct name with its generic parameters
-//   - Single parameter: `BoxTransformer<T, U>`
-//   - Two parameters: `BoxBiTransformer<T, U, V>`
-// * `$conditional_type` - The conditional transformer type for when (e.g., BoxConditionalTransformer)
-// * `$transformer_trait` - Transformer trait name (e.g., Transformer, BiTransformer)
-//
-// # Parameter Usage Comparison
-//
-// | Transformer Type | Struct Signature | `$conditional_type` | `$transformer_trait` |
-// |------------------|-----------------|----------------|---------------------|
-// | **Transformer** | `BoxTransformer<T, U>` | BoxConditionalTransformer | Transformer |
-// | **TransformerOnce** | `BoxTransformerOnce<T, U>` | BoxConditionalTransformerOnce | TransformerOnce |
-// | **StatefulTransformer** | `BoxStatefulTransformer<T, U>` | BoxConditionalStatefulTransformer | StatefulTransformer |
-// | **BiTransformer** | `BoxBiTransformer<T, U, V>` | BoxConditionalBiTransformer | BiTransformer |
-// | **BiTransformerOnce** | `BoxBiTransformerOnce<T, U, V>` | BoxConditionalBiTransformerOnce | BiTransformerOnce |
-// | **StatefulBiTransformer** | `BoxStatefulBiTransformer<T, U, V>` | BoxConditionalStatefulBiTransformer | StatefulBiTransformer |
-//
-// # Examples
-//
-// ```ignore
-// // Single-parameter transformer
-// impl_box_transformer_methods!(
-//     BoxTransformer<T, U>,
-//     BoxConditionalTransformer,
-//     Transformer
-// );
-//
-// // Two-parameter transformer
-// impl_box_transformer_methods!(
-//     BoxBiTransformer<T, U, V>,
-//     BoxConditionalBiTransformer,
-//     BiTransformer
-// );
-// ```
-//
-// # Author
-//
-// Haixing Hu
+//! # Box Transformer Methods Macro
+//!
+//! Generates when and and_then method implementations for Box-based Transformer
+//!
+//! Generates conditional execution when method and chaining and_then method
+//! for Box-based transformers that consume self (because Box cannot be cloned).
+//!
+//! This macro supports both single-parameter and two-parameter transformers through
+//! pattern matching on the struct signature.
+//!
+//! # Parameters
+//!
+//! * `$struct_name<$generics>` - The struct name with its generic parameters
+//!   - Single parameter: `BoxTransformer<T, U>`
+//!   - Two parameters: `BoxBiTransformer<T, U, V>`
+//! * `$conditional_type` - The conditional transformer type for when (e.g., BoxConditionalTransformer)
+//! * `$transformer_trait` - Transformer trait name (e.g., Transformer, BiTransformer)
+//!
+//! # Parameter Usage Comparison
+//!
+//! | Transformer Type | Struct Signature | `$conditional_type` |
+//! |------------------|-----------------|----------------|
+//! | **Transformer** | `BoxTransformer<T, U>` | BoxConditionalTransformer |
+//! | **TransformerOnce** | `BoxTransformerOnce<T, U>` | BoxConditionalTransformerOnce |
+//! | **StatefulTransformer** | `BoxStatefulTransformer<T, U>` | BoxConditionalStatefulTransformer |
+//! | **BiTransformer** | `BoxBiTransformer<T, U, V>` | BoxConditionalBiTransformer |
+//! | **BiTransformerOnce** | `BoxBiTransformerOnce<T, U, V>` | BoxConditionalBiTransformerOnce |
+//! | **StatefulBiTransformer** | `BoxStatefulBiTransformer<T, U, V>` | BoxConditionalStatefulBiTransformer |
+//!
+//! | `$transformer_trait` |
+//! |---------------------|
+//! | Transformer |
+//! | TransformerOnce |
+//! | StatefulTransformer |
+//! | BiTransformer |
+//! | BiTransformerOnce |
+//! | StatefulBiTransformer |
+//!
+//! # Examples
+//!
+//! ```ignore
+//! // Single-parameter transformer
+//! impl_box_transformer_methods!(
+//!     BoxTransformer<T, U>,
+//!     BoxConditionalTransformer,
+//!     Transformer
+//! );
+//!
+//! // Two-parameter transformer
+//! impl_box_transformer_methods!(
+//!     BoxBiTransformer<T, U, V>,
+//!     BoxConditionalBiTransformer,
+//!     BiTransformer
+//! );
+//! ```
+//!
+//! # Author
+//!
+//! Haixing Hu
 
 /// Generates when and and_then method implementations for Box-based Transformer
 ///

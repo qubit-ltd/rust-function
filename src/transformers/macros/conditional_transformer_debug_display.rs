@@ -6,31 +6,31 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Conditional Transformer Debug Display Macro
+//! # Conditional Transformer Debug Display Macro
 //!
-// Generates Debug and Display trait implementations for Conditional Transformer structs
+//! Generates Debug and Display trait implementations for Conditional Transformer structs
 //!
-// Generates standard Debug and Display trait implementations for Conditional
-// Transformer structs that have `transformer` and `predicate` fields but no `name` field.
+//! Generates standard Debug and Display trait implementations for Conditional
+//! Transformer structs that have `transformer` and `predicate` fields but no `name` field.
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name` - The struct name
-// * `$generic` - Generic parameter list (two or three type parameters)
+//! * `$struct_name` - The struct name
+//! * `$generic` - Generic parameter list (two or three type parameters)
 //!
-// # Examples
+//! # Examples
 //!
-// ```ignore
-// // For two type parameters
-// impl_conditional_transformer_debug_display!(BoxConditionalTransformer<T, U>);
+//! ```ignore
+//! // For two type parameters
+//! impl_conditional_transformer_debug_display!(BoxConditionalTransformer<T, U>);
 //!
-// // For three type parameters
-// impl_conditional_transformer_debug_display!(BoxConditionalBiTransformer<T, U, V>);
-// ```
+//! // For three type parameters
+//! impl_conditional_transformer_debug_display!(BoxConditionalBiTransformer<T, U, V>);
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Debug and Display trait implementations for Conditional Transformer structs
 ///

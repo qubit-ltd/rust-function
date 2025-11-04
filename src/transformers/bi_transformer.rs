@@ -36,7 +36,12 @@ use crate::transformers::bi_transformer_once::{
     BiTransformerOnce,
     BoxBiTransformerOnce,
 };
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
+    impl_transformer_clone,
+};
 
 // ============================================================================
 // Core Trait
@@ -246,6 +251,8 @@ pub struct BoxBiTransformer<T, U, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(BoxBiTransformer<T, U, R>);
+
 impl<T, U, R> BoxBiTransformer<T, U, R>
 where
     T: 'static,
@@ -393,26 +400,7 @@ where
     }
 }
 
-impl<T, U, R> BoxBiTransformer<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxBiTransformer, BiTransformer};
-    ///
-    /// let constant = BoxBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxBiTransformer<T, U, R> {
-        BoxBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(BoxBiTransformer<T, U, R>);
 
 impl<T, U, R> BiTransformer<T, U, R> for BoxBiTransformer<T, U, R> {
     fn apply(&self, first: T, second: U) -> R {
@@ -621,6 +609,8 @@ pub struct ArcBiTransformer<T, U, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(ArcBiTransformer<T, U, R>);
+
 impl<T, U, R> ArcBiTransformer<T, U, R>
 where
     T: Send + Sync + 'static,
@@ -776,29 +766,7 @@ where
     }
 }
 
-impl<T, U, R> ArcBiTransformer<T, U, R>
-where
-    T: Send + Sync + 'static,
-    U: Send + Sync + 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcBiTransformer, BiTransformer};
-    ///
-    /// let constant = ArcBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> ArcBiTransformer<T, U, R>
-    where
-        R: Send + Sync,
-    {
-        ArcBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(thread_safe ArcBiTransformer<T, U, R>);
 
 impl<T, U, R> BiTransformer<T, U, R> for ArcBiTransformer<T, U, R> {
     fn apply(&self, first: T, second: U) -> R {
@@ -1088,6 +1056,8 @@ pub struct RcBiTransformer<T, U, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(RcBiTransformer<T, U, R>);
+
 impl<T, U, R> RcBiTransformer<T, U, R>
 where
     T: 'static,
@@ -1245,26 +1215,7 @@ where
     }
 }
 
-impl<T, U, R> RcBiTransformer<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant bi-transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcBiTransformer, BiTransformer};
-    ///
-    /// let constant = RcBiTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123, 456), "hello");
-    /// ```
-    pub fn constant(value: R) -> RcBiTransformer<T, U, R> {
-        RcBiTransformer::new(move |_, _| value.clone())
-    }
-}
+impl_transformer_constant_method!(RcBiTransformer<T, U, R>);
 
 impl<T, U, R> BiTransformer<T, U, R> for RcBiTransformer<T, U, R> {
     fn apply(&self, first: T, second: U) -> R {

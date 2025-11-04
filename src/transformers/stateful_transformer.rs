@@ -40,7 +40,12 @@ use crate::transformers::transformer_once::{
     BoxTransformerOnce,
     TransformerOnce,
 };
-use crate::transformers::macros::impl_transformer_common_methods;
+use crate::transformers::macros::{
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
+    impl_transformer_clone,
+};
 
 // ============================================================================
 // Core Trait
@@ -327,6 +332,8 @@ pub struct BoxStatefulTransformer<T, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(BoxStatefulTransformer<T, R>);
+
 impl<T, R> BoxStatefulTransformer<T, R>
 where
     T: 'static,
@@ -506,25 +513,7 @@ where
     }
 }
 
-impl<T, R> BoxStatefulTransformer<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulTransformer, StatefulTransformer};
-    ///
-    /// let mut constant = BoxStatefulTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> BoxStatefulTransformer<T, R> {
-        BoxStatefulTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful BoxStatefulTransformer<T, R>);
 
 impl<T, R> StatefulTransformer<T, R> for BoxStatefulTransformer<T, R> {
     fn apply(&mut self, input: T) -> R {
@@ -723,6 +712,8 @@ pub struct ArcStatefulTransformer<T, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(ArcStatefulTransformer<T, R>);
+
 impl<T, R> ArcStatefulTransformer<T, R>
 where
     T: Send + 'static,
@@ -891,25 +882,7 @@ where
     }
 }
 
-impl<T, R> ArcStatefulTransformer<T, R>
-where
-    T: Send + Sync + 'static,
-    R: Clone + Send + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulTransformer, StatefulTransformer};
-    ///
-    /// let mut constant = ArcStatefulTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> ArcStatefulTransformer<T, R> {
-        ArcStatefulTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful thread_safe ArcStatefulTransformer<T, R>);
 
 impl<T, R> StatefulTransformer<T, R> for ArcStatefulTransformer<T, R> {
     fn apply(&mut self, input: T) -> R {
@@ -1174,6 +1147,8 @@ pub struct RcStatefulTransformer<T, R> {
     name: Option<String>,
 }
 
+impl_transformer_debug_display!(RcStatefulTransformer<T, R>);
+
 impl<T, R> RcStatefulTransformer<T, R>
 where
     T: 'static,
@@ -1342,25 +1317,7 @@ where
     }
 }
 
-impl<T, R> RcStatefulTransformer<T, R>
-where
-    T: 'static,
-    R: Clone + 'static,
-{
-    /// Creates a constant transformer
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulTransformer, StatefulTransformer};
-    ///
-    /// let mut constant = RcStatefulTransformer::constant("hello");
-    /// assert_eq!(constant.apply(123), "hello");
-    /// ```
-    pub fn constant(value: R) -> RcStatefulTransformer<T, R> {
-        RcStatefulTransformer::new(move |_| value.clone())
-    }
-}
+impl_transformer_constant_method!(stateful RcStatefulTransformer<T, R>);
 
 impl<T, R> StatefulTransformer<T, R> for RcStatefulTransformer<T, R> {
     fn apply(&mut self, input: T) -> R {

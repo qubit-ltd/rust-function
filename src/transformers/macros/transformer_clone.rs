@@ -6,38 +6,38 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Transformer Clone Macro
+//! # Transformer Clone Macro
 //!
-// Generates Clone trait implementation for basic Transformer types
+//! Generates Clone trait implementation for basic Transformer types
 //!
-// Generates Clone implementation for Transformer structs that have `function`
-// and `name` fields. The function field is cloned using its inherent `clone`
-// method, which performs a shallow clone for smart pointers like `Arc` or `Rc`.
+//! Generates Clone implementation for Transformer structs that have `function`
+//! and `name` fields. The function field is cloned using its inherent `clone`
+//! method, which performs a shallow clone for smart pointers like `Arc` or `Rc`.
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name` - The struct name
-// * `$generic` - Generic parameter list (two or three type parameters)
+//! * `$struct_name` - The struct name
+//! * `$generic` - Generic parameter list (two or three type parameters)
 //!
-// # Examples
+//! # Examples
 //!
-// ```ignore
-// // For two type parameters
-// impl_transformer_clone!(ArcTransformer<T, U>);
+//! ```ignore
+//! // For two type parameters
+//! impl_transformer_clone!(ArcTransformer<T, U>);
 //!
-// // For two type parameters with Rc
-// impl_transformer_clone!(RcTransformer<T, U>);
+//! // For two type parameters with Rc
+//! impl_transformer_clone!(RcTransformer<T, U>);
 //!
-// // For three type parameters
-// impl_transformer_clone!(ArcBiTransformer<T, U, V>);
+//! // For three type parameters
+//! impl_transformer_clone!(ArcBiTransformer<T, U, V>);
 //!
-// // For three type parameters with Rc
-// impl_transformer_clone!(RcBiTransformer<T, U, V>);
-// ```
+//! // For three type parameters with Rc
+//! impl_transformer_clone!(RcBiTransformer<T, U, V>);
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Clone trait implementation for basic Transformer types
 ///

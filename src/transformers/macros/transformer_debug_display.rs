@@ -6,31 +6,31 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Transformer Debug Display Macro
+//! # Transformer Debug Display Macro
 //!
-// Generates Debug and Display trait implementations for Transformer structs
+//! Generates Debug and Display trait implementations for Transformer structs
 //!
-// Generates standard Debug and Display trait implementations for Transformer
-// structs that have a `name: Option<String>` field.
+//! Generates standard Debug and Display trait implementations for Transformer
+//! structs that have a `name: Option<String>` field.
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name` - The struct name
-// * `$generic` - Generic parameter list (two or three type parameters)
+//! * `$struct_name` - The struct name
+//! * `$generic` - Generic parameter list (two or three type parameters)
 //!
-// # Examples
+//! # Examples
 //!
-// ```ignore
-// // For two type parameters
-// impl_transformer_debug_display!(BoxTransformer<T, U>);
+//! ```ignore
+//! // For two type parameters
+//! impl_transformer_debug_display!(BoxTransformer<T, U>);
 //!
-// // For three type parameters
-// impl_transformer_debug_display!(BoxBiTransformer<T, U, V>);
-// ```
+//! // For three type parameters
+//! impl_transformer_debug_display!(BoxBiTransformer<T, U, V>);
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Debug and Display trait implementations for Transformer structs
 ///

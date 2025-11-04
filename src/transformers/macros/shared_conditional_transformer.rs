@@ -6,71 +6,74 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Shared Conditional Transformer Macro
+//! # Shared Conditional Transformer Macro
 //!
-// Generates Arc/Rc-based Conditional Transformer implementations
+//! Generates Arc/Rc-based Conditional Transformer implementations
 //!
-// For Arc/Rc-based conditional transformers, generates `and_then` and `or_else` methods,
-// as well as complete Transformer/BiTransformer trait implementations.
+//! For Arc/Rc-based conditional transformers, generates `and_then` and `or_else`
+//! methods, as well as complete Transformer/BiTransformer trait
+//! implementations.
 //!
-// Arc/Rc type characteristics:
-// - `and_then` and `or_else` borrow &self (because Arc/Rc can Clone)
-// - Uses trait default implementations for `into_arc()` and `to_arc()`
-// - Arc types will work with `into_arc()` and `to_arc()` (satisfy Send + Sync constraints)
-// - Rc types will get compile errors if trying to use `into_arc()` or `to_arc()` (don't satisfy Send + Sync)
-// - Implement complete `to_xxx()` methods (because they can Clone)
+//! Arc/Rc type characteristics:
+//! - `and_then` and `or_else` borrow &self (because Arc/Rc can Clone)
+//! - Uses trait default implementations for `into_arc()` and `to_arc()`
+//! - Arc types will work with `into_arc()` and `to_arc()` (satisfy Send + Sync
+//!   constraints)
+//! - Rc types will get compile errors if trying to use `into_arc()` or
+//!   `to_arc()` (don't satisfy Send + Sync)
+//! - Implement complete `to_xxx()` methods (because they can Clone)
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$struct_name<$generics>` - Struct name with generic parameters
-// * `$transformer_type` - Transformer wrapper type name
-// * `$transformer_trait` - Transformer trait name
-// * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
-// * `$extra_bounds` - Extra trait bounds
+//! * `$struct_name<$generics>` - Struct name with generic parameters
+//! * `$transformer_type` - Transformer wrapper type name
+//! * `$transformer_trait` - Transformer trait name
+//! * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
+//! * `$extra_bounds` - Extra trait bounds
 //!
-// # Usage Examples
+//! # Usage Examples
 //!
-// ```ignore
-// // Arc two-parameter Transformer
-// impl_shared_conditional_transformer!(
-//     ArcConditionalTransformer<T, U>,
-//     ArcTransformer,
-//     Transformer,
-//     into_arc,
-//     Send + Sync + 'static
-// );
+//! ```ignore
+//! // Arc two-parameter Transformer
+//! impl_shared_conditional_transformer!(
+//!     ArcConditionalTransformer<T, U>,
+//!     ArcTransformer,
+//!     Transformer,
+//!     into_arc,
+//!     Send + Sync + 'static
+//! );
 //!
-// // Rc two-parameter Transformer
-// impl_shared_conditional_transformer!(
-//     RcConditionalTransformer<T, U>,
-//     RcTransformer,
-//     Transformer,
-//     into_rc,
-//     'static
-// );
+//! // Rc two-parameter Transformer
+//! impl_shared_conditional_transformer!(
+//!     RcConditionalTransformer<T, U>,
+//!     RcTransformer,
+//!     Transformer,
+//!     into_rc,
+//!     'static
+//! );
 //!
-// // Arc three-parameter BiTransformer
-// impl_shared_conditional_transformer!(
-//     ArcConditionalBiTransformer<T, U, V>,
-//     ArcBiTransformer,
-//     BiTransformer,
-//     into_arc,
-//     Send + Sync + 'static
-// );
+//! // Arc three-parameter BiTransformer
+//! impl_shared_conditional_transformer!(
+//!     ArcConditionalBiTransformer<T, U, V>,
+//!     ArcBiTransformer,
+//!     BiTransformer,
+//!     into_arc,
+//!     Send + Sync + 'static
+//! );
 //!
-// // Rc three-parameter BiTransformer
-// impl_shared_conditional_transformer!(
-//     RcConditionalBiTransformer<T, U, V>,
-//     RcBiTransformer,
-//     BiTransformer,
-//     into_rc,
-//     'static
-// );
-// ```
+//! // Rc three-parameter BiTransformer
+//! impl_shared_conditional_transformer!(
+//!     RcConditionalBiTransformer<T, U, V>,
+//!     RcBiTransformer,
+//!     BiTransformer,
+//!     into_rc,
+//!     'static
+//! );
+//! ```
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates Arc/Rc-based Conditional Transformer implementations
 ///
@@ -89,12 +92,12 @@
 /// # Parameters
 ///
 /// * `$struct_name<$generics>` - Struct name with generic parameters
-// * `$transformer_type` - Transformer wrapper type name
-// * `$transformer_trait` - Transformer trait name
-// * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
-// * `$extra_bounds` - Extra trait bounds
+/// * `$transformer_type` - Transformer wrapper type name
+/// * `$transformer_trait` - Transformer trait name
+/// * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
+/// * `$extra_bounds` - Extra trait bounds
 ///
-// # Usage Examples
+/// # Usage Examples
 ///
 /// ```ignore
 /// // Arc two-parameter Transformer

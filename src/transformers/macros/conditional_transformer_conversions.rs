@@ -6,85 +6,85 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-// # Conditional Transformer Conversions Macro
+//! # Conditional Transformer Conversions Macro
 //!
-// Generates conversion methods for Conditional Transformer implementations
+//! Generates conversion methods for Conditional Transformer implementations
 //!
-// This macro generates the conversion methods (`into_box`, `into_rc`, `into_fn`) for
-// conditional transformer types. It handles both immutable (Transformer) and mutable
-// (StatefulTransformer) cases using the `#[allow(unused_mut)]` annotation.
+//! This macro generates the conversion methods (`into_box`, `into_rc`, `into_fn`) for
+//! conditional transformer types. It handles both immutable (Transformer) and mutable
+//! (StatefulTransformer) cases using the `#[allow(unused_mut)]` annotation.
 //!
-// The macro works by always declaring variables as `mut`, which is necessary for
-// StatefulTransformer cases, while suppressing unused_mut warnings for Transformer cases
-// where the mutability is not needed.
+//! The macro works by always declaring variables as `mut`, which is necessary for
+//! StatefulTransformer cases, while suppressing unused_mut warnings for Transformer cases
+//! where the mutability is not needed.
 //!
-// # Parameters
+//! # Parameters
 //!
-// * `$box_type<$t:ident, $u:ident>` - The box-based transformer type (e.g., `BoxTransformer<T, U>`)
-// * `$rc_type:ident` - The rc-based transformer type name (e.g., `RcTransformer`)
-// * `$fn_trait:ident` - The function trait (e.g., `Fn` or `FnMut`)
+//! * `$box_type<$t:ident, $u:ident>` - The box-based transformer type (e.g., `BoxTransformer<T, U>`)
+//! * `$rc_type:ident` - The rc-based transformer type name (e.g., `RcTransformer`)
+//! * `$fn_trait:ident` - The function trait (e.g., `Fn` or `FnMut`)
 //!
-// # Usage Examples
+//! # Usage Examples
 //!
-// For Transformer (immutable):
-// ```ignore
-// impl<T, U> Transformer<T, U> for BoxConditionalTransformer<T, U>
-// where
-//     T: 'static,
-//     U: 'static,
-// {
-//     fn transform(&self, value: &T) -> U {
-//         if self.predicate.test(value) {
-//             self.transformer.transform(value)
-//         } else {
-//             // return identity/default value
-//             todo!()
-//         }
-//     }
+//! For Transformer (immutable):
+//! ```ignore
+//! impl<T, U> Transformer<T, U> for BoxConditionalTransformer<T, U>
+//! where
+//!     T: 'static,
+//!     U: 'static,
+//! {
+//!     fn transform(&self, value: &T) -> U {
+//!         if self.predicate.test(value) {
+//!             self.transformer.transform(value)
+//!         } else {
+//!             // return identity/default value
+//!             todo!()
+//!         }
+//!     }
 //!
-//     impl_conditional_transformer_conversions!(
-//         BoxTransformer<T, U>,
-//         RcTransformer,
-//         Fn
-//     );
-// }
-// ```
+//!     impl_conditional_transformer_conversions!(
+//!         BoxTransformer<T, U>,
+//!         RcTransformer,
+//!         Fn
+//!     );
+//! }
+//! ```
 //!
-// For StatefulTransformer (mutable):
-// ```ignore
-// impl<T, U> StatefulTransformer<T, U> for BoxConditionalStatefulTransformer<T, U>
-// where
-//     T: 'static,
-//     U: 'static,
-// {
-//     fn transform(&mut self, value: &T) -> U {
-//         if self.predicate.test(value) {
-//             self.transformer.transform(value)
-//         } else {
-//             // return identity/default value
-//             todo!()
-//         }
-//     }
+//! For StatefulTransformer (mutable):
+//! ```ignore
+//! impl<T, U> StatefulTransformer<T, U> for BoxConditionalStatefulTransformer<T, U>
+//! where
+//!     T: 'static,
+//!     U: 'static,
+//! {
+//!     fn transform(&mut self, value: &T) -> U {
+//!         if self.predicate.test(value) {
+//!             self.transformer.transform(value)
+//!         } else {
+//!             // return identity/default value
+//!             todo!()
+//!         }
+//!     }
 //!
-//     impl_conditional_transformer_conversions!(
-//         BoxStatefulTransformer<T, U>,
-//         RcStatefulTransformer,
-//         FnMut
-//     );
-// }
-// ```
+//!     impl_conditional_transformer_conversions!(
+//!         BoxStatefulTransformer<T, U>,
+//!         RcStatefulTransformer,
+//!         FnMut
+//!     );
+//! }
+//! ```
 //!
-// # Implementation Details
+//! # Implementation Details
 //!
-// - Uses `#[allow(unused_mut)]` to handle Transformer cases where `mut` is not needed
-// - The closures inside `into_box` and `into_rc` will automatically capture as `Fn`
-//   or `FnMut` based on their internal operations
-// - The `into_fn` method uses the provided `$fn_trait` parameter to match the
-//   intended trait type
+//! - Uses `#[allow(unused_mut)]` to handle Transformer cases where `mut` is not needed
+//! - The closures inside `into_box` and `into_rc` will automatically capture as `Fn`
+//!   or `FnMut` based on their internal operations
+//! - The `into_fn` method uses the provided `$fn_trait` parameter to match the
+//!   intended trait type
 //!
-// # Author
+//! # Author
 //!
-// Haixing Hu
+//! Haixing Hu
 
 /// Generates conversion methods for Conditional Transformer implementations
 ///
