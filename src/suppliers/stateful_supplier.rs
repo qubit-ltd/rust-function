@@ -443,6 +443,7 @@ pub trait StatefulSupplier<T> {
 /// Haixing Hu
 pub struct BoxStatefulSupplier<T> {
     function: Box<dyn FnMut() -> T>,
+    name: Option<String>,
 }
 
 impl<T> BoxStatefulSupplier<T>
@@ -473,7 +474,49 @@ where
     {
         BoxStatefulSupplier {
             function: Box::new(f),
+            name: None,
         }
+    }
+
+    /// Creates a new named supplier.
+    ///
+    /// Wraps the provided closure and assigns it a name, which is
+    /// useful for debugging and logging purposes.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name for this supplier
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new named `BoxStatefulSupplier<T>` instance wrapping the closure.
+    pub fn new_with_name<F>(name: &str, f: F) -> Self
+    where
+        F: FnMut() -> T + 'static,
+    {
+        BoxStatefulSupplier {
+            function: Box::new(f),
+            name: Some(name.to_string()),
+        }
+    }
+
+    /// Gets the name of this supplier.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&str)` if a name was set, `None` otherwise.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Sets the name of this supplier.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name to set for this supplier
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_string());
     }
 
     /// Creates a constant supplier.
@@ -809,6 +852,7 @@ where
 /// Haixing Hu
 pub struct ArcStatefulSupplier<T> {
     function: Arc<Mutex<dyn FnMut() -> T + Send>>,
+    name: Option<String>,
 }
 
 impl<T> ArcStatefulSupplier<T>
@@ -840,7 +884,49 @@ where
     {
         ArcStatefulSupplier {
             function: Arc::new(Mutex::new(f)),
+            name: None,
         }
+    }
+
+    /// Creates a new named supplier.
+    ///
+    /// Wraps the provided closure and assigns it a name, which is
+    /// useful for debugging and logging purposes.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name for this supplier
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new named `ArcStatefulSupplier<T>` instance wrapping the closure.
+    pub fn new_with_name<F>(name: &str, f: F) -> Self
+    where
+        F: FnMut() -> T + Send + 'static,
+    {
+        ArcStatefulSupplier {
+            function: Arc::new(Mutex::new(f)),
+            name: Some(name.to_string()),
+        }
+    }
+
+    /// Gets the name of this supplier.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&str)` if a name was set, `None` otherwise.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Sets the name of this supplier.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name to set for this supplier
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_string());
     }
 
     /// Creates a constant supplier.
@@ -1134,6 +1220,7 @@ impl<T> Clone for ArcStatefulSupplier<T> {
     fn clone(&self) -> Self {
         Self {
             function: Arc::clone(&self.function),
+            name: self.name.clone(),
         }
     }
 }
@@ -1247,6 +1334,7 @@ where
 /// Haixing Hu
 pub struct RcStatefulSupplier<T> {
     function: Rc<RefCell<dyn FnMut() -> T>>,
+    name: Option<String>,
 }
 
 impl<T> RcStatefulSupplier<T>
@@ -1278,7 +1366,49 @@ where
     {
         RcStatefulSupplier {
             function: Rc::new(RefCell::new(f)),
+            name: None,
         }
+    }
+
+    /// Creates a new named supplier.
+    ///
+    /// Wraps the provided closure and assigns it a name, which is
+    /// useful for debugging and logging purposes.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name for this supplier
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new named `RcStatefulSupplier<T>` instance wrapping the closure.
+    pub fn new_with_name<F>(name: &str, f: F) -> Self
+    where
+        F: FnMut() -> T + 'static,
+    {
+        RcStatefulSupplier {
+            function: Rc::new(RefCell::new(f)),
+            name: Some(name.to_string()),
+        }
+    }
+
+    /// Gets the name of this supplier.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&str)` if a name was set, `None` otherwise.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Sets the name of this supplier.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name to set for this supplier
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_string());
     }
 
     /// Creates a constant supplier.
@@ -1566,6 +1696,7 @@ impl<T> Clone for RcStatefulSupplier<T> {
     fn clone(&self) -> Self {
         Self {
             function: Rc::clone(&self.function),
+            name: self.name.clone(),
         }
     }
 }

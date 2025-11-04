@@ -289,6 +289,7 @@ pub trait SupplierOnce<T> {
 /// Haixing Hu
 pub struct BoxSupplierOnce<T> {
     function: Box<dyn FnOnce() -> T>,
+    name: Option<String>,
 }
 
 impl<T> BoxSupplierOnce<T> {
@@ -316,7 +317,49 @@ impl<T> BoxSupplierOnce<T> {
     {
         BoxSupplierOnce {
             function: Box::new(f),
+            name: None,
         }
+    }
+
+    /// Creates a new named supplier.
+    ///
+    /// Wraps the provided closure and assigns it a name, which is
+    /// useful for debugging and logging purposes.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name for this supplier
+    /// * `f` - The closure to wrap
+    ///
+    /// # Returns
+    ///
+    /// A new named `BoxSupplierOnce<T>` instance wrapping the closure.
+    pub fn new_with_name<F>(name: &str, f: F) -> Self
+    where
+        F: FnOnce() -> T + 'static,
+    {
+        BoxSupplierOnce {
+            function: Box::new(f),
+            name: Some(name.to_string()),
+        }
+    }
+
+    /// Gets the name of this supplier.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(&str)` if a name was set, `None` otherwise.
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
+    }
+
+    /// Sets the name of this supplier.
+    ///
+    /// # Parameters
+    ///
+    /// * `name` - The name to set for this supplier
+    pub fn set_name(&mut self, name: &str) {
+        self.name = Some(name.to_string());
     }
 }
 
