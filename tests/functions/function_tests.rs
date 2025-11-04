@@ -1091,7 +1091,7 @@ fn test_rc_function_into_box_preserves_name() {
     // Test that RcFunction::into_box preserves the name
     let original = RcFunction::new_with_name("test_rc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_rc_func"));
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), Some("test_rc_func"));
     assert_eq!(boxed.apply(&21), 42);
@@ -1102,7 +1102,7 @@ fn test_arc_function_into_box_preserves_name() {
     // Test that ArcFunction::into_box preserves the name
     let original = ArcFunction::new_with_name("test_arc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_arc_func"));
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), Some("test_arc_func"));
     assert_eq!(boxed.apply(&21), 42);
@@ -1113,7 +1113,7 @@ fn test_arc_function_into_rc_preserves_name() {
     // Test that ArcFunction::into_rc preserves the name
     let original = ArcFunction::new_with_name("test_arc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_arc_func"));
-    
+
     let rc = original.into_rc();
     assert_eq!(rc.name(), Some("test_arc_func"));
     assert_eq!(rc.apply(&21), 42);
@@ -1124,11 +1124,11 @@ fn test_rc_function_to_box_preserves_name() {
     // Test that RcFunction::to_box preserves the name
     let original = RcFunction::new_with_name("test_rc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_rc_func"));
-    
+
     let boxed = original.to_box();
     assert_eq!(boxed.name(), Some("test_rc_func"));
     assert_eq!(boxed.apply(&21), 42);
-    
+
     // Original should still be usable
     assert_eq!(original.apply(&21), 42);
 }
@@ -1138,11 +1138,11 @@ fn test_arc_function_to_box_preserves_name() {
     // Test that ArcFunction::to_box preserves the name
     let original = ArcFunction::new_with_name("test_arc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_arc_func"));
-    
+
     let boxed = original.to_box();
     assert_eq!(boxed.name(), Some("test_arc_func"));
     assert_eq!(boxed.apply(&21), 42);
-    
+
     // Original should still be usable
     assert_eq!(original.apply(&21), 42);
 }
@@ -1152,11 +1152,11 @@ fn test_arc_function_to_rc_preserves_name() {
     // Test that ArcFunction::to_rc preserves the name
     let original = ArcFunction::new_with_name("test_arc_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("test_arc_func"));
-    
+
     let rc = original.to_rc();
     assert_eq!(rc.name(), Some("test_arc_func"));
     assert_eq!(rc.apply(&21), 42);
-    
+
     // Original should still be usable
     assert_eq!(original.apply(&21), 42);
 }
@@ -1166,7 +1166,7 @@ fn test_function_conversions_without_name() {
     // Test that conversions work correctly even when there's no name
     let original = RcFunction::new(|x: &i32| x * 2);
     assert_eq!(original.name(), None);
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), None);
     assert_eq!(boxed.apply(&21), 42);
@@ -1177,17 +1177,17 @@ fn test_multiple_conversions_preserve_name() {
     // Test that multiple conversions preserve the name correctly
     let original = ArcFunction::new_with_name("original_func", |x: &i32| x * 2);
     assert_eq!(original.name(), Some("original_func"));
-    
+
     // Arc -> Rc
     let rc = original.to_rc();
     assert_eq!(rc.name(), Some("original_func"));
     assert_eq!(rc.apply(&21), 42);
-    
+
     // Rc -> Box
     let boxed = rc.to_box();
     assert_eq!(boxed.name(), Some("original_func"));
     assert_eq!(boxed.apply(&21), 42);
-    
+
     // Original Arc should still work
     assert_eq!(original.apply(&21), 42);
 }

@@ -53,6 +53,10 @@
 /// // For three type parameters
 /// impl_function_debug_display!(BoxBiFunction<T, U, R>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_function_debug_display {
     // Two generic parameters - Function types
     ($struct_name:ident < $t:ident, $r:ident >) => {
@@ -74,6 +78,7 @@ macro_rules! impl_function_debug_display {
             }
         }
     };
+
     // Three generic parameters - BiFunction types
     ($struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
         impl<$t, $u, $r> std::fmt::Debug for $struct_name<$t, $u, $r> {

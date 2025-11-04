@@ -108,6 +108,10 @@
 /// // Two-parameter function
 /// impl_function_constant_method!(BoxBiFunction<T, U, R>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_function_constant_method {
     // Two generic parameters - Function
     ($struct_name:ident < $t:ident, $r:ident >, $($extra_bounds:tt)+) => {

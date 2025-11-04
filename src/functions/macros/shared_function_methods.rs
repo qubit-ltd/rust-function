@@ -123,6 +123,10 @@
 ///     'static
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_function_methods {
     // Two generic parameters - Function types
     (

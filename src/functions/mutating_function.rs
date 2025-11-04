@@ -710,10 +710,7 @@ impl<T, R> MutatingFunction<T, R> for RcMutatingFunction<T, R> {
         T: 'static,
         R: 'static,
     {
-        BoxMutatingFunction::new_with_optional_name(
-            move |t| (self.function)(t),
-            self.name
-        )
+        BoxMutatingFunction::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_rc(self) -> RcMutatingFunction<T, R>
@@ -862,10 +859,7 @@ impl<T, R> MutatingFunction<T, R> for ArcMutatingFunction<T, R> {
         T: 'static,
         R: 'static,
     {
-        BoxMutatingFunction::new_with_optional_name(
-            move |t| (self.function)(t),
-            self.name
-        )
+        BoxMutatingFunction::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_rc(self) -> RcMutatingFunction<T, R>
@@ -873,10 +867,7 @@ impl<T, R> MutatingFunction<T, R> for ArcMutatingFunction<T, R> {
         T: 'static,
         R: 'static,
     {
-        RcMutatingFunction::new_with_optional_name(
-            move |t| (self.function)(t),
-            self.name
-        )
+        RcMutatingFunction::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     fn into_arc(self) -> ArcMutatingFunction<T, R>
@@ -903,10 +894,7 @@ impl<T, R> MutatingFunction<T, R> for ArcMutatingFunction<T, R> {
         R: 'static,
     {
         let self_fn = self.function.clone();
-        BoxMutatingFunction::new_with_optional_name(
-            move |t| (self_fn)(t),
-            self.name.clone()
-        )
+        BoxMutatingFunction::new_with_optional_name(move |t| (self_fn)(t), self.name.clone())
     }
 
     fn to_rc(&self) -> RcMutatingFunction<T, R>
@@ -916,10 +904,7 @@ impl<T, R> MutatingFunction<T, R> for ArcMutatingFunction<T, R> {
         R: 'static,
     {
         let self_fn = self.function.clone();
-        RcMutatingFunction::new_with_optional_name(
-            move |t| (self_fn)(t),
-            self.name.clone()
-        )
+        RcMutatingFunction::new_with_optional_name(move |t| (self_fn)(t), self.name.clone())
     }
 
     fn to_arc(&self) -> ArcMutatingFunction<T, R>

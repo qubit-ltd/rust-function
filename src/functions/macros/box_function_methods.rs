@@ -107,6 +107,10 @@
 ///     BiFunction
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_function_methods {
     // Two generic parameters - Function
     (

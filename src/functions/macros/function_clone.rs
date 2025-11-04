@@ -67,6 +67,10 @@
 /// // For three type parameters with Rc
 /// impl_function_clone!(RcBiFunction<T, U, R>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_function_clone {
     // Two generic parameters - Function types
     ($struct_name:ident < $t:ident, $r:ident >) => {

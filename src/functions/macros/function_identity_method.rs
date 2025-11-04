@@ -101,6 +101,10 @@
 /// impl_function_identity_method!(BoxMutatingFunction<T, T>);
 /// impl_function_identity_method!(BoxStatefulFunction<T, T>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_function_identity_method {
     ($struct_name:ident < $t:ident , $r:ident >) => {
         // Note: The caller must ensure $t and $r are the same identifier

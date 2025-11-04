@@ -115,6 +115,10 @@
 /// * `name()` - Gets the name of the function
 /// * `set_name()` - Sets the name of the function
 /// * `identity()` - Creates an identity function
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_function_common_methods {
     // Two generic parameters - Function types
     (

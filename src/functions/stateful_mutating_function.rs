@@ -643,10 +643,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for BoxStatefulMutatingFunction<T, R> 
         T: 'static,
         R: 'static,
     {
-        RcStatefulMutatingFunction::new_with_optional_name(
-            move |t| (self.function)(t),
-            self.name
-        )
+        RcStatefulMutatingFunction::new_with_optional_name(move |t| (self.function)(t), self.name)
     }
 
     // do NOT override StatefulMutatingFunction::into_arc() because
@@ -798,7 +795,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for RcStatefulMutatingFunction<T, R> {
         let self_fn = self.function.clone();
         BoxStatefulMutatingFunction::new_with_optional_name(
             move |t| (self_fn.borrow_mut())(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -924,7 +921,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
     {
         BoxStatefulMutatingFunction::new_with_optional_name(
             move |t| (self.function.lock().unwrap())(t),
-            self.name
+            self.name,
         )
     }
 
@@ -935,7 +932,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
     {
         RcStatefulMutatingFunction::new_with_optional_name(
             move |t| (self.function.lock().unwrap())(t),
-            self.name
+            self.name,
         )
     }
 
@@ -965,7 +962,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
         let self_fn = self.function.clone();
         BoxStatefulMutatingFunction::new_with_optional_name(
             move |t| (self_fn.lock().unwrap())(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -978,7 +975,7 @@ impl<T, R> StatefulMutatingFunction<T, R> for ArcStatefulMutatingFunction<T, R> 
         let self_fn = self.function.clone();
         RcStatefulMutatingFunction::new_with_optional_name(
             move |t| (self_fn.lock().unwrap())(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 

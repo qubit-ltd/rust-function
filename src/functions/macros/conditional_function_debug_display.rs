@@ -54,6 +54,10 @@
 /// // For three type parameters
 /// impl_conditional_function_debug_display!(BoxConditionalBiFunction<T, U, R>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_function_debug_display {
     // Two generic parameters - Function types
     ($struct_name:ident < $t:ident, $r:ident >) => {

@@ -59,6 +59,10 @@
 /// impl_conditional_function_clone!(ArcConditionalBiFunction<T, U, R>);
 /// impl_conditional_function_clone!(RcConditionalBiFunction<T, U, R>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_function_clone {
     // Two generic parameters - Function types
     ($struct_name:ident < $t:ident, $r:ident >) => {
