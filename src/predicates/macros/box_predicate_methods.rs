@@ -62,7 +62,10 @@
 /// // Two-parameter predicate
 /// impl_box_predicate_methods!(BoxBiPredicate<T, U>);
 /// ```
-
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_predicate_methods {
     // Internal macro for generating logical operations
     (@logical_ops $struct_name:ident < $t:ident >, $trait_name:ident) => {

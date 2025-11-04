@@ -54,6 +54,10 @@
 /// // For two type parameters
 /// impl_predicate_debug_display!(BoxBiPredicate<T, U>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_predicate_debug_display {
     // Single generic parameter
     ($struct_name:ident < $t:ident >) => {

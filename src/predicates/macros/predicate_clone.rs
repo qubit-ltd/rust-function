@@ -68,6 +68,10 @@
 /// // For two type parameters with Rc
 /// impl_predicate_clone!(RcBiPredicate<T, U>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_predicate_clone {
     // Single generic parameter
     ($struct_name:ident < $t:ident >) => {

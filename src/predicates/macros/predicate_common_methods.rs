@@ -102,6 +102,10 @@
 /// * `set_name()` - Sets the name of the predicate
 /// * `always_true()` - Creates a predicate that always returns true
 /// * `always_false()` - Creates a predicate that always returns false
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_predicate_common_methods {
     // Single generic parameter - Predicate types
     (

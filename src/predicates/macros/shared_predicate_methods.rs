@@ -95,6 +95,10 @@
 /// // Two-parameter with Rc
 /// impl_shared_predicate_methods!(RcBiPredicate<T, U>, 'static);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_predicate_methods {
     // Internal macro for generating logical operations
     (

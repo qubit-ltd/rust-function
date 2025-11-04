@@ -2896,7 +2896,7 @@ fn test_rc_predicate_into_box_preserves_name() {
     // Test that RcPredicate::into_box preserves the name
     let original = RcPredicate::new_with_name("test_rc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_rc_predicate"));
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), Some("test_rc_predicate"));
     assert!(boxed.test(&5));
@@ -2908,7 +2908,7 @@ fn test_arc_predicate_into_box_preserves_name() {
     // Test that ArcPredicate::into_box preserves the name
     let original = ArcPredicate::new_with_name("test_arc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_arc_predicate"));
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), Some("test_arc_predicate"));
     assert!(boxed.test(&5));
@@ -2920,7 +2920,7 @@ fn test_arc_predicate_into_rc_preserves_name() {
     // Test that ArcPredicate::into_rc preserves the name
     let original = ArcPredicate::new_with_name("test_arc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_arc_predicate"));
-    
+
     let rc = original.into_rc();
     assert_eq!(rc.name(), Some("test_arc_predicate"));
     assert!(rc.test(&5));
@@ -2932,12 +2932,12 @@ fn test_rc_predicate_to_box_preserves_name() {
     // Test that RcPredicate::to_box preserves the name
     let original = RcPredicate::new_with_name("test_rc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_rc_predicate"));
-    
+
     let boxed = original.to_box();
     assert_eq!(boxed.name(), Some("test_rc_predicate"));
     assert!(boxed.test(&5));
     assert!(!boxed.test(&-3));
-    
+
     // Original should still be usable
     assert!(original.test(&10));
     assert!(!original.test(&-10));
@@ -2948,12 +2948,12 @@ fn test_arc_predicate_to_box_preserves_name() {
     // Test that ArcPredicate::to_box preserves the name
     let original = ArcPredicate::new_with_name("test_arc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_arc_predicate"));
-    
+
     let boxed = original.to_box();
     assert_eq!(boxed.name(), Some("test_arc_predicate"));
     assert!(boxed.test(&5));
     assert!(!boxed.test(&-3));
-    
+
     // Original should still be usable
     assert!(original.test(&10));
     assert!(!original.test(&-10));
@@ -2964,12 +2964,12 @@ fn test_arc_predicate_to_rc_preserves_name() {
     // Test that ArcPredicate::to_rc preserves the name
     let original = ArcPredicate::new_with_name("test_arc_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("test_arc_predicate"));
-    
+
     let rc = original.to_rc();
     assert_eq!(rc.name(), Some("test_arc_predicate"));
     assert!(rc.test(&5));
     assert!(!rc.test(&-3));
-    
+
     // Original should still be usable
     assert!(original.test(&10));
     assert!(!original.test(&-10));
@@ -2980,7 +2980,7 @@ fn test_predicate_conversions_without_name() {
     // Test that conversions work correctly even when there's no name
     let original = RcPredicate::new(|x: &i32| *x > 0);
     assert_eq!(original.name(), None);
-    
+
     let boxed = original.into_box();
     assert_eq!(boxed.name(), None);
     assert!(boxed.test(&5));
@@ -2992,19 +2992,19 @@ fn test_multiple_predicate_conversions_preserve_name() {
     // Test that multiple conversions preserve the name correctly
     let original = ArcPredicate::new_with_name("original_predicate", |x: &i32| *x > 0);
     assert_eq!(original.name(), Some("original_predicate"));
-    
+
     // Arc -> Rc
     let rc = original.to_rc();
     assert_eq!(rc.name(), Some("original_predicate"));
     assert!(rc.test(&5));
     assert!(!rc.test(&-3));
-    
+
     // Rc -> Box
     let boxed = rc.to_box();
     assert_eq!(boxed.name(), Some("original_predicate"));
     assert!(boxed.test(&5));
     assert!(!boxed.test(&-3));
-    
+
     // Original Arc should still work
     assert!(original.test(&10));
     assert!(!original.test(&-10));
