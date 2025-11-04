@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Conditional Mutator Conversions Macro
+//! # Conditional Mutator Conversions Macro
 //!
 //! Generates conversion methods for Conditional Mutator implementations
 //!
@@ -77,7 +77,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates conversion methods for Conditional Mutator implementations
 ///
@@ -151,6 +150,10 @@
 ///   or `FnMut` based on their internal operations
 /// - The `into_fn` method uses the provided `$fn_trait` parameter to match the
 ///   intended trait type
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_mutator_conversions {
     // Single generic parameter - Mutator
     (

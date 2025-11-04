@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Box Mutator Methods Macro
+//! # Box Mutator Methods Macro
 //!
 //! Generates when and and_then method implementations for Box-based Mutator
 //!
@@ -45,7 +45,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates when and and_then method implementations for Box-based Mutator
 ///
@@ -87,6 +86,10 @@
 ///     );
 /// }
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_mutator_methods {
     // Single generic parameter - Mutator
     ($struct_name:ident < $t:ident >, $conditional_type:ident, $mutator_trait:ident) => {

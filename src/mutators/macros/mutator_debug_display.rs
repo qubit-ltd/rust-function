@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Mutator Debug Display Macro
+//! # Mutator Debug Display Macro
 //!
 //! Generates Debug and Display trait implementations for Mutator structs
 //!
@@ -28,7 +28,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates Debug and Display trait implementations for Mutator structs
 ///
@@ -53,6 +52,10 @@
 /// // At the top level, outside of any impl block
 /// impl_mutator_debug_display!(BoxMutator<T>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_mutator_debug_display {
     // Single generic parameter
     ($struct_name:ident < $generic:ident >) => {

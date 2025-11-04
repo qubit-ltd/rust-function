@@ -643,18 +643,10 @@ where
     T: 'static,
 {
     // Generate common mutator methods (new, new_with_name, name, set_name, noop)
-    impl_mutator_common_methods!(
-        BoxMutator<T>,
-        (Fn(&mut T) + 'static),
-        |f| Box::new(f)
-    );
+    impl_mutator_common_methods!(BoxMutator<T>, (Fn(&mut T) + 'static), |f| Box::new(f));
 
     // Generate box mutator methods (when, and_then, or_else, etc.)
-    impl_box_mutator_methods!(
-        BoxMutator<T>,
-        BoxConditionalMutator,
-        Mutator
-    );
+    impl_box_mutator_methods!(BoxMutator<T>, BoxConditionalMutator, Mutator);
 }
 
 impl<T> Mutator<T> for BoxMutator<T> {
@@ -745,11 +737,7 @@ where
     T: 'static,
 {
     // Generate common mutator methods (new, new_with_name, name, set_name, noop)
-    impl_mutator_common_methods!(
-        RcMutator<T>,
-        (Fn(&mut T) + 'static),
-        |f| Rc::new(f)
-    );
+    impl_mutator_common_methods!(RcMutator<T>, (Fn(&mut T) + 'static), |f| Rc::new(f));
 
     // Generate shared mutator methods (when, and_then, or_else, conversions)
     impl_shared_mutator_methods!(
@@ -878,11 +866,9 @@ where
     T: 'static,
 {
     // Generate common mutator methods (new, new_with_name, name, set_name, noop)
-    impl_mutator_common_methods!(
-        ArcMutator<T>,
-        (Fn(&mut T) + Send + Sync + 'static),
-        |f| Arc::new(f)
-    );
+    impl_mutator_common_methods!(ArcMutator<T>, (Fn(&mut T) + Send + Sync + 'static), |f| {
+        Arc::new(f)
+    });
 
     // Generate shared mutator methods (when, and_then, or_else, conversions)
     impl_shared_mutator_methods!(

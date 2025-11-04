@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Mutator Macros Module
+//! # Mutator Macros Module
 //!
 //! Provides declarative macros to simplify Mutator implementations and
 //! reduce code duplication.
@@ -14,7 +14,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 // Module declarations
 mod box_conditional_mutator;

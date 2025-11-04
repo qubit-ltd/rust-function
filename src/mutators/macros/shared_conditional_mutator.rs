@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Shared Conditional Mutator Macro
+//! # Shared Conditional Mutator Macro
 //!
 //! Generates Arc/Rc-based Conditional Mutator implementations
 //!
@@ -53,7 +53,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates Arc/Rc-based Conditional Mutator implementations
 ///
@@ -104,6 +103,10 @@
 ///     'static
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_conditional_mutator {
     // Single generic parameter - Mutator
     (

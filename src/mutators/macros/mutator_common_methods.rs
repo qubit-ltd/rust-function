@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Mutator Common Methods Macro
+//! # Mutator Common Methods Macro
 //!
 //! Generates common Mutator methods (new, new_with_name, name,
 //! set_name, noop)
@@ -54,7 +54,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates common Mutator methods (new, new_with_name, name,
 /// set_name, noop)
@@ -104,6 +103,10 @@
 /// * `name()` - Gets the name of the mutator
 /// * `set_name()` - Sets the name of the mutator
 /// * `noop()` - Creates a mutator that performs no operation
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_mutator_common_methods {
     // Single generic parameter - Mutator types
     (

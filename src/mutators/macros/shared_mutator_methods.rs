@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Shared Mutator Methods Macro
+//! # Shared Mutator Methods Macro
 //!
 //! Generates when and and_then method implementations for Arc/Rc-based Mutator
 //!
@@ -59,7 +59,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates when and and_then method implementations for Arc/Rc-based Mutator
 ///
@@ -117,6 +116,10 @@
 ///     );
 /// }
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_mutator_methods {
     // Single generic parameter
     ($struct_name:ident < $t:ident >, $return_type:ident, $predicate_conversion:ident, $mutator_trait:ident, $($extra_bounds:tt)+) => {

@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Box Conditional Mutator Macro
+//! # Box Conditional Mutator Macro
 //!
 //! Generates Box-based Conditional Mutator implementations
 //!
@@ -38,7 +38,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates Box-based Conditional Mutator implementations
 ///
@@ -74,6 +73,10 @@
 ///     Mutator
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_conditional_mutator {
     // Single generic parameter - Mutator
     (

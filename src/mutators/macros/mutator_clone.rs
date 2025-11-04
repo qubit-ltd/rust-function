@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Mutator Clone Macro
+//! # Mutator Clone Macro
 //!
 //! Generates Clone trait implementation for basic Mutator types
 //!
@@ -32,7 +32,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates Clone trait implementation for basic Mutator types
 ///
@@ -61,6 +60,10 @@
 /// // For single type parameter with Rc
 /// impl_mutator_clone!(RcMutator<T>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_mutator_clone {
     // Single generic parameter
     ($struct_name:ident < $generic:ident >) => {

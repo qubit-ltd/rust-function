@@ -6,7 +6,7 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-/*! # Conditional Mutator Clone Macro
+//! # Conditional Mutator Clone Macro
 //!
 //! Generates Clone trait implementation for Conditional Mutator types
 //!
@@ -30,7 +30,6 @@
 //! # Author
 //!
 //! Haixing Hu
-*/
 
 /// Generates Clone trait implementation for Conditional Mutator types
 ///
@@ -57,6 +56,10 @@
 /// impl_conditional_mutator_clone!(ArcConditionalMutator<T>);
 /// impl_conditional_mutator_clone!(RcConditionalMutator<T>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_mutator_clone {
     // Single generic parameter
     ($struct_name:ident < $generic:ident >) => {
