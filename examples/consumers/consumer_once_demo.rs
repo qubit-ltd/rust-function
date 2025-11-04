@@ -152,7 +152,7 @@ fn main() {
             l.lock().unwrap().push(*x * 2);
         });
         // Note: This will panic because BoxConsumerOnce can only be called once
-        // vec![1, 2, 3, 4, 5].iter().for_each(consumer.into_fn_once());
+        // vec![1, 2, 3, 4, 5].iter().for_each(consumer.into_fn());
         consumer.accept_once(&1);
         println!(
             "  BoxConsumerOnce with single value: {:?}\n",

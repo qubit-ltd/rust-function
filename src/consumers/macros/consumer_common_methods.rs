@@ -114,6 +114,10 @@
 /// * `name()` - Gets the name of the consumer
 /// * `set_name()` - Sets the name of the consumer
 /// * `noop()` - Creates a consumer that performs no operation
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_consumer_common_methods {
     // Single generic parameter - Consumer types
     (

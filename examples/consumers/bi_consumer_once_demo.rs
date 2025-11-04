@@ -162,7 +162,7 @@ fn main() {
     let consumer = BoxBiConsumerOnce::new(move |x: &i32, y: &i32| {
         l.lock().unwrap().push(*x + *y);
     });
-    let func = consumer.into_fn_once();
+    let func = consumer.into_fn();
     func(&7, &3);
     println!("  Log: {:?}\n", *log.lock().unwrap());
 

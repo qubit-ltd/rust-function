@@ -46,7 +46,8 @@
 /// # Parameters
 ///
 /// * `$struct_name` - The struct name
-/// * `$generic` - Generic parameter list (one or two type parameters)
+/// * `$t` - Generic parameter list (one or two type parameters)
+/// * `$u` - Generic parameter list (one or two type parameters)
 ///
 /// # Examples
 ///
@@ -59,10 +60,14 @@
 /// impl_conditional_consumer_clone!(ArcConditionalBiConsumer<T, U>);
 /// impl_conditional_consumer_clone!(RcConditionalBiConsumer<T, U>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_consumer_clone {
     // Single generic parameter - Consumer types
-    ($struct_name:ident < $generic:ident >) => {
-        impl<$generic> Clone for $struct_name<$generic> {
+    ($struct_name:ident < $t:ident >) => {
+        impl<$t> Clone for $struct_name<$t> {
             fn clone(&self) -> Self {
                 Self {
                     consumer: self.consumer.clone(),
@@ -72,8 +77,8 @@ macro_rules! impl_conditional_consumer_clone {
         }
     };
     // Two generic parameters - BiConsumer types
-    ($struct_name:ident < $generic1:ident, $generic2:ident >) => {
-        impl<$generic1, $generic2> Clone for $struct_name<$generic1, $generic2> {
+    ($struct_name:ident < $t:ident, $u:ident >) => {
+        impl<$t, $u> Clone for $struct_name<$t, $u> {
             fn clone(&self) -> Self {
                 Self {
                     consumer: self.consumer.clone(),

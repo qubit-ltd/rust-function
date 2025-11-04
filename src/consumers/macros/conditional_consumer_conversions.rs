@@ -146,6 +146,14 @@
 ///   or `FnMut` based on their internal operations
 /// - The `into_fn` method uses the provided `$fn_trait` parameter to match the
 ///   intended trait type
+///
+/// # Author
+///
+/// Haixing Hu
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_consumer_conversions {
     // Single generic parameter - Consumer
     (
@@ -208,11 +216,14 @@ macro_rules! impl_conditional_consumer_conversions {
         fn into_rc(self) -> $rc_type<$t, $u> {
             let pred = self.predicate.into_rc();
             let mut consumer = self.consumer.into_rc();
-            $rc_type::new_with_optional_name(move |t, u| {
-                if pred.test(t, u) {
-                    consumer.accept(t, u);
-                }
-            }, None)
+            $rc_type::new_with_optional_name(
+                move |t, u| {
+                    if pred.test(t, u) {
+                        consumer.accept(t, u);
+                    }
+                },
+                None,
+            )
         }
 
         #[allow(unused_mut)]

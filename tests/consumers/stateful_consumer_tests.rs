@@ -915,7 +915,6 @@ mod test_rc_consumer {
         assert_eq!(boxed.name(), None);
     }
 
-
     // Test to_box() preserves name
     #[test]
     fn test_to_box_preserves_name() {
@@ -934,7 +933,6 @@ mod test_rc_consumer {
         assert_eq!(boxed.name(), None);
         assert_eq!(consumer.name(), None);
     }
-
 }
 
 // ============================================================================

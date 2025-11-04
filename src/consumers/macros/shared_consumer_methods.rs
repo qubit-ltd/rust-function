@@ -120,9 +120,19 @@
 ///     'static
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_consumer_methods {
     // Single generic parameter - Consumer types
-    ($struct_name:ident < $t:ident >, $return_type:ident, $predicate_conversion:ident, $consumer_trait:ident, $($extra_bounds:tt)+) => {
+    (
+        $struct_name:ident < $t:ident >,
+        $return_type:ident,
+        $predicate_conversion:ident,
+        $consumer_trait:ident,
+        $($extra_bounds:tt)+
+    ) => {
         /// Creates a conditional consumer
         ///
         /// Wraps this consumer with a predicate condition, creating a new
@@ -196,8 +206,15 @@ macro_rules! impl_shared_consumer_methods {
             })
         }
     };
+
     // Two generic parameters - BiConsumer types
-    ($struct_name:ident < $t:ident, $u:ident >, $return_type:ident, $predicate_conversion:ident, $consumer_trait:ident, $($extra_bounds:tt)+) => {
+    (
+        $struct_name:ident < $t:ident, $u:ident >,
+        $return_type:ident,
+        $predicate_conversion:ident,
+        $consumer_trait:ident,
+        $($extra_bounds:tt)+
+    ) => {
         /// Creates a conditional bi-consumer
         ///
         /// Wraps this bi-consumer with a bi-predicate condition, creating a new

@@ -556,11 +556,9 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(
-        BoxStatefulConsumer<T>,
-        (FnMut(&T) + 'static),
-        |f| Box::new(f)
-    );
+    impl_consumer_common_methods!(BoxStatefulConsumer<T>, (FnMut(&T) + 'static), |f| Box::new(
+        f
+    ));
 
     // Generates: when() and and_then() methods that consume self
     impl_box_consumer_methods!(
@@ -685,11 +683,9 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(
-        RcStatefulConsumer<T>,
-        (FnMut(&T) + 'static),
-        |f| Rc::new(RefCell::new(f))
-    );
+    impl_consumer_common_methods!(RcStatefulConsumer<T>, (FnMut(&T) + 'static), |f| Rc::new(
+        RefCell::new(f)
+    ));
 
     // Generates: when() and and_then() methods that borrow &self (Rc can clone)
     impl_shared_consumer_methods!(
@@ -712,7 +708,7 @@ impl<T> StatefulConsumer<T> for RcStatefulConsumer<T> {
     {
         BoxStatefulConsumer::new_with_optional_name(
             move |t| self.function.borrow_mut()(t),
-            self.name
+            self.name,
         )
     }
 
@@ -740,7 +736,7 @@ impl<T> StatefulConsumer<T> for RcStatefulConsumer<T> {
         let self_fn = self.function.clone();
         BoxStatefulConsumer::new_with_optional_name(
             move |t| self_fn.borrow_mut()(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -834,11 +830,9 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(
-        ArcStatefulConsumer<T>,
-        (FnMut(&T) + Send + 'static),
-        |f| Arc::new(Mutex::new(f))
-    );
+    impl_consumer_common_methods!(ArcStatefulConsumer<T>, (FnMut(&T) + Send + 'static), |f| {
+        Arc::new(Mutex::new(f))
+    });
 
     // Generates: when() and and_then() methods that borrow &self (Arc can clone)
     impl_shared_consumer_methods!(
@@ -861,7 +855,7 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
     {
         BoxStatefulConsumer::new_with_optional_name(
             move |t| self.function.lock().unwrap()(t),
-            self.name
+            self.name,
         )
     }
 
@@ -871,7 +865,7 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
     {
         RcStatefulConsumer::new_with_optional_name(
             move |t| self.function.lock().unwrap()(t),
-            self.name
+            self.name,
         )
     }
 
@@ -896,7 +890,7 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
         let self_fn = self.function.clone();
         BoxStatefulConsumer::new_with_optional_name(
             move |t| self_fn.lock().unwrap()(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -907,7 +901,7 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
         let self_fn = self.function.clone();
         RcStatefulConsumer::new_with_optional_name(
             move |t| self_fn.lock().unwrap()(t),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -1243,11 +1237,7 @@ where
     }
 
     // Generates: into_box(), into_rc(), into_fn()
-    impl_conditional_consumer_conversions!(
-        BoxStatefulConsumer<T>,
-        RcStatefulConsumer,
-        FnMut
-    );
+    impl_conditional_consumer_conversions!(BoxStatefulConsumer<T>, RcStatefulConsumer, FnMut);
 }
 
 // Use macro to generate Debug and Display implementations
@@ -1322,11 +1312,7 @@ where
     }
 
     // Generates: into_box(), into_rc(), into_fn()
-    impl_conditional_consumer_conversions!(
-        BoxStatefulConsumer<T>,
-        RcStatefulConsumer,
-        FnMut
-    );
+    impl_conditional_consumer_conversions!(BoxStatefulConsumer<T>, RcStatefulConsumer, FnMut);
 }
 
 // Use macro to generate Clone implementation
@@ -1405,11 +1391,7 @@ where
     }
 
     // Generates: into_box(), into_rc(), into_fn()
-    impl_conditional_consumer_conversions!(
-        BoxStatefulConsumer<T>,
-        RcStatefulConsumer,
-        FnMut
-    );
+    impl_conditional_consumer_conversions!(BoxStatefulConsumer<T>, RcStatefulConsumer, FnMut);
 }
 
 // Use macro to generate Clone implementation

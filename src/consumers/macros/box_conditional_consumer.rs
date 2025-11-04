@@ -81,6 +81,10 @@
 ///     BiConsumer
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_conditional_consumer {
     // Single generic parameter - Consumer
     (

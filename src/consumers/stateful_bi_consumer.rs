@@ -39,7 +39,6 @@ use std::sync::{
     Mutex,
 };
 
-use crate::BoxBiConsumerOnce;
 use crate::consumers::macros::{
     impl_box_conditional_consumer,
     impl_box_consumer_methods,
@@ -62,6 +61,7 @@ use crate::predicates::bi_predicate::{
     BoxBiPredicate,
     RcBiPredicate,
 };
+use crate::BoxBiConsumerOnce;
 
 /// Type alias for bi-consumer function to simplify complex types.
 ///
@@ -590,10 +590,7 @@ impl<T, U> StatefulBiConsumer<T, U> for BoxStatefulBiConsumer<T, U> {
         U: 'static,
     {
         let mut func = self.function;
-        RcStatefulBiConsumer::new_with_optional_name(
-            move |t, u| func(t, u),
-            self.name
-        )
+        RcStatefulBiConsumer::new_with_optional_name(move |t, u| func(t, u), self.name)
     }
 
     // do NOT override BiConsumer::into_arc() because BoxStatefulBiConsumer is not Send + Sync
@@ -714,7 +711,7 @@ impl<T, U> StatefulBiConsumer<T, U> for ArcStatefulBiConsumer<T, U> {
         let self_fn = self.function;
         BoxStatefulBiConsumer::new_with_optional_name(
             move |t, u| self_fn.lock().unwrap()(t, u),
-            name
+            name,
         )
     }
 
@@ -726,7 +723,7 @@ impl<T, U> StatefulBiConsumer<T, U> for ArcStatefulBiConsumer<T, U> {
         let self_fn = self.function;
         RcStatefulBiConsumer::new_with_optional_name(
             move |t, u| self_fn.lock().unwrap()(t, u),
-            self.name
+            self.name,
         )
     }
 
@@ -755,7 +752,7 @@ impl<T, U> StatefulBiConsumer<T, U> for ArcStatefulBiConsumer<T, U> {
         let self_fn = self.function.clone();
         BoxStatefulBiConsumer::new_with_optional_name(
             move |t, u| self_fn.lock().unwrap()(t, u),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -767,7 +764,7 @@ impl<T, U> StatefulBiConsumer<T, U> for ArcStatefulBiConsumer<T, U> {
         let self_fn = self.function.clone();
         RcStatefulBiConsumer::new_with_optional_name(
             move |t, u| self_fn.lock().unwrap()(t, u),
-            self.name.clone()
+            self.name.clone(),
         )
     }
 
@@ -904,10 +901,7 @@ impl<T, U> StatefulBiConsumer<T, U> for RcStatefulBiConsumer<T, U> {
     {
         let name = self.name;
         let self_fn = self.function;
-        BoxStatefulBiConsumer::new_with_optional_name(
-            move |t, u| self_fn.borrow_mut()(t, u),
-            name
-        )
+        BoxStatefulBiConsumer::new_with_optional_name(move |t, u| self_fn.borrow_mut()(t, u), name)
     }
 
     fn to_fn(&self) -> impl FnMut(&T, &U)

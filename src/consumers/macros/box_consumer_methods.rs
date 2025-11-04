@@ -103,9 +103,17 @@
 ///     BiConsumer
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_consumer_methods {
     // Single generic parameter - Consumer
-    ($struct_name:ident < $t:ident >, $conditional_type:ident, $consumer_trait:ident) => {
+    (
+        $struct_name:ident < $t:ident >,
+        $conditional_type:ident,
+        $consumer_trait:ident
+    ) => {
         /// Creates a conditional consumer that executes based on predicate
         /// result.
         ///
@@ -205,7 +213,11 @@ macro_rules! impl_box_consumer_methods {
     };
 
     // Two generic parameters - BiConsumer
-    ($struct_name:ident < $t:ident, $u:ident >, $conditional_type:ident, $consumer_trait:ident) => {
+    (
+        $struct_name:ident < $t:ident, $u:ident >,
+        $conditional_type:ident,
+        $consumer_trait:ident
+    ) => {
         /// Creates a conditional two-parameter consumer that executes based
         /// on bi-predicate result.
         ///

@@ -133,6 +133,10 @@
 ///     'static
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_conditional_consumer {
     // Single generic parameter - Consumer types
     (

@@ -841,7 +841,8 @@ mod arc_stateful_bi_consumer_tests {
     // Test into_box() preserves name
     #[test]
     fn test_into_box_preserves_name() {
-        let consumer = ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let boxed = consumer.into_box();
         assert_eq!(boxed.name(), Some("original_consumer"));
     }
@@ -857,7 +858,8 @@ mod arc_stateful_bi_consumer_tests {
     // Test into_rc() preserves name
     #[test]
     fn test_into_rc_preserves_name() {
-        let consumer = ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let rced = consumer.into_rc();
         assert_eq!(rced.name(), Some("original_consumer"));
     }
@@ -873,7 +875,8 @@ mod arc_stateful_bi_consumer_tests {
     // Test to_box() preserves name
     #[test]
     fn test_to_box_preserves_name() {
-        let consumer = ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let boxed = consumer.to_box();
         assert_eq!(boxed.name(), Some("original_consumer"));
         // Original consumer should still be usable and have the same name
@@ -892,7 +895,8 @@ mod arc_stateful_bi_consumer_tests {
     // Test to_rc() preserves name
     #[test]
     fn test_to_rc_preserves_name() {
-        let consumer = ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let rced = consumer.to_rc();
         assert_eq!(rced.name(), Some("original_consumer"));
         // Original consumer should still be usable and have the same name
@@ -911,7 +915,8 @@ mod arc_stateful_bi_consumer_tests {
     // Test to_arc() preserves name (clones self)
     #[test]
     fn test_to_arc_preserves_name() {
-        let consumer = ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            ArcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let arced = consumer.to_arc();
         assert_eq!(arced.name(), Some("original_consumer"));
         // Original consumer should still be usable and have the same name
@@ -1424,7 +1429,8 @@ mod rc_stateful_bi_consumer_tests {
     // Test into_box() preserves name
     #[test]
     fn test_into_box_preserves_name() {
-        let consumer = RcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            RcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let boxed = consumer.into_box();
         assert_eq!(boxed.name(), Some("original_consumer"));
     }
@@ -1437,11 +1443,11 @@ mod rc_stateful_bi_consumer_tests {
         assert_eq!(boxed.name(), None);
     }
 
-
     // Test to_box() preserves name
     #[test]
     fn test_to_box_preserves_name() {
-        let consumer = RcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
+        let consumer =
+            RcStatefulBiConsumer::new_with_name("original_consumer", |_x: &i32, _y: &i32| {});
         let boxed = consumer.to_box();
         assert_eq!(boxed.name(), Some("original_consumer"));
         // Original consumer should still be usable and have the same name
@@ -1456,7 +1462,6 @@ mod rc_stateful_bi_consumer_tests {
         assert_eq!(boxed.name(), None);
         assert_eq!(consumer.name(), None);
     }
-
 }
 
 // ============================================================================
