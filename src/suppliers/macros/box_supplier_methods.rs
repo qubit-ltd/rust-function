@@ -34,7 +34,6 @@
 //! # Examples
 //!
 //! ```ignore
-//! // Single-parameter supplier
 //! impl_box_supplier_methods!(
 //!     BoxSupplier<T>,
 //!     BoxConditionalSupplier,
@@ -65,10 +64,10 @@
 /// # Parameter Usage Comparison
 ///
 /// | Supplier Type | Struct Signature | `$conditional_type` | `$supplier_trait` |
-//! |---------------|-----------------|----------------|------------------|
-//! | **Supplier** | `BoxSupplier<T>` | BoxConditionalSupplier | Supplier |
-//! | **SupplierOnce** | `BoxSupplierOnce<T>` | BoxConditionalSupplierOnce | SupplierOnce |
-//! | **StatefulSupplier** | `BoxStatefulSupplier<T>` | BoxConditionalStatefulSupplier | StatefulSupplier |
+/// |---------------|-----------------|----------------|------------------|
+/// | **Supplier** | `BoxSupplier<T>` | BoxConditionalSupplier | Supplier |
+/// | **SupplierOnce** | `BoxSupplierOnce<T>` | BoxConditionalSupplierOnce | SupplierOnce |
+/// | **StatefulSupplier** | `BoxStatefulSupplier<T>` | BoxConditionalStatefulSupplier | StatefulSupplier |
 ///
 /// # Examples
 ///
@@ -77,9 +76,13 @@
 /// impl_box_supplier_methods!(
 ///     BoxSupplier<T>,
 ///     BoxConditionalSupplier,
-//!     Supplier
-//! );
-//! ```
+///     Supplier
+/// );
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_supplier_methods {
     // Single generic parameter - Supplier
     ($struct_name:ident < $t:ident >, $conditional_type:ident, $supplier_trait:ident) => {

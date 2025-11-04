@@ -6,7 +6,6 @@
  *    All rights reserved.
  *
  ******************************************************************************/
-
 //! # Conditional Supplier Clone Macro
 //!
 //! Generates Clone trait implementation for Conditional Supplier types
@@ -47,23 +46,27 @@
 /// # Parameters
 ///
 /// * `$struct_name` - The struct name
-/// * `$generic` - Generic parameter list (one type parameter)
+/// * `$t` - Generic parameter list (one type parameter)
 ///
 /// # Examples
 ///
 /// ```ignore
 /// // For single type parameter
 /// impl_conditional_supplier_clone!(ArcConditionalSupplier<T>);
-//! impl_conditional_supplier_clone!(RcConditionalSupplier<T>);
+/// impl_conditional_supplier_clone!(RcConditionalSupplier<T>);
 ///
-//! // For stateful supplier
-//! impl_conditional_supplier_clone!(ArcConditionalStatefulSupplier<T>);
-//! impl_conditional_supplier_clone!(RcConditionalStatefulSupplier<T>);
-//! ```
+/// // For stateful supplier
+/// impl_conditional_supplier_clone!(ArcConditionalStatefulSupplier<T>);
+/// impl_conditional_supplier_clone!(RcConditionalStatefulSupplier<T>);
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_supplier_clone {
     // Single generic parameter
-    ($struct_name:ident < $generic:ident >) => {
-        impl<$generic> Clone for $struct_name<$generic> {
+    ($struct_name:ident < $t:ident >) => {
+        impl<$t> Clone for $struct_name<$t> {
             fn clone(&self) -> Self {
                 Self {
                     supplier: self.supplier.clone(),

@@ -23,7 +23,7 @@
 //! # Examples
 //!
 //! ```ignore
-//! // For single type parameter
+//! //!For single type parameter
 //! impl_supplier_clone!(ArcSupplier<T>);
 //!
 //! // For single type parameter with Rc
@@ -51,7 +51,7 @@
 /// # Parameters
 ///
 /// * `$struct_name` - The struct name
-/// * `$generic` - Generic parameter list (one type parameter)
+/// * `$t` - Generic parameter list (one type parameter)
 ///
 /// # Examples
 ///
@@ -68,10 +68,14 @@
 /// // For stateful supplier with Rc
 /// impl_supplier_clone!(RcStatefulSupplier<T>);
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_supplier_clone {
     // Single generic parameter
-    ($struct_name:ident < $generic:ident >) => {
-        impl<$generic> Clone for $struct_name<$generic> {
+    ($struct_name:ident < $t:ident >) => {
+        impl<$t> Clone for $struct_name<$t> {
             fn clone(&self) -> Self {
                 Self {
                     function: self.function.clone(),

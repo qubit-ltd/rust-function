@@ -1543,6 +1543,7 @@ where
                     None
                 }
             })),
+            name: None,
         }
     }
 
@@ -1582,6 +1583,7 @@ where
         let first = Rc::clone(&self.function);
         RcStatefulSupplier {
             function: Rc::new(RefCell::new(move || (first.borrow_mut()(), other.get()))),
+            name: None,
         }
     }
 
@@ -1629,6 +1631,7 @@ where
                     value
                 }
             })),
+            name: None,
         }
     }
 }

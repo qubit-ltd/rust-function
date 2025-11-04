@@ -72,10 +72,10 @@
 /// # Parameters
 ///
 /// * `$struct_name<$generics>` - Struct name with generic parameters
-//! * `$supplier_type` - Supplier wrapper type name
-//! * `$supplier_trait` - Supplier trait name
-//! * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
-//! * `$extra_bounds` - Extra trait bounds
+/// * `$supplier_type` - Supplier wrapper type name
+/// * `$supplier_trait` - Supplier trait name
+/// * `$predicate_conversion` - Predicate conversion method (into_arc or into_rc)
+/// * `$extra_bounds` - Extra trait bounds
 ///
 /// # Usage Examples
 ///
@@ -98,6 +98,9 @@
 ///     'static
 /// );
 /// ```
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_conditional_supplier {
     // Single generic parameter - Supplier
     (

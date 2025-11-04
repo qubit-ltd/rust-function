@@ -82,11 +82,11 @@
 /// # All Macro Invocations
 ///
 /// | Supplier Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$supplier_trait` | `$extra_bounds` |
-//! |---------------|-----------------|----------------|------------------------|------------------|----------------|
-//! | **ArcSupplier** | `ArcSupplier<T>` | ArcConditionalSupplier | into_arc | Supplier | Send + Sync + 'static |
-//! | **RcSupplier** | `RcSupplier<T>` | RcConditionalSupplier | into_rc | Supplier | 'static |
-//! | **ArcStatefulSupplier** | `ArcStatefulSupplier<T>` | ArcConditionalStatefulSupplier | into_arc | StatefulSupplier | Send + Sync + 'static |
-//! | **RcStatefulSupplier** | `RcStatefulSupplier<T>` | RcConditionalStatefulSupplier | into_rc | StatefulSupplier | 'static |
+/// |---------------|-----------------|----------------|------------------------|------------------|----------------|
+/// | **ArcSupplier** | `ArcSupplier<T>` | ArcConditionalSupplier | into_arc | Supplier | Send + Sync + 'static |
+/// | **RcSupplier** | `RcSupplier<T>` | RcConditionalSupplier | into_rc | Supplier | 'static |
+/// | **ArcStatefulSupplier** | `ArcStatefulSupplier<T>` | ArcConditionalStatefulSupplier | into_arc | StatefulSupplier | Send + Sync + 'static |
+/// | **RcStatefulSupplier** | `RcStatefulSupplier<T>` | RcConditionalStatefulSupplier | into_rc | StatefulSupplier | 'static |
 ///
 /// # Examples
 ///
@@ -95,20 +95,23 @@
 /// impl_shared_supplier_methods!(
 ///     ArcSupplier<T>,
 ///     ArcConditionalSupplier,
-//!     into_arc,
-//!     Supplier,
-//!     Send + Sync + 'static
-//! );
-//!
-//! // Single-parameter with Rc
-//! impl_shared_supplier_methods!(
-//!     RcSupplier<T>,
-//!     RcConditionalSupplier,
-//!     into_rc,
-//!     Supplier,
-//!     'static
-//! );
-//! ```
+///     into_arc,
+///     Supplier,
+///     Send + Sync + 'static
+/// );
+///
+/// // Single-parameter with Rc
+/// impl_shared_supplier_methods!(
+///     RcSupplier<T>,
+///     RcConditionalSupplier,
+///     into_rc,
+///     Supplier,
+///     'static
+/// );
+/// ```
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_shared_supplier_methods {
     // Single generic parameter
     ($struct_name:ident < $t:ident >, $return_type:ident, $predicate_conversion:ident, $supplier_trait:ident, $($extra_bounds:tt)+) => {

@@ -104,6 +104,10 @@
 /// * `name()` - Gets the name of the supplier
 /// * `set_name()` - Sets the name of the supplier
 /// * `constant()` - Creates a supplier that returns a constant value
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_supplier_common_methods {
     // Single generic parameter - Supplier types
     (

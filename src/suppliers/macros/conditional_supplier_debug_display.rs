@@ -44,7 +44,7 @@
 /// # Parameters
 ///
 /// * `$struct_name` - The struct name
-/// * `$generic` - Generic parameter list (one type parameter)
+/// * `$t` - Generic parameter list (one type parameter)
 ///
 /// # Examples
 ///
@@ -55,10 +55,13 @@
 /// // For stateful supplier
 /// impl_conditional_supplier_debug_display!(BoxConditionalStatefulSupplier<T>);
 /// ```
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_conditional_supplier_debug_display {
     // Single generic parameter
-    ($struct_name:ident < $generic:ident >) => {
-        impl<$generic> std::fmt::Debug for $struct_name<$generic> {
+    ($struct_name:ident < $t:ident >) => {
+        impl<$t> std::fmt::Debug for $struct_name<$t> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.debug_struct(stringify!($struct_name))
                     .field("supplier", &self.supplier)
@@ -67,7 +70,7 @@ macro_rules! impl_conditional_supplier_debug_display {
             }
         }
 
-        impl<$generic> std::fmt::Display for $struct_name<$generic> {
+        impl<$t> std::fmt::Display for $struct_name<$t> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 write!(
                     f,

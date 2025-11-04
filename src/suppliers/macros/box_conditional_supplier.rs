@@ -62,8 +62,8 @@
 /// # Parameters
 ///
 /// * `$struct_name<$generics>` - Struct name with generic parameters
-//! * `$supplier_type` - Supplier wrapper type name
-//! * `$supplier_trait` - Supplier trait name
+/// * `$supplier_type` - Supplier wrapper type name
+/// * `$supplier_trait` - Supplier trait name
 ///
 /// # Usage Examples
 ///
@@ -82,6 +82,10 @@
 ///     StatefulSupplier
 /// );
 /// ```
+///
+/// # Author
+///
+/// Haixing Hu
 macro_rules! impl_box_conditional_supplier {
     // Single generic parameter - Supplier
     (

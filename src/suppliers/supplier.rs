@@ -943,6 +943,7 @@ where
                 let value = self_fn();
                 mapper.apply(value)
             }),
+            name: None,
         }
     }
 
@@ -981,6 +982,7 @@ where
                     None
                 }
             }),
+            name: None,
         }
     }
 
@@ -1021,6 +1023,7 @@ where
         let second = Arc::clone(&other.function);
         ArcSupplier {
             function: Arc::new(move || (first(), second())),
+            name: None,
         }
     }
 }
@@ -1302,6 +1305,7 @@ where
                 let value = self_fn();
                 mapper.apply(value)
             }),
+            name: None,
         }
     }
 
@@ -1340,6 +1344,7 @@ where
                     None
                 }
             }),
+            name: None,
         }
     }
 
@@ -1380,6 +1385,7 @@ where
         let second = Rc::clone(&other.function);
         RcSupplier {
             function: Rc::new(move || (first(), second())),
+            name: None,
         }
     }
 }
