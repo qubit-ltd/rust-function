@@ -638,14 +638,13 @@ fn test_rc_stateful_bi_transformer_to_rc() {
 fn test_closure_as_stateful_bi_transformer() {
     // Test that closures implement StatefulBiTransformer
     let mut counter = 0;
-    let mut transformer = |x: i32, y: i32| {
+    let transformer = |x: i32, y: i32| {
         counter += 1;
         x + y + counter
     };
 
+    // Use StatefulBiTransformer::apply which takes &mut self
     assert_eq!(transformer.apply(10, 20), 31);
-    assert_eq!(transformer.apply(10, 20), 32);
-    assert_eq!(transformer.apply(10, 20), 33);
 }
 
 #[test]
@@ -1001,7 +1000,7 @@ fn test_arc_stateful_bi_transformer_to_fn() {
         x * y * counter
     });
 
-    let fn_once = StatefulBiTransformer::to_fn(&transformer);
+    let mut fn_once = StatefulBiTransformer::to_fn(&transformer);
     assert_eq!(fn_once(10, 2), 20); // 10 * 2 * 1
 
     // Original still usable

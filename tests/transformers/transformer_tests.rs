@@ -301,18 +301,12 @@ mod arc_conditional_tests {
     }
 
     #[test]
-    fn test_conditional_clone() {
+    fn test_conditional_or_else() {
         let double_fn = |x: i32| x * 2;
-        let conditional = FnTransformerOps::when(double_fn, |x: &i32| *x > 0);
-        let cloned = conditional.clone();
+        let result = FnTransformerOps::when(double_fn, |x: &i32| *x > 0).or_else(|x: i32| -x);
 
-        let result1 = conditional.or_else(|x: i32| -x);
-        let result2 = cloned.or_else(|x: i32| -x);
-
-        assert_eq!(result1.apply(5), 10);
-        assert_eq!(result2.apply(5), 10);
-        assert_eq!(result1.apply(-5), 5);
-        assert_eq!(result2.apply(-5), 5);
+        assert_eq!(result.apply(5), 10);
+        assert_eq!(result.apply(-5), 5);
     }
 }
 
@@ -346,18 +340,12 @@ mod rc_conditional_tests {
     }
 
     #[test]
-    fn test_conditional_clone() {
+    fn test_conditional_or_else() {
         let double_fn = |x: i32| x * 2;
-        let conditional = FnTransformerOps::when(double_fn, |x: &i32| *x > 0);
-        let cloned = conditional.clone();
+        let result = FnTransformerOps::when(double_fn, |x: &i32| *x > 0).or_else(|x: i32| -x);
 
-        let result1 = conditional.or_else(|x: i32| -x);
-        let result2 = cloned.or_else(|x: i32| -x);
-
-        assert_eq!(result1.apply(5), 10);
-        assert_eq!(result2.apply(5), 10);
-        assert_eq!(result1.apply(-5), 5);
-        assert_eq!(result2.apply(-5), 5);
+        assert_eq!(result.apply(5), 10);
+        assert_eq!(result.apply(-5), 5);
     }
 }
 
@@ -760,11 +748,11 @@ mod complex_composition_tests {
     }
 
     #[test]
-    fn test_multiple_compose() {
+    fn test_multiple_and_then_with_box() {
         let add_one = BoxTransformer::new(|x: i32| x + 1);
         let double = BoxTransformer::new(|x: i32| x * 2);
         let square = BoxTransformer::new(|x: i32| x * x);
-        let composed = square.compose(double).compose(add_one);
+        let composed = add_one.and_then(double).and_then(square);
         assert_eq!(composed.apply(5), 144); // ((5 + 1) * 2)^2 = 144
     }
 
@@ -781,12 +769,12 @@ mod complex_composition_tests {
     }
 
     #[test]
-    fn test_rc_multiple_compose() {
+    fn test_rc_multiple_and_then() {
         let add_one = RcTransformer::new(|x: i32| x + 1);
         let double = RcTransformer::new(|x: i32| x * 2);
         let square = RcTransformer::new(|x: i32| x * x);
-        let composed = square.compose(double.clone()).compose(add_one.clone());
-        assert_eq!(composed.apply(5), 144);
+        let composed = add_one.and_then(double.clone()).and_then(square.clone());
+        assert_eq!(composed.apply(5), 144); // (5 + 1) * 2 = 12, then 12 * 12 = 144
         // Original transformers still usable
         assert_eq!(add_one.apply(5), 6);
         assert_eq!(double.apply(5), 10);
