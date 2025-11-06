@@ -15,7 +15,6 @@
 mod box_transformer_tests {
     use prism3_function::{
         BoxTransformer,
-        FnTransformerOps,
         Transformer,
     };
 
@@ -75,6 +74,20 @@ mod box_transformer_tests {
         let add_one = BoxTransformer::new(|x: i32| x + 1);
         let composed = add_one.and_then(double);
         assert_eq!(composed.apply(5), 12); // (5 + 1) * 2
+    }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = BoxTransformer::new_with_name("double", |x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxTransformer(double)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = BoxTransformer::new(|x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxTransformer");
     }
 }
 
@@ -234,6 +247,20 @@ mod rc_transformer_tests {
 
         assert_eq!(composed.apply(5), 12); // (5 + 1) * 2
     }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = RcTransformer::new_with_name("double", |x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "RcTransformer(double)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = RcTransformer::new(|x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "RcTransformer");
+    }
 }
 
 // ============================================================================
@@ -243,8 +270,6 @@ mod rc_transformer_tests {
 #[cfg(test)]
 mod box_conditional_tests {
     use prism3_function::{
-        BoxPredicate,
-        BoxTransformer,
         FnTransformerOps,
         Transformer,
     };
@@ -274,8 +299,6 @@ mod box_conditional_tests {
 #[cfg(test)]
 mod arc_conditional_tests {
     use prism3_function::{
-        ArcPredicate,
-        ArcTransformer,
         FnTransformerOps,
         Transformer,
     };
@@ -314,8 +337,6 @@ mod arc_conditional_tests {
 mod rc_conditional_tests {
     use prism3_function::{
         FnTransformerOps,
-        RcPredicate,
-        RcTransformer,
         Transformer,
     };
 
@@ -680,6 +701,20 @@ mod to_conversion_tests {
         assert_eq!(arc.apply(41), 42);
         assert_eq!(rc.apply(41), 42);
     }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = ArcTransformer::new_with_name("double", |x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "ArcTransformer(double)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = ArcTransformer::new(|x: i32| x * 2);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "ArcTransformer");
+    }
 }
 
 // ============================================================================
@@ -690,7 +725,6 @@ mod to_conversion_tests {
 mod trait_usage_tests {
     use prism3_function::{
         BoxTransformer,
-        FnTransformerOps,
         Transformer,
     };
 
@@ -851,7 +885,6 @@ mod edge_cases_tests {
 mod default_implementation_tests {
     use prism3_function::{
         BoxTransformer,
-        FnTransformerOps,
         Transformer,
     };
     use std::thread;
@@ -2118,7 +2151,6 @@ mod transformer_once_tests {
         BoxTransformer,
         RcTransformer,
         Transformer,
-        TransformerOnce,
     };
     use std::sync::Arc;
     use std::thread;

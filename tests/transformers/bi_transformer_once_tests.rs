@@ -12,7 +12,6 @@ use prism3_function::{
     BiTransformerOnce,
     BoxBiTransformerOnce,
 };
-use prism3_function::transformers::bi_transformer_once::BoxConditionalBiTransformerOnce;
 
 // ============================================================================
 // Tests for BiTransformerOnce trait
@@ -382,6 +381,20 @@ mod box_bi_transformer_once_tests {
         let to_float = |x: i32| x as f64 / 2.0;
         let composed = multiply.and_then(to_float);
         assert!((composed.apply(6, 7) - 21.0).abs() < 1e-10);
+    }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = BoxBiTransformerOnce::new_with_name("multiply", |x: i32, y: i32| x * y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxBiTransformerOnce(multiply)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = BoxBiTransformerOnce::new(|x: i32, y: i32| x * y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxBiTransformerOnce");
     }
 }
 

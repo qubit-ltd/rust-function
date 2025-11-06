@@ -1059,3 +1059,56 @@ mod test_rc_supplier_supplier_once {
     }
 }
 */
+
+// ======================================================================
+// Debug and Display Trait Tests
+// ======================================================================
+
+#[cfg(test)]
+mod test_supplier_once_debug_display {
+    use super::*;
+
+    // ============================================================
+    // BoxSupplierOnce Debug and Display Tests
+    // ============================================================
+
+    mod test_box_supplier_once_debug_display {
+        use super::*;
+
+        #[test]
+        fn test_debug_without_name() {
+            // Test Debug formatting for BoxSupplierOnce without name
+            let supplier = BoxSupplierOnce::new(|| 42);
+            let debug_str = format!("{:?}", supplier);
+            assert!(debug_str.contains("BoxSupplierOnce"));
+            assert!(debug_str.contains("name: None"));
+            assert!(debug_str.contains("function: \"<function>\""));
+        }
+
+        #[test]
+        fn test_debug_with_name() {
+            // Test Debug formatting for BoxSupplierOnce with name
+            let supplier = BoxSupplierOnce::new_with_name("test_supplier", || 42);
+            let debug_str = format!("{:?}", supplier);
+            assert!(debug_str.contains("BoxSupplierOnce"));
+            assert!(debug_str.contains("name: Some(\"test_supplier\")"));
+            assert!(debug_str.contains("function: \"<function>\""));
+        }
+
+        #[test]
+        fn test_display_without_name() {
+            // Test Display formatting for BoxSupplierOnce without name
+            let supplier = BoxSupplierOnce::new(|| 42);
+            let display_str = format!("{}", supplier);
+            assert_eq!(display_str, "BoxSupplierOnce");
+        }
+
+        #[test]
+        fn test_display_with_name() {
+            // Test Display formatting for BoxSupplierOnce with name
+            let supplier = BoxSupplierOnce::new_with_name("test_supplier", || 42);
+            let display_str = format!("{}", supplier);
+            assert_eq!(display_str, "BoxSupplierOnce(test_supplier)");
+        }
+    }
+}

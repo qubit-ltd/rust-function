@@ -9,7 +9,6 @@
 
 use prism3_function::{
     BoxTransformerOnce,
-    FnTransformerOps,
     TransformerOnce,
 };
 
@@ -75,6 +74,20 @@ mod box_transformer_once_tests {
         let to_string = BoxTransformerOnce::new(|x: i32| x.to_string());
         let add_suffix = to_string.and_then(|s| format!("{}_suffix", s));
         assert_eq!(add_suffix.apply(42), "42_suffix");
+    }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = BoxTransformerOnce::new_with_name("parse", |s: String| s.parse::<i32>().unwrap_or(0));
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxTransformerOnce(parse)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = BoxTransformerOnce::new(|s: String| s.parse::<i32>().unwrap_or(0));
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxTransformerOnce");
     }
 }
 
@@ -660,7 +673,6 @@ mod box_transformer_transformer_once_tests {
     use prism3_function::{
         BoxTransformer,
         Transformer,
-        TransformerOnce,
     };
 
     #[test]
@@ -708,7 +720,6 @@ mod rc_transformer_transformer_once_tests {
     use prism3_function::{
         RcTransformer,
         Transformer,
-        TransformerOnce,
     };
 
     #[test]
@@ -766,7 +777,6 @@ mod arc_transformer_transformer_once_tests {
     use prism3_function::{
         ArcTransformer,
         Transformer,
-        TransformerOnce,
     };
     use std::sync::Arc;
     use std::thread;

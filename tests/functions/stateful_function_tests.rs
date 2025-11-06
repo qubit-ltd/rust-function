@@ -9,6 +9,8 @@
 
 //! Comprehensive tests for StatefulFunction trait and its implementations
 
+#![allow(unused_assignments)]
+
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::{
@@ -34,108 +36,146 @@ use prism3_function::{
 fn test_stateful_function_trait_apply() {
     // Test that StatefulFunction trait's apply method works correctly
 
-    let mut func = |x: &i32| {
-        x + counter
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
+    let mut func = move |x: &i32| {
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
+    assert_eq!(func.apply(&10), 10);
     assert_eq!(func.apply(&10), 11);
     assert_eq!(func.apply(&10), 12);
-    assert_eq!(func.apply(&10), 13);
 }
 
 #[test]
 fn test_stateful_function_trait_into_box() {
     // Test conversion from closure to BoxStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut boxed = func.into_box();
+    assert_eq!(boxed.apply(&10), 10);
     assert_eq!(boxed.apply(&10), 11);
-    assert_eq!(boxed.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_into_rc() {
     // Test conversion from closure to RcStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut rc = func.into_rc();
+    assert_eq!(rc.apply(&10), 10);
     assert_eq!(rc.apply(&10), 11);
-    assert_eq!(rc.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_into_arc() {
     // Test conversion from closure to ArcStatefulFunction
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     };
     let mut arc = func.into_arc();
+    assert_eq!(arc.apply(&10), 10);
     assert_eq!(arc.apply(&10), 11);
-    assert_eq!(arc.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_into_fn() {
     // Test conversion to closure
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut closure = func.into_fn();
+    assert_eq!(closure(&10), 10);
     assert_eq!(closure(&10), 11);
-    assert_eq!(closure(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_to_box() {
     // Test non-consuming conversion to BoxStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut boxed = func.to_box();
+    assert_eq!(boxed.apply(&10), 10);
     assert_eq!(boxed.apply(&10), 11);
-    assert_eq!(boxed.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_to_rc() {
     // Test non-consuming conversion to RcStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut rc = func.to_rc();
+    assert_eq!(rc.apply(&10), 10);
     assert_eq!(rc.apply(&10), 11);
-    assert_eq!(rc.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_to_arc() {
     // Test non-consuming conversion to ArcStatefulFunction
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     };
     let mut arc = func.to_arc();
+    assert_eq!(arc.apply(&10), 10);
     assert_eq!(arc.apply(&10), 11);
-    assert_eq!(arc.apply(&10), 12);
 }
 
 #[test]
 fn test_stateful_function_trait_to_fn() {
     // Test non-consuming conversion to closure
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     };
     let mut closure = func.to_fn();
+    assert_eq!(closure(&10), 10);
     assert_eq!(closure(&10), 11);
-    assert_eq!(closure(&10), 12);
 }
 
 // ============================================================================
@@ -146,12 +186,16 @@ fn test_stateful_function_trait_to_fn() {
 fn test_box_stateful_function_new() {
     // Test BoxStatefulFunction::new with simple closure
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = BoxStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
+    assert_eq!(func.apply(&10), 10);
     assert_eq!(func.apply(&10), 11);
     assert_eq!(func.apply(&10), 12);
-    assert_eq!(func.apply(&10), 13);
 }
 
 #[test]
@@ -176,12 +220,16 @@ fn test_box_stateful_function_constant() {
 fn test_box_stateful_function_apply() {
     // Test StatefulFunction trait implementation for BoxStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = BoxStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x * current
     });
+    assert_eq!(func.apply(&10), 0);
     assert_eq!(func.apply(&10), 10);
     assert_eq!(func.apply(&10), 20);
-    assert_eq!(func.apply(&10), 30);
 }
 
 // ============================================================================
@@ -233,13 +281,17 @@ fn test_box_stateful_function_when_or_else() {
 fn test_box_stateful_function_when_with_predicate() {
     // Test when with BoxPredicate
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = BoxStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x * current
     })
     .when(BoxPredicate::new(|x: &i32| *x > 0))
     .or_else(|x: &i32| -(*x));
 
-    assert_eq!(func.apply(&10), 10); // 10 > 0, apply * 1
+    assert_eq!(func.apply(&10), 0); // 10 > 0, apply * 0
     assert_eq!(func.apply(&-5), 5); // -5 <= 0, apply negate
 }
 
@@ -251,33 +303,45 @@ fn test_box_stateful_function_when_with_predicate() {
 fn test_box_stateful_function_into_box() {
     // Test BoxStatefulFunction::into_box (should return itself)
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = BoxStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut boxed = func.into_box();
-    assert_eq!(boxed.apply(&10), 11);
+    assert_eq!(boxed.apply(&10), 10);
 }
 
 #[test]
 fn test_box_stateful_function_into_rc() {
     // Test BoxStatefulFunction::into_rc conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = BoxStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut rc = func.into_rc();
-    assert_eq!(rc.apply(&10), 11);
+    assert_eq!(rc.apply(&10), 10);
 }
 
 #[test]
 fn test_box_stateful_function_into_fn() {
     // Test BoxStatefulFunction::into_fn conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = BoxStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut closure = func.into_fn();
-    assert_eq!(closure(&10), 11);
+    assert_eq!(closure(&10), 10);
 }
 
 // ============================================================================
@@ -288,12 +352,17 @@ fn test_box_stateful_function_into_fn() {
 fn test_arc_stateful_function_new() {
     // Test ArcStatefulFunction::new with simple closure
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let mut func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
+    assert_eq!(func.apply(&10), 10);
     assert_eq!(func.apply(&10), 11);
     assert_eq!(func.apply(&10), 12);
-    assert_eq!(func.apply(&10), 13);
 }
 
 #[test]
@@ -317,23 +386,33 @@ fn test_arc_stateful_function_constant() {
 fn test_arc_stateful_function_apply() {
     // Test StatefulFunction trait implementation for ArcStatefulFunction
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let mut func = ArcStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x * *current;
+        *current += 1;
+        result
     });
+    assert_eq!(func.apply(&10), 0);
     assert_eq!(func.apply(&10), 10);
-    assert_eq!(func.apply(&10), 20);
 }
 
 #[test]
 fn test_arc_stateful_function_clone() {
     // Test ArcStatefulFunction::clone
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut func_clone = func.clone();
+    assert_eq!(func_clone.apply(&10), 10);
     assert_eq!(func_clone.apply(&10), 11);
-    assert_eq!(func_clone.apply(&10), 12);
 }
 
 // ============================================================================
@@ -385,13 +464,18 @@ fn test_arc_stateful_function_when_or_else() {
 fn test_arc_stateful_function_when_with_predicate() {
     // Test when with ArcPredicate
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let mut func = ArcStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x * *current;
+        *current += 1;
+        result
     })
     .when(ArcPredicate::new(|x: &i32| *x > 0))
     .or_else(|x: &i32| -(*x));
 
-    assert_eq!(func.apply(&10), 10); // 10 > 0, apply * 1
+    assert_eq!(func.apply(&10), 0); // 10 > 0, apply * 0
     assert_eq!(func.apply(&-5), 5); // -5 <= 0, apply negate
 }
 
@@ -403,92 +487,132 @@ fn test_arc_stateful_function_when_with_predicate() {
 fn test_arc_stateful_function_into_box() {
     // Test ArcStatefulFunction::into_box conversion
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut boxed = func.into_box();
-    assert_eq!(boxed.apply(&10), 11);
+    assert_eq!(boxed.apply(&10), 10);
 }
 
 #[test]
 fn test_arc_stateful_function_into_rc() {
     // Test ArcStatefulFunction::into_rc conversion
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut rc = func.into_rc();
-    assert_eq!(rc.apply(&10), 11);
+    assert_eq!(rc.apply(&10), 10);
 }
 
 #[test]
 fn test_arc_stateful_function_into_arc() {
     // Test ArcStatefulFunction::into_arc (should return itself)
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut arc = func.into_arc();
-    assert_eq!(arc.apply(&10), 11);
+    assert_eq!(arc.apply(&10), 10);
 }
 
 #[test]
 fn test_arc_stateful_function_into_fn() {
     // Test ArcStatefulFunction::into_fn conversion
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut closure = func.into_fn();
-    assert_eq!(closure(&10), 11);
+    assert_eq!(closure(&10), 10);
 }
 
 #[test]
 fn test_arc_stateful_function_to_box() {
     // Test non-consuming conversion to BoxStatefulFunction
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut boxed = func.to_box();
-    assert_eq!(boxed.apply(&10), 11);
-    assert_eq!(func.clone().apply(&10), 12);
+    assert_eq!(boxed.apply(&10), 10);
+    assert_eq!(func.clone().apply(&10), 11);
 }
 
 #[test]
 fn test_arc_stateful_function_to_rc() {
     // Test non-consuming conversion to RcStatefulFunction
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut rc = func.to_rc();
-    assert_eq!(rc.apply(&10), 11);
-    assert_eq!(func.clone().apply(&10), 12);
+    assert_eq!(rc.apply(&10), 10);
+    assert_eq!(func.clone().apply(&10), 11);
 }
 
 #[test]
 fn test_arc_stateful_function_to_arc() {
     // Test non-consuming conversion to ArcStatefulFunction (clone)
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut arc = func.to_arc();
-    assert_eq!(arc.apply(&10), 11);
-    assert_eq!(func.clone().apply(&10), 12);
+    assert_eq!(arc.apply(&10), 10);
+    assert_eq!(func.clone().apply(&10), 11);
 }
 
 #[test]
 fn test_arc_stateful_function_to_fn() {
     // Test non-consuming conversion to closure
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut closure = func.to_fn();
-    assert_eq!(closure(&10), 11);
-    assert_eq!(func.clone().apply(&10), 12);
+    assert_eq!(closure(&10), 10);
+    assert_eq!(func.clone().apply(&10), 11);
 }
 
 // ============================================================================
@@ -499,14 +623,19 @@ fn test_arc_stateful_function_to_fn() {
 fn test_arc_stateful_function_thread_safety() {
     // Test that ArcStatefulFunction is Send + Sync
 
+    let counter = Arc::new(Mutex::new(0));
+    let counter_clone = Arc::clone(&counter);
     let func = ArcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let mut current = counter_clone.lock().unwrap();
+        let result = x + *current;
+        *current += 1;
+        result
     });
     let mut func_clone = func.clone();
 
     let handle = std::thread::spawn(move || func_clone.apply(&10));
 
-    assert_eq!(handle.join().unwrap(), 11);
+    assert_eq!(handle.join().unwrap(), 10);
 }
 
 // ============================================================================
@@ -517,12 +646,16 @@ fn test_arc_stateful_function_thread_safety() {
 fn test_rc_stateful_function_new() {
     // Test RcStatefulFunction::new with simple closure
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
+    assert_eq!(func.apply(&10), 10);
     assert_eq!(func.apply(&10), 11);
     assert_eq!(func.apply(&10), 12);
-    assert_eq!(func.apply(&10), 13);
 }
 
 #[test]
@@ -546,23 +679,31 @@ fn test_rc_stateful_function_constant() {
 fn test_rc_stateful_function_apply() {
     // Test StatefulFunction trait implementation for RcStatefulFunction
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x * current
     });
+    assert_eq!(func.apply(&10), 0);
     assert_eq!(func.apply(&10), 10);
-    assert_eq!(func.apply(&10), 20);
 }
 
 #[test]
 fn test_rc_stateful_function_clone() {
     // Test RcStatefulFunction::clone
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut func_clone = func.clone();
+    assert_eq!(func_clone.apply(&10), 10);
     assert_eq!(func_clone.apply(&10), 11);
-    assert_eq!(func_clone.apply(&10), 12);
 }
 
 // ============================================================================
@@ -614,13 +755,18 @@ fn test_rc_stateful_function_when_or_else() {
 fn test_rc_stateful_function_when_with_predicate() {
     // Test when with RcPredicate
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let mut current = counter_clone.borrow_mut();
+        let result = x * *current;
+        *current += 1;
+        result
     })
     .when(RcPredicate::new(|x: &i32| *x > 0))
     .or_else(|x: &i32| -(*x));
 
-    assert_eq!(func.apply(&10), 10); // 10 > 0, apply * 1
+    assert_eq!(func.apply(&10), 0); // 10 > 0, apply * 0
     assert_eq!(func.apply(&-5), 5); // -5 <= 0, apply negate
 }
 
@@ -632,78 +778,102 @@ fn test_rc_stateful_function_when_with_predicate() {
 fn test_rc_stateful_function_into_box() {
     // Test RcStatefulFunction::into_box conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut boxed = func.into_box();
-    assert_eq!(boxed.apply(&10), 11);
+    assert_eq!(boxed.apply(&10), 10);
 }
 
 #[test]
 fn test_rc_stateful_function_into_rc() {
     // Test RcStatefulFunction::into_rc (should return itself)
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut rc = func.into_rc();
-    assert_eq!(rc.apply(&10), 11);
+    assert_eq!(rc.apply(&10), 10);
 }
 
 #[test]
 fn test_rc_stateful_function_into_fn() {
     // Test RcStatefulFunction::into_fn conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut closure = func.into_fn();
-    assert_eq!(closure(&10), 11);
+    assert_eq!(closure(&10), 10);
 }
 
 #[test]
 fn test_rc_stateful_function_to_box() {
     // Test RcStatefulFunction::to_box conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut boxed = func.to_box();
-    assert_eq!(boxed.apply(&10), 11);
+    assert_eq!(boxed.apply(&10), 10);
     // Original should still be usable since it was cloned
-    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+    assert_eq!(func.apply(&5), 6); // 5 + 1 = 6
 }
 
 #[test]
 fn test_rc_stateful_function_to_rc() {
     // Test RcStatefulFunction::to_rc conversion (clone)
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
     let mut rc = func.to_rc();
-    assert_eq!(rc.apply(&10), 11);
+    assert_eq!(rc.apply(&10), 10);
     // Original should still be usable since it was cloned
-    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+    assert_eq!(func.apply(&5), 6); // 5 + 1 = 6
 }
 
 #[test]
 fn test_rc_stateful_function_to_fn() {
     // Test RcStatefulFunction::to_fn conversion
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = RcStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
 
     // Test closure in a separate scope to avoid borrowing conflicts
     {
         let mut closure = func.to_fn();
-        assert_eq!(closure(&10), 11);
+        assert_eq!(closure(&10), 10);
     } // closure dropped here
 
     // Original should still be usable since it was cloned
     // Note: counter state is shared, so it continues from 1
-    assert_eq!(func.apply(&5), 7); // 5 + 2 = 7
+    assert_eq!(func.apply(&5), 6); // 5 + 1 = 6
 }
 
 // ============================================================================
@@ -714,22 +884,30 @@ fn test_rc_stateful_function_to_fn() {
 fn test_stateful_function_with_zero() {
     // Test stateful function with zero input
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = BoxStatefulFunction::new(move |x: &i32| {
-        x + counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
     });
+    assert_eq!(func.apply(&0), 0);
     assert_eq!(func.apply(&0), 1);
-    assert_eq!(func.apply(&0), 2);
 }
 
 #[test]
 fn test_stateful_function_with_negative() {
     // Test stateful function with negative input
 
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
     let mut func = BoxStatefulFunction::new(move |x: &i32| {
-        x * counter
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x * current
     });
+    assert_eq!(func.apply(&-10), 0);
     assert_eq!(func.apply(&-10), -10);
-    assert_eq!(func.apply(&-10), -20);
 }
 
 #[test]
@@ -1124,12 +1302,8 @@ fn test_rc_stateful_function_debug_display() {
     assert_eq!(display_str, "RcStatefulFunction");
 
     // Test Debug and Display for RcStatefulFunction with name
-    let mut counter2 = 0;
     let mut named_double =
-        RcStatefulFunction::new_with_name("rc_stateful_double", move |x: &i32| {
-            counter2 += 1;
-            x * 2
-        });
+        RcStatefulFunction::new_with_name("rc_stateful_double", |x: &i32| x * 2);
     // Call apply to test the function
     let _result2 = named_double.apply(&3);
 
@@ -1166,7 +1340,7 @@ fn test_arc_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             x * 2
         });
     // Call apply to test the function
@@ -1345,7 +1519,7 @@ fn test_rc_conditional_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         RcStatefulFunction::new_with_name("rc_stateful_double", move |x: &i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             x * 2
         });
     // Call apply to test the function
@@ -1396,7 +1570,7 @@ fn test_arc_conditional_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             x * 2
         });
     // Call apply to test the function

@@ -939,7 +939,7 @@ fn test_box_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         BoxStatefulMutatingFunction::new_with_name("box_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -983,7 +983,7 @@ fn test_rc_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -1027,7 +1027,7 @@ fn test_arc_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulMutatingFunction::new_with_name("arc_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -1182,7 +1182,7 @@ fn test_box_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = BoxStatefulMutatingFunction::new_with_name(
         "stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x = *x * 2;
             *x
         },
@@ -1239,7 +1239,7 @@ fn test_rc_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = RcStatefulMutatingFunction::new_with_name(
         "rc_stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x = *x * 2;
             *x
         },
@@ -1296,7 +1296,7 @@ fn test_arc_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = ArcStatefulMutatingFunction::new_with_name(
         "arc_stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 += 1;
+            counter2 = counter2 + 1;
             *x = *x * 2;
             *x
         },

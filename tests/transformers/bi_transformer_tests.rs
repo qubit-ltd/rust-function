@@ -20,11 +20,6 @@ use prism3_function::{
     BoxBiTransformer,
     RcBiTransformer,
 };
-use prism3_function::transformers::bi_transformer::{
-    ArcConditionalBiTransformer,
-    BoxConditionalBiTransformer,
-    RcConditionalBiTransformer,
-};
 use std::thread;
 
 // ============================================================================
@@ -92,6 +87,20 @@ mod box_bi_transformer_tests {
         assert_eq!(safe_divide.apply(42, 2), Some(21));
         assert_eq!(safe_divide.apply(42, 0), None);
     }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = BoxBiTransformer::new_with_name("add", |x: i32, y: i32| x + y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxBiTransformer(add)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = BoxBiTransformer::new(|x: i32, y: i32| x + y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "BoxBiTransformer");
+    }
 }
 
 // ============================================================================
@@ -155,6 +164,20 @@ mod arc_bi_transformer_tests {
         let format = ArcBiTransformer::new(|name: String, age: i32| format!("{} is {}", name, age));
         assert_eq!(format.apply("Alice".to_string(), 30), "Alice is 30");
     }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = ArcBiTransformer::new_with_name("multiply", |x: i32, y: i32| x * y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "ArcBiTransformer(multiply)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = ArcBiTransformer::new(|x: i32, y: i32| x * y);
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "ArcBiTransformer");
+    }
 }
 
 // ============================================================================
@@ -208,6 +231,20 @@ mod rc_bi_transformer_tests {
     fn test_with_different_types() {
         let format = RcBiTransformer::new(|name: String, age: i32| format!("{} is {}", name, age));
         assert_eq!(format.apply("Alice".to_string(), 30), "Alice is 30");
+    }
+
+    #[test]
+    fn test_display_with_name() {
+        let transformer = RcBiTransformer::new_with_name("concat", |s1: String, s2: String| format!("{}{}", s1, s2));
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "RcBiTransformer(concat)");
+    }
+
+    #[test]
+    fn test_display_without_name() {
+        let transformer = RcBiTransformer::new(|s1: String, s2: String| format!("{}{}", s1, s2));
+        let display_str = format!("{}", transformer);
+        assert_eq!(display_str, "RcBiTransformer");
     }
 }
 
@@ -1707,7 +1744,6 @@ mod arc_thread_safety_tests {
 #[cfg(test)]
 mod box_bi_transformer_once_tests {
     use super::*;
-    use prism3_function::BiTransformerOnce;
 
     #[test]
     fn test_apply() {
@@ -1750,7 +1786,6 @@ mod box_bi_transformer_once_tests {
 #[cfg(test)]
 mod rc_bi_transformer_once_tests {
     use super::*;
-    use prism3_function::BiTransformerOnce;
 
     #[test]
     fn test_apply() {
@@ -1813,7 +1848,6 @@ mod rc_bi_transformer_once_tests {
 #[cfg(test)]
 mod arc_bi_transformer_once_tests {
     use super::*;
-    use prism3_function::BiTransformerOnce;
     use std::thread;
 
     #[test]
