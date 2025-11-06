@@ -827,6 +827,45 @@ pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized + 'stati
     {
         BoxStatefulBiTransformer::new(self).when(predicate)
     }
+
+    /// Non-consuming conversion to a function using `&self`.
+    ///
+    /// Returns a closure that clones `self` and calls the bi-transformer.
+    /// This method requires that the bi-transformer implements `Clone`.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `F` - The closure type (automatically inferred)
+    ///
+    /// # Returns
+    ///
+    /// Returns a closure that implements `FnMut(T, U) -> R`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{StatefulBiTransformer, FnStatefulBiTransformerOps};
+    ///
+    /// let mut counter = 0;
+    /// let transformer = |x: i32, y: i32| {
+    ///     counter += 1;
+    ///     x + y + counter
+    /// };
+    ///
+    /// let mut fn_transformer = transformer.to_fn();
+    /// assert_eq!(fn_transformer(10, 20), 31);
+    /// assert_eq!(fn_transformer(10, 20), 32);
+    /// ```
+    fn to_fn(&self) -> impl FnMut(T, U) -> R
+    where
+        Self: Clone + 'static,
+        T: 'static,
+        U: 'static,
+        R: 'static,
+    {
+        let mut cloned = self.clone();
+        move |t, u| cloned(t, u)
+    }
 }
 
 /// Blanket implementation of FnStatefulBiTransformerOps for all closures
