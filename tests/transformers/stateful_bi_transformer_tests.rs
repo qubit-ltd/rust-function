@@ -779,6 +779,39 @@ fn test_fn_stateful_bi_transformer_ops_to_fn() {
     assert_eq!(original.apply(1, 2), 3);
 }
 
+#[test]
+fn test_closure_to_fn_method_call() {
+    // Test closure's to_fn method via direct method call on FnStatefulBiTransformerOps trait
+    // Use a closure that doesn't capture mutable references so it can be cloned
+    let transformer = |x: i32, y: i32| x + y;
+
+    // Test calling to_fn directly on the FnStatefulBiTransformerOps trait
+    // This specifically tests the FnStatefulBiTransformerOps::to_fn implementation for closures
+    let mut fn_transformer = FnStatefulBiTransformerOps::to_fn(&transformer);
+    assert_eq!(fn_transformer(10, 20), 30);
+    assert_eq!(fn_transformer(5, 15), 20);
+
+    // Original transformer still usable
+    let mut original = transformer.clone();
+    assert_eq!(original.apply(1, 2), 3);
+}
+
+#[test]
+fn test_closure_as_stateful_bi_transformer_to_fn() {
+    // Test closure used as StatefulBiTransformer calling to_fn method
+    // This tests the blanket implementation of StatefulBiTransformer for FnMut closures
+    let transformer = |x: i32, y: i32| x + y;
+
+    // Test calling to_fn via StatefulBiTransformer trait (blanket implementation for closures)
+    let mut fn_transformer = StatefulBiTransformer::to_fn(&transformer);
+    assert_eq!(fn_transformer(10, 20), 30);
+    assert_eq!(fn_transformer(5, 15), 20);
+
+    // Original transformer still usable
+    let mut original = transformer.clone();
+    assert_eq!(original.apply(1, 2), 3);
+}
+
 // ============================================================================
 // BoxConditionalStatefulBiTransformer Tests
 // ============================================================================
@@ -1237,6 +1270,19 @@ mod stateful_bi_transformer_trait_default_methods_tests {
         // Test that original transformer is still usable
         let mut original = transformer.clone();
         assert_eq!(original.apply(7, 2), 80); // 7 + 2 + 71 (independent state)
+    }
+
+    #[test]
+    fn test_to_fn() {
+        let transformer = TestStatefulBiTransformer::new(80);
+        let mut fn_transformer = StatefulBiTransformer::to_fn(&transformer);
+
+        // Test that the fn transformer works
+        assert_eq!(fn_transformer(8, 2), 91); // 8 + 2 + 81
+
+        // Test that original transformer is still usable
+        let mut original = transformer.clone();
+        assert_eq!(original.apply(8, 2), 91); // 8 + 2 + 81 (independent state)
     }
 }
 

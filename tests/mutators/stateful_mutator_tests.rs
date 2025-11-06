@@ -825,6 +825,26 @@ mod test_fn_mutator_ops {
     }
 
     #[test]
+    fn test_cloneable_closure_to_box_apply() {
+        // Test to_box with a cloneable closure that doesn't capture mutable references
+        let closure = |x: &mut i32| *x *= 2;
+
+        // Test that to_box works with cloneable closure
+        let mut boxed = StatefulMutator::to_box(&closure);
+        let mut value = 5;
+        boxed.apply(&mut value);
+
+        // Verify the boxed mutator works correctly
+        assert_eq!(value, 10);
+
+        // Test that original closure is still usable
+        let mut original_value = 3;
+        let original = closure.clone();
+        original.apply(&mut original_value);
+        assert_eq!(original_value, 6);
+    }
+
+    #[test]
     fn test_closure_into_rc() {
         let closure = |x: &mut i32| *x *= 2;
         let mut rc = closure.into_rc();
