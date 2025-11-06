@@ -920,9 +920,7 @@ mod test_closure {
 fn test_box_stateful_mutating_function_debug_display() {
     // Test Debug and Display for BoxStatefulMutatingFunction without name
 
-    let mut double = BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x * 2
-    });
+    let mut double = BoxStatefulMutatingFunction::new(move |x: &mut i32| *x * 2);
     // Call apply to use the counter variable
     let mut value1 = 5;
     let _result1 = double.apply(&mut value1);
@@ -964,9 +962,7 @@ fn test_box_stateful_mutating_function_debug_display() {
 fn test_rc_stateful_mutating_function_debug_display() {
     // Test Debug and Display for RcStatefulMutatingFunction without name
 
-    let mut double = RcStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x * 2
-    });
+    let mut double = RcStatefulMutatingFunction::new(move |x: &mut i32| *x * 2);
     // Call apply to use the counter variable
     let mut value1 = 5;
     let _result1 = double.apply(&mut value1);
@@ -1008,9 +1004,7 @@ fn test_rc_stateful_mutating_function_debug_display() {
 fn test_arc_stateful_mutating_function_debug_display() {
     // Test Debug and Display for ArcStatefulMutatingFunction without name
 
-    let mut double = ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x * 2
-    });
+    let mut double = ArcStatefulMutatingFunction::new(move |x: &mut i32| *x * 2);
     // Call apply to use the counter variable
     let mut value1 = 5;
     let _result1 = double.apply(&mut value1);

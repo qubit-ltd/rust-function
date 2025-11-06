@@ -1251,9 +1251,7 @@ fn test_rc_conditional_stateful_function_clone() {
 fn test_box_stateful_function_debug_display() {
     // Test Debug and Display for BoxStatefulFunction without name
 
-    let mut double = BoxStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = BoxStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
@@ -1266,9 +1264,7 @@ fn test_box_stateful_function_debug_display() {
     assert_eq!(display_str, "BoxStatefulFunction");
 
     // Test Debug and Display for BoxStatefulFunction with name
-    let mut named_double = BoxStatefulFunction::new_with_name("stateful_double", |x: &i32| {
-        x * 2
-    });
+    let mut named_double = BoxStatefulFunction::new_with_name("stateful_double", |x: &i32| x * 2);
     // Call apply to test the function
     let _result2 = named_double.apply(&3);
 
@@ -1287,9 +1283,7 @@ fn test_box_stateful_function_debug_display() {
 fn test_rc_stateful_function_debug_display() {
     // Test Debug and Display for RcStatefulFunction without name
 
-    let mut double = RcStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = RcStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
@@ -1302,8 +1296,7 @@ fn test_rc_stateful_function_debug_display() {
     assert_eq!(display_str, "RcStatefulFunction");
 
     // Test Debug and Display for RcStatefulFunction with name
-    let mut named_double =
-        RcStatefulFunction::new_with_name("rc_stateful_double", |x: &i32| x * 2);
+    let mut named_double = RcStatefulFunction::new_with_name("rc_stateful_double", |x: &i32| x * 2);
     // Call apply to test the function
     let _result2 = named_double.apply(&3);
 
@@ -1322,9 +1315,7 @@ fn test_rc_stateful_function_debug_display() {
 fn test_arc_stateful_function_debug_display() {
     // Test Debug and Display for ArcStatefulFunction without name
 
-    let mut double = ArcStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = ArcStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
@@ -1368,9 +1359,7 @@ fn test_arc_stateful_function_debug_display() {
 fn test_box_stateful_function_name_methods() {
     // Test new_with_name, name(), and set_name()
 
-    let mut double = BoxStatefulFunction::new_with_name("box_stateful_func", move |x: &i32| {
-        x * 2
-    });
+    let mut double = BoxStatefulFunction::new_with_name("box_stateful_func", move |x: &i32| x * 2);
 
     // Test name() returns the initial name
     assert_eq!(double.name(), Some("box_stateful_func"));
@@ -1389,9 +1378,7 @@ fn test_box_stateful_function_name_methods() {
 fn test_rc_stateful_function_name_methods() {
     // Test new_with_name, name(), and set_name()
 
-    let mut double = RcStatefulFunction::new_with_name("rc_stateful_func", move |x: &i32| {
-        x * 2
-    });
+    let mut double = RcStatefulFunction::new_with_name("rc_stateful_func", move |x: &i32| x * 2);
 
     // Test name() returns the initial name
     assert_eq!(double.name(), Some("rc_stateful_func"));
@@ -1415,9 +1402,7 @@ fn test_rc_stateful_function_name_methods() {
 fn test_arc_stateful_function_name_methods() {
     // Test new_with_name, name(), and set_name()
 
-    let mut double = ArcStatefulFunction::new_with_name("arc_stateful_func", move |x: &i32| {
-        x * 2
-    });
+    let mut double = ArcStatefulFunction::new_with_name("arc_stateful_func", move |x: &i32| x * 2);
 
     // Test name() returns the initial name
     assert_eq!(double.name(), Some("arc_stateful_func"));
@@ -1445,9 +1430,7 @@ fn test_arc_stateful_function_name_methods() {
 fn test_box_conditional_stateful_function_debug_display() {
     // Test Debug and Display for BoxConditionalStatefulFunction without name
 
-    let mut double = BoxStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = BoxStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
@@ -1495,9 +1478,7 @@ fn test_box_conditional_stateful_function_debug_display() {
 fn test_rc_conditional_stateful_function_debug_display() {
     // Test Debug and Display for RcConditionalStatefulFunction without name
 
-    let mut double = RcStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = RcStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
@@ -1546,9 +1527,7 @@ fn test_rc_conditional_stateful_function_debug_display() {
 fn test_arc_conditional_stateful_function_debug_display() {
     // Test Debug and Display for ArcConditionalStatefulFunction without name
 
-    let mut double = ArcStatefulFunction::new(move |x: &i32| {
-        x * 2
-    });
+    let mut double = ArcStatefulFunction::new(move |x: &i32| x * 2);
     // Call apply to test the function
     let _result1 = double.apply(&5);
 
