@@ -839,7 +839,7 @@ mod test_fn_mutator_ops {
 
         // Test that original closure is still usable
         let mut original_value = 3;
-        let original = closure.clone();
+        let original = closure;
         original.apply(&mut original_value);
         assert_eq!(original_value, 6);
     }

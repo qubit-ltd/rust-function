@@ -914,8 +914,6 @@ mod test_closure {
 // StatefulMutatingFunction Debug and Display Tests
 // ============================================================================
 
-// Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
 #[test]
 fn test_box_stateful_mutating_function_debug_display() {
     // Test Debug and Display for BoxStatefulMutatingFunction without name
@@ -934,13 +932,9 @@ fn test_box_stateful_mutating_function_debug_display() {
     assert_eq!(display_str, "BoxStatefulMutatingFunction");
 
     // Test Debug and Display for BoxStatefulMutatingFunction with name
-    let mut counter2 = 0;
     let mut named_double =
-        BoxStatefulMutatingFunction::new_with_name("box_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
-            *x * 2
-        });
-    // Call apply to use the counter2 variable
+        BoxStatefulMutatingFunction::new_with_name("box_stateful_mutating", |x: &mut i32| *x * 2);
+    // Call apply to ensure the function works
     let mut value2 = 3;
     let _result2 = named_double.apply(&mut value2);
 
@@ -956,8 +950,6 @@ fn test_box_stateful_mutating_function_debug_display() {
     );
 }
 
-// Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
 #[test]
 fn test_rc_stateful_mutating_function_debug_display() {
     // Test Debug and Display for RcStatefulMutatingFunction without name
@@ -976,13 +968,9 @@ fn test_rc_stateful_mutating_function_debug_display() {
     assert_eq!(display_str, "RcStatefulMutatingFunction");
 
     // Test Debug and Display for RcStatefulMutatingFunction with name
-    let mut counter2 = 0;
     let mut named_double =
-        RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
-            *x * 2
-        });
-    // Call apply to use the counter2 variable
+        RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating", |x: &mut i32| *x * 2);
+    // Call apply to ensure the function works
     let mut value2 = 3;
     let _result2 = named_double.apply(&mut value2);
 
@@ -998,8 +986,6 @@ fn test_rc_stateful_mutating_function_debug_display() {
     );
 }
 
-// Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
 #[test]
 fn test_arc_stateful_mutating_function_debug_display() {
     // Test Debug and Display for ArcStatefulMutatingFunction without name
@@ -1018,13 +1004,9 @@ fn test_arc_stateful_mutating_function_debug_display() {
     assert_eq!(display_str, "ArcStatefulMutatingFunction");
 
     // Test Debug and Display for ArcStatefulMutatingFunction with name
-    let mut counter2 = 0;
     let mut named_double =
-        ArcStatefulMutatingFunction::new_with_name("arc_stateful_mutating", move |x: &mut i32| {
-            counter2 += 1;
-            *x * 2
-        });
-    // Call apply to use the counter2 variable
+        ArcStatefulMutatingFunction::new_with_name("arc_stateful_mutating", |x: &mut i32| *x * 2);
+    // Call apply to ensure the function works
     let mut value2 = 3;
     let _result2 = named_double.apply(&mut value2);
 
@@ -1144,7 +1126,7 @@ fn test_arc_stateful_mutating_function_name_methods() {
 // ============================================================================
 
 // Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
+#[allow(unused_variables, unused_assignments)]
 #[test]
 fn test_box_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for BoxConditionalStatefulMutatingFunction without name
@@ -1172,16 +1154,12 @@ fn test_box_conditional_stateful_mutating_function_debug_display() {
     assert!(display_str.ends_with(")"));
 
     // Test Debug and Display for BoxConditionalStatefulMutatingFunction with name
-    let mut counter2 = 0;
-    let mut named_double = BoxStatefulMutatingFunction::new_with_name(
-        "stateful_mutating_double",
-        move |x: &mut i32| {
-            counter2 += 1;
+    let mut named_double =
+        BoxStatefulMutatingFunction::new_with_name("stateful_mutating_double", |x: &mut i32| {
             *x *= 2;
             *x
-        },
-    );
-    // Call apply to use the counter2 variable
+        });
+    // Call apply to ensure the function works
     let mut test_val2 = 3;
     let _result2 = named_double.apply(&mut test_val2);
 
@@ -1201,7 +1179,7 @@ fn test_box_conditional_stateful_mutating_function_debug_display() {
 }
 
 // Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
+#[allow(unused_variables, unused_assignments)]
 #[test]
 fn test_rc_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for RcConditionalStatefulMutatingFunction without name
@@ -1229,16 +1207,12 @@ fn test_rc_conditional_stateful_mutating_function_debug_display() {
     assert!(display_str.ends_with(")"));
 
     // Test Debug and Display for RcConditionalStatefulMutatingFunction with name
-    let mut counter2 = 0;
-    let mut named_double = RcStatefulMutatingFunction::new_with_name(
-        "rc_stateful_mutating_double",
-        move |x: &mut i32| {
-            counter2 += 1;
+    let mut named_double =
+        RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating_double", |x: &mut i32| {
             *x *= 2;
             *x
-        },
-    );
-    // Call apply to use the counter2 variable
+        });
+    // Call apply to ensure the function works
     let mut test_val2 = 3;
     let _result2 = named_double.apply(&mut test_val2);
 
@@ -1258,7 +1232,7 @@ fn test_rc_conditional_stateful_mutating_function_debug_display() {
 }
 
 // Allow unused variables in debug/display tests since they are used in closures
-#[allow(unused_variables)]
+#[allow(unused_variables, unused_assignments)]
 #[test]
 fn test_arc_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for ArcConditionalStatefulMutatingFunction without name
@@ -1286,16 +1260,14 @@ fn test_arc_conditional_stateful_mutating_function_debug_display() {
     assert!(display_str.ends_with(")"));
 
     // Test Debug and Display for ArcConditionalStatefulMutatingFunction with name
-    let mut counter2 = 0;
     let mut named_double = ArcStatefulMutatingFunction::new_with_name(
         "arc_stateful_mutating_double",
-        move |x: &mut i32| {
-            counter2 += 1;
+        |x: &mut i32| {
             *x *= 2;
             *x
         },
     );
-    // Call apply to use the counter2 variable
+    // Call apply to ensure the function works
     let mut test_val2 = 3;
     let _result2 = named_double.apply(&mut test_val2);
 

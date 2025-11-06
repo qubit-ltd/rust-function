@@ -775,7 +775,7 @@ fn test_fn_stateful_bi_transformer_ops_to_fn() {
     assert_eq!(fn_transformer(5, 15), 20);
 
     // Original transformer still usable
-    let mut original = transformer.clone();
+    let mut original = transformer;
     assert_eq!(original.apply(1, 2), 3);
 }
 
@@ -792,7 +792,7 @@ fn test_closure_to_fn_method_call() {
     assert_eq!(fn_transformer(5, 15), 20);
 
     // Original transformer still usable
-    let mut original = transformer.clone();
+    let mut original = transformer;
     assert_eq!(original.apply(1, 2), 3);
 }
 
@@ -808,7 +808,7 @@ fn test_closure_as_stateful_bi_transformer_to_fn() {
     assert_eq!(fn_transformer(5, 15), 20);
 
     // Original transformer still usable
-    let mut original = transformer.clone();
+    let mut original = transformer;
     assert_eq!(original.apply(1, 2), 3);
 }
 
