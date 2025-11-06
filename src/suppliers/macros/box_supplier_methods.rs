@@ -9,10 +9,10 @@
 
 //! # Box Supplier Methods Macro
 //!
-//! Generates when and and_then method implementations for Box-based Supplier
+//! Generates map, filter, and zip method implementations for Box-based Supplier
 //!
-//! Generates conditional execution when method and chaining and_then method
-//! for Box-based suppliers that consume self (because Box cannot be cloned).
+//! Generates transformation methods for Box-based suppliers that consume self
+//! (because Box cannot be cloned).
 //!
 //! This macro supports single-parameter suppliers.
 //!
@@ -20,23 +20,21 @@
 //!
 //! * `$struct_name<$generics>` - The struct name with its generic parameters
 //!   - Single parameter: `BoxSupplier<T>`
-//! * `$conditional_type` - The conditional supplier type for when (e.g., BoxConditionalSupplier)
 //! * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
 //!
 //! # Parameter Usage Comparison
 //!
-//! | Supplier Type | Struct Signature | `$conditional_type` | `$supplier_trait` |
-//! |---------------|-----------------|----------------|------------------|
-//! | **Supplier** | `BoxSupplier<T>` | BoxConditionalSupplier | Supplier |
-//! | **SupplierOnce** | `BoxSupplierOnce<T>` | BoxConditionalSupplierOnce | SupplierOnce |
-//! | **StatefulSupplier** | `BoxStatefulSupplier<T>` | BoxConditionalStatefulSupplier | StatefulSupplier |
+//! | Supplier Type | Struct Signature | `$supplier_trait` |
+//! |---------------|-----------------|------------------|
+//! | **Supplier** | `BoxSupplier<T>` | Supplier |
+//! | **SupplierOnce** | `BoxSupplierOnce<T>` | SupplierOnce |
+//! | **StatefulSupplier** | `BoxStatefulSupplier<T>` | StatefulSupplier |
 //!
 //! # Examples
 //!
 //! ```ignore
 //! impl_box_supplier_methods!(
 //!     BoxSupplier<T>,
-//!     BoxConditionalSupplier,
 //!     Supplier
 //! );
 //! ```
@@ -45,12 +43,12 @@
 //!
 //! Haixing Hu
 
-/// Generates when and and_then method implementations for Box-based Supplier
+/// Generates map, filter, and zip method implementations for Box-based Supplier
 ///
 /// This macro should be used at the top level (outside of any impl block) as
 /// it generates a complete impl block with methods for the specified struct.
-/// Generates conditional execution when method and chaining and_then method
-/// for Box-based suppliers that consume self (because Box cannot be cloned).
+/// Generates transformation methods for Box-based suppliers that consume self
+/// (because Box cannot be cloned).
 ///
 /// This macro supports single-parameter suppliers.
 ///
@@ -58,16 +56,15 @@
 ///
 /// * `$struct_name<$generics>` - The struct name with its generic parameters
 ///   - Single parameter: `BoxSupplier<T>`
-/// * `$conditional_type` - The conditional supplier type for when (e.g., BoxConditionalSupplier)
 /// * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
 ///
 /// # Parameter Usage Comparison
 ///
-/// | Supplier Type | Struct Signature | `$conditional_type` | `$supplier_trait` |
-/// |---------------|-----------------|----------------|------------------|
-/// | **Supplier** | `BoxSupplier<T>` | BoxConditionalSupplier | Supplier |
-/// | **SupplierOnce** | `BoxSupplierOnce<T>` | BoxConditionalSupplierOnce | SupplierOnce |
-/// | **StatefulSupplier** | `BoxStatefulSupplier<T>` | BoxConditionalStatefulSupplier | StatefulSupplier |
+/// | Supplier Type | Struct Signature | `$supplier_trait` |
+/// |---------------|-----------------|------------------|
+/// | **Supplier** | `BoxSupplier<T>` | Supplier |
+/// | **SupplierOnce** | `BoxSupplierOnce<T>` | SupplierOnce |
+/// | **StatefulSupplier** | `BoxStatefulSupplier<T>` | StatefulSupplier |
 ///
 /// # Examples
 ///
@@ -75,7 +72,6 @@
 /// // Single-parameter supplier
 /// impl_box_supplier_methods!(
 ///     BoxSupplier<T>,
-///     BoxConditionalSupplier,
 ///     Supplier
 /// );
 /// ```
@@ -85,103 +81,112 @@
 /// Haixing Hu
 macro_rules! impl_box_supplier_methods {
     // Single generic parameter - Supplier
-    ($struct_name:ident < $t:ident >, $conditional_type:ident, $supplier_trait:ident) => {
-        /// Creates a conditional supplier that executes based on predicate
-        /// result.
+    (
+        $struct_name:ident < $t:ident >,
+        $supplier_trait:ident
+    ) => {
+        /// Maps the output using a transformation function.
+        ///
+        /// Consumes self and returns a new supplier that applies the
+        /// mapper to each output.
         ///
         /// # Parameters
         ///
-        /// * `predicate` - The predicate to determine whether to execute
-        ///   the supply operation
+        /// * `mapper` - The transformer to apply to the output. Can be a
+        ///   closure, function pointer, or any type implementing
+        ///   `Transformer<T, U>`.
         ///
         /// # Returns
         ///
-        /// Returns a conditional supplier that only executes when the
-        /// predicate returns `true`.
+        /// A new mapped supplier
         ///
         /// # Examples
         ///
         /// ```rust
-        /// use std::sync::Arc;
-        /// use std::sync::atomic::{AtomicI32, Ordering};
         /// use prism3_rust_function::suppliers::*;
         ///
-        /// let counter = Arc::new(AtomicI32::new(0));
-        /// let supplier = BoxSupplier::new({
-        ///     let counter = Arc::clone(&counter);
-        ///     move || {
-        ///         counter.fetch_add(1, Ordering::SeqCst) as i32
-        ///     }
-        /// });
-        ///
-        /// let conditional = supplier.when(|value: &i32| *value > 0);
-        /// let result = conditional.get();
-        /// // Only executes if predicate returns true
+        /// let supplier = BoxSupplier::new(|| 10);
+        /// let mapped = supplier
+        ///     .map(|x| x * 2)
+        ///     .map(|x| x + 5);
+        /// assert_eq!(mapped.get(), 25);
         /// ```
-        pub fn when<P>(self, predicate: P) -> $conditional_type<$t>
+        pub fn map<U, M>(self, mapper: M) -> $struct_name<U>
+        where
+            M: Transformer<$t, U> + 'static,
+            U: 'static,
+        {
+            $struct_name::new(move || mapper.apply(self.get()))
+        }
+
+        /// Filters output based on a predicate.
+        ///
+        /// Returns a new supplier that returns `Some(value)` if the
+        /// predicate is satisfied, `None` otherwise.
+        ///
+        /// # Parameters
+        ///
+        /// * `predicate` - The predicate to test the supplied value
+        ///
+        /// # Returns
+        ///
+        /// A new filtered supplier
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_rust_function::suppliers::*;
+        ///
+        /// let supplier = BoxSupplier::new(|| 42);
+        /// let filtered = supplier.filter(|x| x % 2 == 0);
+        ///
+        /// assert_eq!(filtered.get(), Some(42));
+        /// ```
+        pub fn filter<P>(self, predicate: P) -> $struct_name<Option<$t>>
         where
             P: Predicate<$t> + 'static,
         {
-            $conditional_type {
-                supplier: self,
-                predicate: predicate.into_box(),
-            }
+            $struct_name::new(move || {
+                let value = self.get();
+                if predicate.test(&value) {
+                    Some(value)
+                } else {
+                    None
+                }
+            })
         }
 
-        /// Chains execution with another supplier, executing the current
-        /// supplier first, then the subsequent supplier.
+        /// Combines this supplier with another, producing a tuple.
+        ///
+        /// Consumes both suppliers and returns a new supplier that
+        /// produces tuples.
         ///
         /// # Parameters
         ///
-        /// * `after` - The subsequent supplier to execute after the current
-        ///   supplier completes
+        /// * `other` - The other supplier to combine with
         ///
         /// # Returns
         ///
-        /// Returns a new supplier that executes the current supplier and
-        /// the subsequent supplier in sequence.
+        /// A new supplier that produces tuples
         ///
         /// # Examples
         ///
         /// ```rust
-        /// use std::sync::Arc;
-        /// use std::sync::atomic::{AtomicI32, Ordering};
         /// use prism3_rust_function::suppliers::*;
         ///
-        /// let counter1 = Arc::new(AtomicI32::new(0));
-        /// let counter2 = Arc::new(AtomicI32::new(0));
+        /// let first = BoxSupplier::new(|| 42);
+        /// let second = BoxSupplier::new(|| "hello");
+        /// let zipped = first.zip(second);
         ///
-        /// let supplier1 = BoxSupplier::new({
-        ///     let counter = Arc::clone(&counter1);
-        ///     move || {
-        ///         counter.fetch_add(1, Ordering::SeqCst) as i32
-        ///     }
-        /// });
-        ///
-        /// let supplier2 = BoxSupplier::new({
-        ///     let counter = Arc::clone(&counter2);
-        ///     move || {
-        ///         counter.fetch_add(2, Ordering::SeqCst) as i32
-        ///     }
-        /// });
-        ///
-        /// let chained = supplier1.and_then(supplier2);
-        /// let result = chained.get();
-        /// // supplier1 executed first, then supplier2
+        /// assert_eq!(zipped.get(), (42, "hello"));
         /// ```
-        #[allow(unused_mut)]
-        pub fn and_then<S>(self, mut after: S) -> $struct_name<$t>
+        pub fn zip<U>(self, other: $struct_name<U>) -> $struct_name<($t, U)>
         where
-            Self: Sized + 'static,
-            $t: 'static,
-            S: $supplier_trait<$t> + 'static,
+            U: 'static,
         {
-            let mut first = self;
-            $struct_name::new(move || {
-                let _ = first.get();
-                after.get()
-            })
+            $struct_name::new(move || (self.get(), other.get()))
         }
     };
 }
 
+pub (crate) use impl_box_supplier_methods;

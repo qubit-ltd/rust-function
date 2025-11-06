@@ -17,15 +17,14 @@
 //! Haixing Hu
 
 // Module declarations
-mod box_conditional_supplier;
 mod box_supplier_methods;
-mod conditional_supplier_clone;
-mod conditional_supplier_conversions;
-mod conditional_supplier_debug_display;
-mod shared_conditional_supplier;
 mod shared_supplier_methods;
 mod supplier_clone;
 mod supplier_common_methods;
 mod supplier_debug_display;
 
-// Note: Macros are currently not exported as they are not used externally
+pub(crate) use box_supplier_methods::impl_box_supplier_methods;
+pub(crate) use shared_supplier_methods::impl_shared_supplier_methods;
+pub(crate) use supplier_clone::impl_supplier_clone;
+pub(crate) use supplier_common_methods::impl_supplier_common_methods;
+pub(crate) use supplier_debug_display::impl_supplier_debug_display;

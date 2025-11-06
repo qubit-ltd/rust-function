@@ -9,10 +9,10 @@
 
 //! # Shared Supplier Methods Macro
 //!
-//! Generates when and and_then method implementations for Arc/Rc-based Supplier
+//! Generates map, filter, zip method implementations for Arc/Rc-based Supplier
 //!
-//! Generates conditional execution when method and chaining and_then method
-//! for Arc/Rc-based suppliers that borrow &self (because Arc/Rc can be cloned).
+//! Generates transformation methods for Arc/Rc-based suppliers that borrow &self
+//! (because Arc/Rc can be cloned).
 //!
 //! This macro supports single-parameter suppliers.
 //!
@@ -20,19 +20,16 @@
 //!
 //! * `$struct_name<$generics>` - The struct name with its generic parameters
 //!   - Single parameter: `ArcSupplier<T>`
-//! * `$return_type` - The return type for when (e.g., ArcConditionalSupplier)
-//! * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
 //! * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
-//! * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+//! * `($extra_bounds)` - Extra trait bounds in parentheses ('static for Rc, Send + Sync + 'static for Arc)
+//! * `$conversion_method` - Method to convert objects to match the wrapper type (into_arc or into_rc)
 //!
 //! # All Macro Invocations
 //!
-//! | Supplier Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$supplier_trait` | `$extra_bounds` |
-//! |---------------|-----------------|----------------|------------------------|------------------|----------------|
-//! | **ArcSupplier** | `ArcSupplier<T>` | ArcConditionalSupplier | into_arc | Supplier | Send + Sync + 'static |
-//! | **RcSupplier** | `RcSupplier<T>` | RcConditionalSupplier | into_rc | Supplier | 'static |
-//! | **ArcStatefulSupplier** | `ArcStatefulSupplier<T>` | ArcConditionalStatefulSupplier | into_arc | StatefulSupplier | Send + Sync + 'static |
-//! | **RcStatefulSupplier** | `RcStatefulSupplier<T>` | RcConditionalStatefulSupplier | into_rc | StatefulSupplier | 'static |
+//! | Supplier Type | Struct Signature | `$supplier_trait` | `($extra_bounds)` | `$conversion_method` |
+//! |---------------|------------------|-------------------|------------------|----------------------|
+//! | **ArcSupplier** | `ArcSupplier<T>` | Supplier | (Send + Sync + 'static) | into_arc |
+//! | **RcSupplier** | `RcSupplier<T>` | Supplier | ('static) | into_rc |
 //!
 //! # Examples
 //!
@@ -40,19 +37,17 @@
 //! // Single-parameter with Arc
 //! impl_shared_supplier_methods!(
 //!     ArcSupplier<T>,
-//!     ArcConditionalSupplier,
-//!     into_arc,
 //!     Supplier,
-//!     Send + Sync + 'static
+//!     (Send + Sync + 'static),
+//!     into_arc
 //! );
 //!
 //! // Single-parameter with Rc
 //! impl_shared_supplier_methods!(
 //!     RcSupplier<T>,
-//!     RcConditionalSupplier,
-//!     into_rc,
 //!     Supplier,
-//!     'static
+//!     ('static),
+//!     into_rc
 //! );
 //! ```
 //!
@@ -60,13 +55,12 @@
 //!
 //! Haixing Hu
 
-/// Generates when and and_then method implementations for Arc/Rc-based Supplier
+/// Generates map, filter, zip method implementations for Arc/Rc-based Supplier
 ///
 /// This macro should be used inside an existing impl block for the target
 /// struct. It generates individual methods but does not create a complete
-/// impl block itself. Generates conditional execution when method and chaining
-/// and_then method for Arc/Rc-based suppliers that borrow &self (because Arc/Rc
-/// can be cloned).
+/// impl block itself. Generates transformation methods for Arc/Rc-based suppliers
+/// that borrow &self (because Arc/Rc can be cloned).
 ///
 /// This macro supports single-parameter suppliers.
 ///
@@ -74,19 +68,16 @@
 ///
 /// * `$struct_name<$generics>` - The struct name with its generic parameters
 ///   - Single parameter: `ArcSupplier<T>`
-/// * `$return_type` - The return type for when (e.g., ArcConditionalSupplier)
-/// * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
 /// * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
 /// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+/// * `$conversion_method` - Method to convert objects to match the wrapper type (into_arc or into_rc)
 ///
 /// # All Macro Invocations
 ///
-/// | Supplier Type | Struct Signature | `$return_type` | `$predicate_conversion` | `$supplier_trait` | `$extra_bounds` |
-/// |---------------|-----------------|----------------|------------------------|------------------|----------------|
-/// | **ArcSupplier** | `ArcSupplier<T>` | ArcConditionalSupplier | into_arc | Supplier | Send + Sync + 'static |
-/// | **RcSupplier** | `RcSupplier<T>` | RcConditionalSupplier | into_rc | Supplier | 'static |
-/// | **ArcStatefulSupplier** | `ArcStatefulSupplier<T>` | ArcConditionalStatefulSupplier | into_arc | StatefulSupplier | Send + Sync + 'static |
-/// | **RcStatefulSupplier** | `RcStatefulSupplier<T>` | RcConditionalStatefulSupplier | into_rc | StatefulSupplier | 'static |
+/// | Supplier Type | Struct Signature | `$supplier_trait` | `$extra_bounds` | `$conversion_method` |
+/// |---------------|------------------|-------------------|----------------|---------------|
+/// | **ArcSupplier** | `ArcSupplier<T>` | Supplier | Send + Sync + 'static | into_arc |
+/// | **RcSupplier** | `RcSupplier<T>` | Supplier | 'static | into_rc |
 ///
 /// # Examples
 ///
@@ -94,19 +85,17 @@
 /// // Single-parameter with Arc
 /// impl_shared_supplier_methods!(
 ///     ArcSupplier<T>,
-///     ArcConditionalSupplier,
-///     into_arc,
 ///     Supplier,
-///     Send + Sync + 'static
+///     Send + Sync + 'static,
+///     Arc
 /// );
 ///
 /// // Single-parameter with Rc
 /// impl_shared_supplier_methods!(
 ///     RcSupplier<T>,
-///     RcConditionalSupplier,
-///     into_rc,
 ///     Supplier,
-///     'static
+///     'static,
+///     Rc
 /// );
 /// ```
 /// # Author
@@ -114,29 +103,116 @@
 /// Haixing Hu
 macro_rules! impl_shared_supplier_methods {
     // Single generic parameter
-    ($struct_name:ident < $t:ident >, $return_type:ident, $predicate_conversion:ident, $supplier_trait:ident, $($extra_bounds:tt)+) => {
-        pub fn when<P>(&self, predicate: P) -> $return_type<$t>
+    (
+        $struct_name:ident < $t:ident >,
+        $supplier_trait:ident,
+        ($($extra_bounds:tt)*),
+        $conversion_method:ident
+    ) => {
+        /// Maps the output using a transformation function.
+        ///
+        /// # Parameters
+        ///
+        /// * `mapper` - The transformation function to apply
+        ///
+        /// # Returns
+        ///
+        /// A new `$struct_name<U>` with the mapped output
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let source = $struct_name::new(|| 10);
+        /// let mapped = source.map(|x| x * 2);
+        /// // source is still usable
+        /// assert_eq!(mapped.get(), 20);
+        /// ```
+        pub fn map<U, M>(&self, mapper: M) -> $struct_name<U>
+        where
+            M: Transformer<$t, U> + $($extra_bounds)+,
+            U: $($extra_bounds)+,
+        {
+            let self_fn = self.function.clone();
+            // let mapper_converted = mapper.$conversion_method();
+            $struct_name::new(move || {
+                let value = self_fn();
+                mapper.apply(value)
+            })
+        }
+
+        /// Filters output based on a predicate.
+        ///
+        /// # Parameters
+        ///
+        /// * `predicate` - The predicate to test the supplied value
+        ///
+        /// # Returns
+        ///
+        /// A new filtered `$struct_name<Option<$t>>`
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let source = $struct_name::new(|| 42);
+        /// let filtered = source.filter(|x| x % 2 == 0);
+        ///
+        /// assert_eq!(filtered.get(), Some(42));
+        /// ```
+        pub fn filter<P>(&self, predicate: P) -> $struct_name<Option<$t>>
         where
             P: Predicate<$t> + $($extra_bounds)+,
         {
-            $return_type {
-                supplier: self.clone(),
-                predicate: predicate.$predicate_conversion(),
-            }
+            let self_fn = self.function.clone();
+            // let predicate_converted = predicate.$conversion_method();
+            $struct_name::new(move || {
+                let value = self_fn();
+                if predicate.test(&value) {
+                    Some(value)
+                } else {
+                    None
+                }
+            })
         }
 
-        #[allow(unused_mut)]
-        pub fn and_then<S>(&self, mut after: S) -> $struct_name<$t>
+        /// Combines this supplier with another, producing a tuple.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other supplier to combine with
+        ///
+        /// # Returns
+        ///
+        /// A new `$struct_name<($t, U)>`
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let first = $struct_name::new(|| 42);
+        /// let second = $struct_name::new(|| "hello");
+        ///
+        /// let zipped = first.zip(second);
+        ///
+        /// assert_eq!(zipped.get(), (42, "hello"));
+        /// ```
+        pub fn zip<U, S>(&self, other: S) -> $struct_name<($t, U)>
         where
-            $t: 'static,
-            S: $supplier_trait<$t> + $($extra_bounds)+,
+            S: $supplier_trait<U> + $($extra_bounds)+,
+            U: $($extra_bounds)+,
         {
-            let mut first = self.clone();
+            let first = self.function.clone();
+            // let other_converted = other.$conversion_method();
             $struct_name::new(move || {
-                let _ = first.get();
-                after.get()
+                let second = other.get();
+                (first(), second)
             })
         }
     };
 }
 
+pub(crate) use impl_shared_supplier_methods;

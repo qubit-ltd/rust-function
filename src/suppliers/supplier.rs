@@ -122,6 +122,8 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::predicates::predicate::Predicate;
+use crate::suppliers::macros::{impl_box_supplier_methods, impl_shared_supplier_methods, impl_supplier_clone, impl_supplier_common_methods, impl_supplier_debug_display};
 use crate::transformers::transformer::Transformer;
 
 // ======================================================================
@@ -294,7 +296,7 @@ pub trait Supplier<T> {
     fn into_arc(self) -> ArcSupplier<T>
     where
         Self: Sized + Send + Sync + 'static,
-        T: Send + 'static,
+        T: Send + Sync + 'static,
     {
         ArcSupplier::new(move || self.get())
     }
@@ -403,7 +405,7 @@ pub trait Supplier<T> {
     fn to_arc(&self) -> ArcSupplier<T>
     where
         Self: Clone + Send + Sync + 'static,
-        T: Send + 'static,
+        T: Send + Sync + 'static,
     {
         self.clone().into_arc()
     }
@@ -496,205 +498,22 @@ impl<T> BoxSupplier<T>
 where
     T: 'static,
 {
-    /// Creates a new `BoxSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxSupplier, Supplier};
-    ///
-    /// let supplier = BoxSupplier::new(|| 42);
-    /// assert_eq!(supplier.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn() -> T + 'static,
-    {
-        BoxSupplier {
-            function: Box::new(f),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        BoxSupplier<T>,
+        (Fn() -> T + 'static),
+        |f| Box::new(f)
+    );
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `BoxSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn() -> T + 'static,
-    {
-        BoxSupplier {
-            function: Box::new(f),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// Returns a supplier that always produces the same value (via
-    /// cloning).
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxSupplier, Supplier};
-    ///
-    /// let constant = BoxSupplier::constant(42);
-    /// assert_eq!(constant.get(), 42);
-    /// assert_eq!(constant.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + 'static,
-    {
-        BoxSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Consumes self and returns a new supplier that applies the
-    /// mapper to each output.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The transformer to apply to the output. Can be a
-    ///   closure, function pointer, or any type implementing
-    ///   `Transformer<T, U>`.
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `BoxSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxSupplier, Supplier};
-    ///
-    /// let mapped = BoxSupplier::new(|| 10)
-    ///     .map(|x| x * 2)
-    ///     .map(|x| x + 5);
-    /// assert_eq!(mapped.get(), 25);
-    /// ```
-    pub fn map<U, M>(self, mapper: M) -> BoxSupplier<U>
-    where
-        M: Transformer<T, U> + 'static,
-        U: 'static,
-    {
-        BoxSupplier::new(move || mapper.apply(self.get()))
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// Returns a new supplier that returns `Some(value)` if the
-    /// predicate is satisfied, `None` otherwise.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `BoxSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxSupplier, Supplier};
-    ///
-    /// let filtered = BoxSupplier::new(|| 42)
-    ///     .filter(|x| x % 2 == 0);
-    ///
-    /// assert_eq!(filtered.get(), Some(42));
-    /// ```
-    pub fn filter<P>(self, predicate: P) -> BoxSupplier<Option<T>>
-    where
-        P: Fn(&T) -> bool + 'static,
-    {
-        BoxSupplier::new(move || {
-            let value = self.get();
-            if predicate(&value) {
-                Some(value)
-            } else {
-                None
-            }
-        })
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// Consumes both suppliers and returns a new supplier that
-    /// produces `(T, U)` tuples.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxSupplier, Supplier};
-    ///
-    /// let first = BoxSupplier::new(|| 42);
-    /// let second = BoxSupplier::new(|| "hello");
-    /// let zipped = first.zip(second);
-    ///
-    /// assert_eq!(zipped.get(), (42, "hello"));
-    /// ```
-    pub fn zip<U>(self, other: BoxSupplier<U>) -> BoxSupplier<(T, U)>
-    where
-        U: 'static,
-    {
-        BoxSupplier::new(move || (self.get(), other.get()))
-    }
+    // Generates: map(), filter(), zip()
+    impl_box_supplier_methods!(
+        BoxSupplier<T>,
+        Supplier
+    );
 }
+
+// Generates: Debug and Display implementations for BoxSupplier<T>
+impl_supplier_debug_display!(BoxSupplier<T>);
 
 impl<T> Supplier<T> for BoxSupplier<T> {
     fn get(&self) -> T {
@@ -809,223 +628,29 @@ pub struct ArcSupplier<T> {
 
 impl<T> ArcSupplier<T>
 where
-    T: Send + 'static,
+    T: Send + Sync + 'static,
 {
-    /// Creates a new `ArcSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcSupplier, Supplier};
-    ///
-    /// let supplier = ArcSupplier::new(|| 42);
-    /// assert_eq!(supplier.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn() -> T + Send + Sync + 'static,
-    {
-        ArcSupplier {
-            function: Arc::new(f),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        ArcSupplier<T>,
+        (Fn() -> T + Send + Sync + 'static),
+        |f| Arc::new(f)
+    );
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `ArcSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn() -> T + Send + Sync + 'static,
-    {
-        ArcSupplier {
-            function: Arc::new(f),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcSupplier, Supplier};
-    ///
-    /// let constant = ArcSupplier::constant(42);
-    /// assert_eq!(constant.get(), 42);
-    /// assert_eq!(constant.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + Send + Sync + 'static,
-    {
-        ArcSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Borrows `&self`, doesn't consume the original supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The transformer to apply to the output. Can be a
-    ///   closure, function pointer, or any type implementing
-    ///   `Transformer<T, U>`.
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `ArcSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcSupplier, Supplier};
-    ///
-    /// let source = ArcSupplier::new(|| 10);
-    /// let mapped = source.map(|x| x * 2);
-    /// // source is still usable
-    /// assert_eq!(mapped.get(), 20);
-    /// ```
-    pub fn map<U, M>(&self, mapper: M) -> ArcSupplier<U>
-    where
-        M: Transformer<T, U> + Send + Sync + 'static,
-        U: Send + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        let mapper = Arc::new(mapper);
-        ArcSupplier {
-            function: Arc::new(move || {
-                let value = self_fn();
-                mapper.apply(value)
-            }),
-            name: None,
-        }
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `ArcSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcSupplier, Supplier};
-    ///
-    /// let source = ArcSupplier::new(|| 42);
-    /// let filtered = source.filter(|x| x % 2 == 0);
-    ///
-    /// assert_eq!(filtered.get(), Some(42));
-    /// ```
-    pub fn filter<P>(&self, predicate: P) -> ArcSupplier<Option<T>>
-    where
-        P: Fn(&T) -> bool + Send + Sync + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        let predicate = Arc::new(predicate);
-        ArcSupplier {
-            function: Arc::new(move || {
-                let value = self_fn();
-                if predicate(&value) {
-                    Some(value)
-                } else {
-                    None
-                }
-            }),
-            name: None,
-        }
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with. **Note:
-    ///   Passed by reference, so the original supplier remains
-    ///   usable.**
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcSupplier, Supplier};
-    ///
-    /// let first = ArcSupplier::new(|| 42);
-    /// let second = ArcSupplier::new(|| "hello");
-    ///
-    /// // second is passed by reference, so it remains usable
-    /// let zipped = first.zip(&second);
-    ///
-    /// assert_eq!(zipped.get(), (42, "hello"));
-    ///
-    /// // Both first and second still usable
-    /// assert_eq!(first.get(), 42);
-    /// assert_eq!(second.get(), "hello");
-    /// ```
-    pub fn zip<U>(&self, other: &ArcSupplier<U>) -> ArcSupplier<(T, U)>
-    where
-        U: Send + 'static,
-    {
-        let first = Arc::clone(&self.function);
-        let second = Arc::clone(&other.function);
-        ArcSupplier {
-            function: Arc::new(move || (first(), second())),
-            name: None,
-        }
-    }
+    // Generates: map(), filter(), zip()
+    impl_shared_supplier_methods!(
+        ArcSupplier<T>,
+        Supplier,
+        (Send + Sync + 'static),
+        into_arc
+    );
 }
+
+// Generates: Debug and Display implementations for ArcSupplier<T>
+impl_supplier_debug_display!(ArcSupplier<T>);
+
+// Generates: Clone implementation for ArcSupplier<T>
+impl_supplier_clone!(ArcSupplier<T>);
 
 impl<T> Supplier<T> for ArcSupplier<T> {
     fn get(&self) -> T {
@@ -1095,19 +720,6 @@ impl<T> Supplier<T> for ArcSupplier<T> {
     }
 }
 
-impl<T> Clone for ArcSupplier<T> {
-    /// Clones the `ArcSupplier`.
-    ///
-    /// Creates a new instance that shares the underlying function
-    /// with the original.
-    fn clone(&self) -> Self {
-        Self {
-            function: Arc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
-
 // ======================================================================
 // RcSupplier - Single-threaded Shared Ownership
 // ======================================================================
@@ -1173,221 +785,27 @@ impl<T> RcSupplier<T>
 where
     T: 'static,
 {
-    /// Creates a new `RcSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `RcSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcSupplier, Supplier};
-    ///
-    /// let supplier = RcSupplier::new(|| 42);
-    /// assert_eq!(supplier.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: Fn() -> T + 'static,
-    {
-        RcSupplier {
-            function: Rc::new(f),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        RcSupplier<T>,
+        (Fn() -> T + 'static),
+        |f| Rc::new(f)
+    );
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `RcSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: Fn() -> T + 'static,
-    {
-        RcSupplier {
-            function: Rc::new(f),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcSupplier, Supplier};
-    ///
-    /// let constant = RcSupplier::constant(42);
-    /// assert_eq!(constant.get(), 42);
-    /// assert_eq!(constant.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + 'static,
-    {
-        RcSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Borrows `&self`, doesn't consume the original supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The transformer to apply to the output. Can be a
-    ///   closure, function pointer, or any type implementing
-    ///   `Transformer<T, U>`.
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `RcSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcSupplier, Supplier};
-    ///
-    /// let source = RcSupplier::new(|| 10);
-    /// let mapped = source.map(|x| x * 2);
-    /// // source is still usable
-    /// assert_eq!(mapped.get(), 20);
-    /// ```
-    pub fn map<U, M>(&self, mapper: M) -> RcSupplier<U>
-    where
-        M: Transformer<T, U> + 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        let mapper = Rc::new(mapper);
-        RcSupplier {
-            function: Rc::new(move || {
-                let value = self_fn();
-                mapper.apply(value)
-            }),
-            name: None,
-        }
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `RcSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcSupplier, Supplier};
-    ///
-    /// let source = RcSupplier::new(|| 42);
-    /// let filtered = source.filter(|x| x % 2 == 0);
-    ///
-    /// assert_eq!(filtered.get(), Some(42));
-    /// ```
-    pub fn filter<P>(&self, predicate: P) -> RcSupplier<Option<T>>
-    where
-        P: Fn(&T) -> bool + 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        let predicate = Rc::new(predicate);
-        RcSupplier {
-            function: Rc::new(move || {
-                let value = self_fn();
-                if predicate(&value) {
-                    Some(value)
-                } else {
-                    None
-                }
-            }),
-            name: None,
-        }
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with. **Note:
-    ///   Passed by reference, so the original supplier remains
-    ///   usable.**
-    ///
-    /// # Returns
-    ///
-    /// A new `RcSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcSupplier, Supplier};
-    ///
-    /// let first = RcSupplier::new(|| 42);
-    /// let second = RcSupplier::new(|| "hello");
-    ///
-    /// // second is passed by reference, so it remains usable
-    /// let zipped = first.zip(&second);
-    ///
-    /// assert_eq!(zipped.get(), (42, "hello"));
-    ///
-    /// // Both first and second still usable
-    /// assert_eq!(first.get(), 42);
-    /// assert_eq!(second.get(), "hello");
-    /// ```
-    pub fn zip<U>(&self, other: &RcSupplier<U>) -> RcSupplier<(T, U)>
-    where
-        U: 'static,
-    {
-        let first = Rc::clone(&self.function);
-        let second = Rc::clone(&other.function);
-        RcSupplier {
-            function: Rc::new(move || (first(), second())),
-            name: None,
-        }
-    }
+    // Generates: map(), filter(), zip()
+    impl_shared_supplier_methods!(
+        RcSupplier<T>,
+        Supplier,
+        ('static),
+        into_rc
+    );
 }
+
+// Generates: Debug and Display implementations for RcSupplier<T>
+impl_supplier_debug_display!(RcSupplier<T>);
+
+// Generates: Clone implementation for RcSupplier<T>
+impl_supplier_clone!(RcSupplier<T>);
 
 impl<T> Supplier<T> for RcSupplier<T> {
     fn get(&self) -> T {
@@ -1453,19 +871,6 @@ impl<T> Supplier<T> for RcSupplier<T> {
     }
 }
 
-impl<T> Clone for RcSupplier<T> {
-    /// Clones the `RcSupplier`.
-    ///
-    /// Creates a new instance that shares the underlying function
-    /// with the original.
-    fn clone(&self) -> Self {
-        Self {
-            function: Rc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
-
 // ======================================================================
 // Implement Supplier for Closures
 // ======================================================================
@@ -1501,7 +906,7 @@ where
     fn into_arc(self) -> ArcSupplier<T>
     where
         Self: Sized + Send + Sync + 'static,
-        T: Send + 'static,
+        T: Send + Sync + 'static,
     {
         ArcSupplier::new(self)
     }
@@ -1536,7 +941,7 @@ where
     fn to_arc(&self) -> ArcSupplier<T>
     where
         Self: Clone + Send + Sync + 'static,
-        T: Send + 'static,
+        T: Send + Sync + 'static,
     {
         let self_fn = self.clone();
         ArcSupplier::new(self_fn)
