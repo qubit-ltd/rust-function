@@ -863,7 +863,7 @@ fn test_arc_mutating_function_debug_display() {
 fn test_box_mutating_function_name_methods() {
     // Test new_with_name, name(), and set_name()
     let mut double = BoxMutatingFunction::new_with_name("box_mutating_func", |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
 
@@ -884,7 +884,7 @@ fn test_box_mutating_function_name_methods() {
 fn test_rc_mutating_function_name_methods() {
     // Test new_with_name, name(), and set_name()
     let mut double = RcMutatingFunction::new_with_name("rc_mutating_func", |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
 
@@ -912,7 +912,7 @@ fn test_rc_mutating_function_name_methods() {
 fn test_arc_mutating_function_name_methods() {
     // Test new_with_name, name(), and set_name()
     let mut double = ArcMutatingFunction::new_with_name("arc_mutating_func", |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
 

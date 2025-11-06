@@ -1331,7 +1331,7 @@ fn test_arc_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             x * 2
         });
     // Call apply to test the function
@@ -1500,7 +1500,7 @@ fn test_rc_conditional_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         RcStatefulFunction::new_with_name("rc_stateful_double", move |x: &i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             x * 2
         });
     // Call apply to test the function
@@ -1549,7 +1549,7 @@ fn test_arc_conditional_stateful_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulFunction::new_with_name("arc_stateful_double", move |x: &i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             x * 2
         });
     // Call apply to test the function

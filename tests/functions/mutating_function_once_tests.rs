@@ -125,7 +125,7 @@ mod test_box_mutating_function_once {
     #[test]
     fn test_and_then() {
         let data1 = vec![1, 2];
-        let data2 = vec![3, 4];
+        let data2 = [3, 4];
 
         let chained = BoxMutatingFunctionOnce::new(move |x: &mut Vec<i32>| {
             x.extend(data1);
@@ -145,8 +145,8 @@ mod test_box_mutating_function_once {
     #[test]
     fn test_and_then_multiple_chains() {
         let data1 = vec![1, 2];
-        let data2 = vec![3, 4];
-        let data3 = vec![5, 6];
+        let data2 = [3, 4];
+        let data3 = [5, 6];
 
         let chained = BoxMutatingFunctionOnce::new(move |x: &mut Vec<i32>| {
             x.extend(data1);
@@ -256,7 +256,7 @@ mod test_closure {
     #[test]
     fn test_closure_and_then() {
         let data1 = vec![1, 2];
-        let data2 = vec![3, 4];
+        let data2 = [3, 4];
 
         let chained = (move |x: &mut Vec<i32>| {
             x.extend(data1);
@@ -444,7 +444,7 @@ fn test_box_mutating_function_once_name_methods() {
     // Test new_with_name, name(), and set_name()
     let mut double =
         BoxMutatingFunctionOnce::new_with_name("box_mutating_once_func", |x: &mut i32| {
-            *x = *x * 2;
+            *x *= 2;
             *x
         });
 

@@ -526,7 +526,7 @@ mod function_once_default_impl_tests {
 
     #[test]
     fn test_custom_with_captured_value() {
-        let captured = vec![1, 2, 3];
+        let captured = [1, 2, 3];
         let custom = CloneableCustomFunctionOnce { multiplier: 2 };
 
         let func = BoxFunctionOnce::new(move |x: &i32| {

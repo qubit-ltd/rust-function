@@ -937,7 +937,7 @@ fn test_box_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         BoxStatefulMutatingFunction::new_with_name("box_stateful_mutating", move |x: &mut i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -979,7 +979,7 @@ fn test_rc_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         RcStatefulMutatingFunction::new_with_name("rc_stateful_mutating", move |x: &mut i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -1021,7 +1021,7 @@ fn test_arc_stateful_mutating_function_debug_display() {
     let mut counter2 = 0;
     let mut named_double =
         ArcStatefulMutatingFunction::new_with_name("arc_stateful_mutating", move |x: &mut i32| {
-            counter2 = counter2 + 1;
+            counter2 += 1;
             *x * 2
         });
     // Call apply to use the counter2 variable
@@ -1053,7 +1053,7 @@ fn test_box_stateful_mutating_function_name_methods() {
     let mut double = BoxStatefulMutatingFunction::new_with_name(
         "box_stateful_mutating_func",
         move |x: &mut i32| {
-            *x = *x * 2;
+            *x *= 2;
             *x
         },
     );
@@ -1080,7 +1080,7 @@ fn test_rc_stateful_mutating_function_name_methods() {
     let mut double = RcStatefulMutatingFunction::new_with_name(
         "rc_stateful_mutating_func",
         move |x: &mut i32| {
-            *x = *x * 2;
+            *x *= 2;
             *x
         },
     );
@@ -1114,7 +1114,7 @@ fn test_arc_stateful_mutating_function_name_methods() {
     let mut double = ArcStatefulMutatingFunction::new_with_name(
         "arc_stateful_mutating_func",
         move |x: &mut i32| {
-            *x = *x * 2;
+            *x *= 2;
             *x
         },
     );
@@ -1150,7 +1150,7 @@ fn test_box_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for BoxConditionalStatefulMutatingFunction without name
 
     let mut double = BoxStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
     // Call apply to use the counter variable
@@ -1176,8 +1176,8 @@ fn test_box_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = BoxStatefulMutatingFunction::new_with_name(
         "stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 = counter2 + 1;
-            *x = *x * 2;
+            counter2 += 1;
+            *x *= 2;
             *x
         },
     );
@@ -1207,7 +1207,7 @@ fn test_rc_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for RcConditionalStatefulMutatingFunction without name
 
     let mut double = RcStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
     // Call apply to use the counter variable
@@ -1233,8 +1233,8 @@ fn test_rc_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = RcStatefulMutatingFunction::new_with_name(
         "rc_stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 = counter2 + 1;
-            *x = *x * 2;
+            counter2 += 1;
+            *x *= 2;
             *x
         },
     );
@@ -1264,7 +1264,7 @@ fn test_arc_conditional_stateful_mutating_function_debug_display() {
     // Test Debug and Display for ArcConditionalStatefulMutatingFunction without name
 
     let mut double = ArcStatefulMutatingFunction::new(move |x: &mut i32| {
-        *x = *x * 2;
+        *x *= 2;
         *x
     });
     // Call apply to use the counter variable
@@ -1290,8 +1290,8 @@ fn test_arc_conditional_stateful_mutating_function_debug_display() {
     let mut named_double = ArcStatefulMutatingFunction::new_with_name(
         "arc_stateful_mutating_double",
         move |x: &mut i32| {
-            counter2 = counter2 + 1;
-            *x = *x * 2;
+            counter2 += 1;
+            *x *= 2;
             *x
         },
     );
