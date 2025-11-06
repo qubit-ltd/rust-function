@@ -1286,14 +1286,13 @@ mod test_rc_stateful_supplier {
 #[cfg(test)]
 mod test_box_stateful_supplier_once {
     use super::*;
-    use prism3_function::SupplierOnce;
 
     mod test_get {
         use super::*;
 
         #[test]
         fn test_consumes_stateful_supplier() {
-            let supplier = BoxStatefulSupplier::new(|| 42);
+            let mut supplier = BoxStatefulSupplier::new(|| 42);
             let value = supplier.get();
             assert_eq!(value, 42);
             // StatefulSupplier is consumed, cannot be used again
@@ -1301,14 +1300,14 @@ mod test_box_stateful_supplier_once {
 
         #[test]
         fn test_with_string() {
-            let supplier = BoxStatefulSupplier::new(|| String::from("hello"));
+            let mut supplier = BoxStatefulSupplier::new(|| String::from("hello"));
             let value = supplier.get();
             assert_eq!(value, "hello");
         }
 
         #[test]
         fn test_with_vec() {
-            let supplier = BoxStatefulSupplier::new(|| vec![1, 2, 3]);
+            let mut supplier = BoxStatefulSupplier::new(|| vec![1, 2, 3]);
             let value = supplier.get();
             assert_eq!(value, vec![1, 2, 3]);
         }
@@ -1316,7 +1315,7 @@ mod test_box_stateful_supplier_once {
         #[test]
         fn test_moves_captured_value() {
             let data = String::from("captured");
-            let supplier = BoxStatefulSupplier::new(move || data.clone());
+            let mut supplier = BoxStatefulSupplier::new(move || data.clone());
             let value = supplier.get();
             assert_eq!(value, "captured");
         }
@@ -1324,7 +1323,7 @@ mod test_box_stateful_supplier_once {
         #[test]
         fn test_with_stateful_closure() {
             let mut counter = 0;
-            let supplier = BoxStatefulSupplier::new(move || {
+            let mut supplier = BoxStatefulSupplier::new(move || {
                 counter += 1;
                 counter
             });
@@ -1335,28 +1334,27 @@ mod test_box_stateful_supplier_once {
 
     mod test_into_box {
         use super::*;
-        use prism3_function::BoxSupplierOnce;
 
         #[test]
-        fn test_converts_to_box_stateful_supplier_once() {
+        fn test_into_box() {
             let supplier = BoxStatefulSupplier::new(|| 42);
-            let once: BoxSupplierOnce<i32> = supplier.into_box();
-            assert_eq!(once.get(), 42);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = BoxStatefulSupplier::new(|| String::from("test"));
-            let once = supplier.into_box();
-            assert_eq!(once.get(), "test");
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), "test");
         }
 
         #[test]
         fn test_with_moved_value() {
             let data = vec![1, 2, 3];
             let supplier = BoxStatefulSupplier::new(move || data.clone());
-            let once = supplier.into_box();
-            assert_eq!(once.get(), vec![1, 2, 3]);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), vec![1, 2, 3]);
         }
     }
 
@@ -1366,14 +1364,14 @@ mod test_box_stateful_supplier_once {
         #[test]
         fn test_converts_to_fn() {
             let supplier = BoxStatefulSupplier::new(|| 42);
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = BoxStatefulSupplier::new(|| String::from("hello"));
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), "hello");
         }
 
@@ -1381,14 +1379,14 @@ mod test_box_stateful_supplier_once {
         fn test_with_moved_value() {
             let data = String::from("captured");
             let supplier = BoxStatefulSupplier::new(move || data.clone());
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), "captured");
         }
 
         #[test]
         fn test_fn_once_closure_can_be_called() {
             let supplier = BoxStatefulSupplier::new(|| 100);
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             let result = f();
             assert_eq!(result, 100);
         }
@@ -1400,7 +1398,7 @@ mod test_box_stateful_supplier_once {
                 counter += 1;
                 counter
             });
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 1);
         }
     }
@@ -1417,14 +1415,13 @@ mod test_box_stateful_supplier_once {
 #[cfg(test)]
 mod test_arc_stateful_supplier_once {
     use super::*;
-    use prism3_function::SupplierOnce;
 
     mod test_get {
         use super::*;
 
         #[test]
         fn test_consumes_stateful_supplier() {
-            let supplier = ArcStatefulSupplier::new(|| 42);
+            let mut supplier = ArcStatefulSupplier::new(|| 42);
             let value = supplier.get();
             assert_eq!(value, 42);
             // StatefulSupplier is consumed, cannot be used again
@@ -1432,14 +1429,14 @@ mod test_arc_stateful_supplier_once {
 
         #[test]
         fn test_with_string() {
-            let supplier = ArcStatefulSupplier::new(|| String::from("hello"));
+            let mut supplier = ArcStatefulSupplier::new(|| String::from("hello"));
             let value = supplier.get();
             assert_eq!(value, "hello");
         }
 
         #[test]
         fn test_with_vec() {
-            let supplier = ArcStatefulSupplier::new(|| vec![1, 2, 3]);
+            let mut supplier = ArcStatefulSupplier::new(|| vec![1, 2, 3]);
             let value = supplier.get();
             assert_eq!(value, vec![1, 2, 3]);
         }
@@ -1448,7 +1445,7 @@ mod test_arc_stateful_supplier_once {
         fn test_with_shared_state() {
             let counter = Arc::new(Mutex::new(0));
             let counter_clone = Arc::clone(&counter);
-            let supplier = ArcStatefulSupplier::new(move || {
+            let mut supplier = ArcStatefulSupplier::new(move || {
                 let mut c = counter_clone.lock().unwrap();
                 *c += 1;
                 *c
@@ -1471,8 +1468,10 @@ mod test_arc_stateful_supplier_once {
 
             let stateful_supplier2 = stateful_supplier1.clone();
 
-            let value1 = SupplierOnce::get(stateful_supplier1);
-            let value2 = SupplierOnce::get(stateful_supplier2);
+            let mut stateful_supplier1 = stateful_supplier1;
+            let mut stateful_supplier2 = stateful_supplier2;
+            let value1 = stateful_supplier1.get();
+            let value2 = stateful_supplier2.get();
 
             // Both should increment the same counter
             assert_eq!(value1 + value2, 3); // 1 + 2
@@ -1482,20 +1481,19 @@ mod test_arc_stateful_supplier_once {
 
     mod test_into_box {
         use super::*;
-        use prism3_function::BoxSupplierOnce;
 
         #[test]
-        fn test_converts_to_box_stateful_supplier_once() {
+        fn test_into_box() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let once: BoxSupplierOnce<i32> = supplier.into_box();
-            assert_eq!(once.get(), 42);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = ArcStatefulSupplier::new(|| String::from("test"));
-            let once = supplier.into_box();
-            assert_eq!(once.get(), "test");
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), "test");
         }
 
         #[test]
@@ -1507,8 +1505,8 @@ mod test_arc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let once = supplier.into_box();
-            assert_eq!(once.get(), 1);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), 1);
             assert_eq!(*counter.lock().unwrap(), 1);
         }
     }
@@ -1519,14 +1517,14 @@ mod test_arc_stateful_supplier_once {
         #[test]
         fn test_converts_to_fn() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = ArcStatefulSupplier::new(|| String::from("hello"));
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), "hello");
         }
 
@@ -1539,7 +1537,7 @@ mod test_arc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 1);
             assert_eq!(*counter.lock().unwrap(), 1);
         }
@@ -1553,26 +1551,25 @@ mod test_arc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 1);
         }
     }
 
     mod test_to_box {
         use super::*;
-        use prism3_function::BoxSupplierOnce;
 
         #[test]
-        fn test_creates_box_stateful_supplier_once() {
+        fn test_to_box() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let once: BoxSupplierOnce<i32> = supplier.to_box();
-            assert_eq!(once.get(), 42);
+            let mut boxed = supplier.to_box();
+            assert_eq!(boxed.get(), 42);
         }
 
         #[test]
         fn test_original_remains_usable() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let _once = supplier.to_box();
+            let mut _once = supplier.to_box();
             // Original StatefulSupplier still usable
             let s = supplier;
             assert_eq!(s.clone().get(), 42);
@@ -1588,7 +1585,7 @@ mod test_arc_stateful_supplier_once {
                 *c
             });
 
-            let once = supplier.to_box();
+            let mut once = supplier.to_box();
             assert_eq!(once.get(), 1);
 
             // Can still use original
@@ -1603,14 +1600,14 @@ mod test_arc_stateful_supplier_once {
         #[test]
         fn test_creates_fn_once() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             assert_eq!(f(), 42);
         }
 
         #[test]
         fn test_original_remains_usable() {
             let supplier = ArcStatefulSupplier::new(|| 42);
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             // Original StatefulSupplier still usable
             assert_eq!(supplier.clone().get(), 42);
             // Call the function we created
@@ -1627,7 +1624,7 @@ mod test_arc_stateful_supplier_once {
                 *c
             });
 
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             assert_eq!(f(), 1);
 
             // Can still use original
@@ -1644,14 +1641,13 @@ mod test_arc_stateful_supplier_once {
 #[cfg(test)]
 mod test_rc_stateful_supplier_once {
     use super::*;
-    use prism3_function::SupplierOnce;
 
     mod test_get {
         use super::*;
 
         #[test]
         fn test_consumes_stateful_supplier() {
-            let supplier = RcStatefulSupplier::new(|| 42);
+            let mut supplier = RcStatefulSupplier::new(|| 42);
             let value = supplier.get();
             assert_eq!(value, 42);
             // StatefulSupplier is consumed, cannot be used again
@@ -1659,14 +1655,14 @@ mod test_rc_stateful_supplier_once {
 
         #[test]
         fn test_with_string() {
-            let supplier = RcStatefulSupplier::new(|| String::from("hello"));
+            let mut supplier = RcStatefulSupplier::new(|| String::from("hello"));
             let value = supplier.get();
             assert_eq!(value, "hello");
         }
 
         #[test]
         fn test_with_vec() {
-            let supplier = RcStatefulSupplier::new(|| vec![1, 2, 3]);
+            let mut supplier = RcStatefulSupplier::new(|| vec![1, 2, 3]);
             let value = supplier.get();
             assert_eq!(value, vec![1, 2, 3]);
         }
@@ -1675,7 +1671,7 @@ mod test_rc_stateful_supplier_once {
         fn test_with_shared_state() {
             let counter = Rc::new(RefCell::new(0));
             let counter_clone = Rc::clone(&counter);
-            let supplier = RcStatefulSupplier::new(move || {
+            let mut supplier = RcStatefulSupplier::new(move || {
                 let mut c = counter_clone.borrow_mut();
                 *c += 1;
                 *c
@@ -1698,8 +1694,10 @@ mod test_rc_stateful_supplier_once {
 
             let stateful_supplier2 = stateful_supplier1.clone();
 
-            let value1 = SupplierOnce::get(stateful_supplier1);
-            let value2 = SupplierOnce::get(stateful_supplier2);
+            let mut stateful_supplier1 = stateful_supplier1;
+            let mut stateful_supplier2 = stateful_supplier2;
+            let value1 = stateful_supplier1.get();
+            let value2 = stateful_supplier2.get();
 
             // Both should increment the same counter
             assert_eq!(value1 + value2, 3); // 1 + 2
@@ -1709,20 +1707,19 @@ mod test_rc_stateful_supplier_once {
 
     mod test_into_box {
         use super::*;
-        use prism3_function::BoxSupplierOnce;
 
         #[test]
-        fn test_converts_to_box_stateful_supplier_once() {
+        fn test_into_box() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let once: BoxSupplierOnce<i32> = supplier.into_box();
-            assert_eq!(once.get(), 42);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = RcStatefulSupplier::new(|| String::from("test"));
-            let once = supplier.into_box();
-            assert_eq!(once.get(), "test");
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), "test");
         }
 
         #[test]
@@ -1734,8 +1731,8 @@ mod test_rc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let once = supplier.into_box();
-            assert_eq!(once.get(), 1);
+            let mut boxed = supplier.into_box();
+            assert_eq!(boxed.get(), 1);
             assert_eq!(*counter.borrow(), 1);
         }
     }
@@ -1746,14 +1743,14 @@ mod test_rc_stateful_supplier_once {
         #[test]
         fn test_converts_to_fn() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 42);
         }
 
         #[test]
         fn test_with_string() {
             let supplier = RcStatefulSupplier::new(|| String::from("hello"));
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), "hello");
         }
 
@@ -1766,7 +1763,7 @@ mod test_rc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 1);
             assert_eq!(*counter.borrow(), 1);
         }
@@ -1780,26 +1777,25 @@ mod test_rc_stateful_supplier_once {
                 *c += 1;
                 *c
             });
-            let f = supplier.into_fn();
+            let mut f = supplier.into_fn();
             assert_eq!(f(), 1);
         }
     }
 
     mod test_to_box {
         use super::*;
-        use prism3_function::BoxSupplierOnce;
 
         #[test]
-        fn test_creates_box_stateful_supplier_once() {
+        fn test_to_box() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let once: BoxSupplierOnce<i32> = supplier.to_box();
-            assert_eq!(once.get(), 42);
+            let mut boxed = supplier.to_box();
+            assert_eq!(boxed.get(), 42);
         }
 
         #[test]
         fn test_original_remains_usable() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let _once = supplier.to_box();
+            let mut _once = supplier.to_box();
             // Original StatefulSupplier still usable
             let s = supplier;
             assert_eq!(s.clone().get(), 42);
@@ -1815,7 +1811,7 @@ mod test_rc_stateful_supplier_once {
                 *c
             });
 
-            let once = supplier.to_box();
+            let mut once = supplier.to_box();
             assert_eq!(once.get(), 1);
 
             // Can still use original
@@ -1830,14 +1826,14 @@ mod test_rc_stateful_supplier_once {
         #[test]
         fn test_creates_fn_once() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             assert_eq!(f(), 42);
         }
 
         #[test]
         fn test_original_remains_usable() {
             let supplier = RcStatefulSupplier::new(|| 42);
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             // Original StatefulSupplier still usable
             assert_eq!(supplier.clone().get(), 42);
             // Call the function we created
@@ -1854,7 +1850,7 @@ mod test_rc_stateful_supplier_once {
                 *c
             });
 
-            let f = supplier.to_fn();
+            let mut f = supplier.to_fn();
             assert_eq!(f(), 1);
 
             // Can still use original
