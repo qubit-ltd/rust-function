@@ -969,8 +969,6 @@ fn test_box_stateful_bi_transformer_apply() {
     // transformer is now consumed
 }
 
-
-
 #[test]
 fn test_arc_stateful_bi_transformer_apply() {
     // Test apply for ArcStatefulBiTransformer
@@ -982,8 +980,6 @@ fn test_arc_stateful_bi_transformer_apply() {
 
     assert_eq!(transformer.apply(10, 20), 31);
 }
-
-
 
 #[test]
 fn test_arc_stateful_bi_transformer_to_box() {
@@ -1084,7 +1080,10 @@ mod conditional_stateful_bi_transformer_display_debug_tests {
         });
         let conditional = add.when(|x: &i32, y: &i32| *x > 0 && *y > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "RcConditionalStatefulBiTransformer(RcStatefulBiTransformer, RcBiPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "RcConditionalStatefulBiTransformer(RcStatefulBiTransformer, RcBiPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1152,7 +1151,9 @@ mod stateful_bi_transformer_trait_default_methods_tests {
 
     impl TestStatefulBiTransformer {
         fn new(initial_state: i32) -> Self {
-            Self { state: initial_state }
+            Self {
+                state: initial_state,
+            }
         }
     }
 
@@ -1246,10 +1247,11 @@ mod stateful_bi_transformer_trait_default_methods_tests {
 #[test]
 fn test_box_stateful_bi_transformer_display_with_name() {
     let mut counter = 0;
-    let transformer = BoxStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
-        counter += 1;
-        x + y + counter
-    });
+    let transformer =
+        BoxStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
+            counter += 1;
+            x + y + counter
+        });
     let display_str = format!("{}", transformer);
     assert_eq!(display_str, "BoxStatefulBiTransformer(add_counter)");
 }
@@ -1268,10 +1270,11 @@ fn test_box_stateful_bi_transformer_display_without_name() {
 #[test]
 fn test_rc_stateful_bi_transformer_display_with_name() {
     let mut counter = 0;
-    let transformer = RcStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
-        counter += 1;
-        x + y + counter
-    });
+    let transformer =
+        RcStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
+            counter += 1;
+            x + y + counter
+        });
     let display_str = format!("{}", transformer);
     assert_eq!(display_str, "RcStatefulBiTransformer(add_counter)");
 }
@@ -1290,10 +1293,11 @@ fn test_rc_stateful_bi_transformer_display_without_name() {
 #[test]
 fn test_arc_stateful_bi_transformer_display_with_name() {
     let mut counter = 0;
-    let transformer = ArcStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
-        counter += 1;
-        x + y + counter
-    });
+    let transformer =
+        ArcStatefulBiTransformer::new_with_name("add_counter", move |x: i32, y: i32| {
+            counter += 1;
+            x + y + counter
+        });
     let display_str = format!("{}", transformer);
     assert_eq!(display_str, "ArcStatefulBiTransformer(add_counter)");
 }

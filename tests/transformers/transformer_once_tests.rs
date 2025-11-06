@@ -78,7 +78,8 @@ mod box_transformer_once_tests {
 
     #[test]
     fn test_display_with_name() {
-        let transformer = BoxTransformerOnce::new_with_name("parse", |s: String| s.parse::<i32>().unwrap_or(0));
+        let transformer =
+            BoxTransformerOnce::new_with_name("parse", |s: String| s.parse::<i32>().unwrap_or(0));
         let display_str = format!("{}", transformer);
         assert_eq!(display_str, "BoxTransformerOnce(parse)");
     }

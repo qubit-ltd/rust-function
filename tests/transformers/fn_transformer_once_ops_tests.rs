@@ -34,7 +34,8 @@ mod tests {
         let add_one = |x: i32| x + 1;
         let double = |x: i32| x * 2;
 
-        let composed = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(add_one, double));
+        let composed =
+            FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(add_one, double));
         assert_eq!(composed.apply("5".to_string()), 12); // (5 + 1) * 2 = 12
     }
 

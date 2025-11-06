@@ -746,10 +746,10 @@ fn test_fn_mapper_ops_and_then() {
     assert_eq!(composed.apply(10), 24); // (10 + 2) * 2
 }
 
-
 #[test]
 fn test_fn_mapper_ops_when() {
-    let mut mapper = FnStatefulTransformerOps::when(|x: i32| x * 2, |x: &i32| *x > 0).or_else(|x: i32| -x);
+    let mut mapper =
+        FnStatefulTransformerOps::when(|x: i32| x * 2, |x: &i32| *x > 0).or_else(|x: i32| -x);
 
     assert_eq!(mapper.apply(5), 10);
     assert_eq!(mapper.apply(-5), 5);
@@ -1660,7 +1660,10 @@ mod conditional_stateful_transformer_display_debug_tests {
         });
         let conditional = add.when(|x: &i32| *x > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "BoxConditionalStatefulTransformer(BoxStatefulTransformer, BoxPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "BoxConditionalStatefulTransformer(BoxStatefulTransformer, BoxPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1696,7 +1699,10 @@ mod conditional_stateful_transformer_display_debug_tests {
         });
         let conditional = add.when(|x: &i32| *x > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "RcConditionalStatefulTransformer(RcStatefulTransformer, RcPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "RcConditionalStatefulTransformer(RcStatefulTransformer, RcPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1732,7 +1738,10 @@ mod conditional_stateful_transformer_display_debug_tests {
         });
         let conditional = add.when(|x: &i32| *x > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "ArcConditionalStatefulTransformer(ArcStatefulTransformer, ArcPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "ArcConditionalStatefulTransformer(ArcStatefulTransformer, ArcPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1817,4 +1826,3 @@ fn test_arc_stateful_transformer_display_without_name() {
     let display_str = format!("{}", transformer);
     assert_eq!(display_str, "ArcStatefulTransformer");
 }
-

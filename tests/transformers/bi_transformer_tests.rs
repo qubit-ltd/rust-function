@@ -235,7 +235,9 @@ mod rc_bi_transformer_tests {
 
     #[test]
     fn test_display_with_name() {
-        let transformer = RcBiTransformer::new_with_name("concat", |s1: String, s2: String| format!("{}{}", s1, s2));
+        let transformer = RcBiTransformer::new_with_name("concat", |s1: String, s2: String| {
+            format!("{}{}", s1, s2)
+        });
         let display_str = format!("{}", transformer);
         assert_eq!(display_str, "RcBiTransformer(concat)");
     }
@@ -1949,7 +1951,10 @@ mod conditional_transformer_display_debug_tests {
         let add = BoxBiTransformer::new(|x: i32, y: i32| x + y);
         let conditional = add.when(|x: &i32, y: &i32| *x > 0 && *y > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "BoxConditionalBiTransformer(BoxBiTransformer, BoxBiPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "BoxConditionalBiTransformer(BoxBiTransformer, BoxBiPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1973,7 +1978,10 @@ mod conditional_transformer_display_debug_tests {
         let add = RcBiTransformer::new(|x: i32, y: i32| x + y);
         let conditional = add.when(|x: &i32, y: &i32| *x > 0 && *y > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "RcConditionalBiTransformer(RcBiTransformer, RcBiPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "RcConditionalBiTransformer(RcBiTransformer, RcBiPredicate(unnamed))"
+        );
     }
 
     #[test]
@@ -1997,7 +2005,10 @@ mod conditional_transformer_display_debug_tests {
         let add = ArcBiTransformer::new(|x: i32, y: i32| x + y);
         let conditional = add.when(|x: &i32, y: &i32| *x > 0 && *y > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "ArcConditionalBiTransformer(ArcBiTransformer, ArcBiPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "ArcConditionalBiTransformer(ArcBiTransformer, ArcBiPredicate(unnamed))"
+        );
     }
 
     #[test]

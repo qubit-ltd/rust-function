@@ -47,7 +47,8 @@ mod tests {
         let conditional = FnTransformerOnceOps::when(double, |x: &i32| *x > 0).or_else(|x: i32| -x);
 
         assert_eq!(conditional.apply(5), 10);
-        let conditional2 = FnTransformerOnceOps::when(|x: i32| x * 2, |x: &i32| *x > 0).or_else(|x: i32| -x);
+        let conditional2 =
+            FnTransformerOnceOps::when(|x: i32| x * 2, |x: &i32| *x > 0).or_else(|x: i32| -x);
         assert_eq!(conditional2.apply(-5), 5);
     }
 }
@@ -113,7 +114,10 @@ mod multiple_composition_tests {
         let double = |x: i32| x * 2;
         let to_string = |x: i32| x.to_string();
 
-        let composed = FnTransformerOnceOps::and_then(add_one, FnTransformerOnceOps::and_then(double, to_string));
+        let composed = FnTransformerOnceOps::and_then(
+            add_one,
+            FnTransformerOnceOps::and_then(double, to_string),
+        );
         assert_eq!(composed.apply(5), "12");
     }
 
@@ -135,7 +139,8 @@ mod multiple_composition_tests {
         let add_ten = |x: i32| x + 10;
         let double = |x: i32| x * 2;
 
-        let composed = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(add_ten, double));
+        let composed =
+            FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(add_ten, double));
         assert_eq!(composed.apply("16".to_string()), 52); // (16 + 10) * 2
     }
 }
@@ -167,7 +172,8 @@ mod conditional_mapping_tests {
         let is_positive = RcPredicate::new(|x: &i32| *x > 0);
 
         // Clone to preserve original predicate
-        let conditional = FnTransformerOnceOps::when(double, is_positive.clone()).or_else(|x: i32| -x);
+        let conditional =
+            FnTransformerOnceOps::when(double, is_positive.clone()).or_else(|x: i32| -x);
 
         assert_eq!(conditional.apply(5), 10);
 
@@ -203,7 +209,13 @@ mod complex_pipeline_tests {
         let add_ten = |x: i32| x + 10;
         let to_string = |x: i32| format!("Result: {}", x);
 
-        let pipeline = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(double, FnTransformerOnceOps::and_then(add_ten, to_string)));
+        let pipeline = FnTransformerOnceOps::and_then(
+            parse,
+            FnTransformerOnceOps::and_then(
+                double,
+                FnTransformerOnceOps::and_then(add_ten, to_string),
+            ),
+        );
         assert_eq!(pipeline.apply("16".to_string()), "Result: 42");
     }
 
@@ -229,7 +241,10 @@ mod complex_pipeline_tests {
         let double = |opt: Option<i32>| opt.map(|x| x * 2);
         let to_string = |opt: Option<i32>| opt.map(|x| x.to_string());
 
-        let pipeline = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(double, to_string));
+        let pipeline = FnTransformerOnceOps::and_then(
+            parse,
+            FnTransformerOnceOps::and_then(double, to_string),
+        );
         assert_eq!(pipeline.apply("21".to_string()), Some("42".to_string()));
     }
 }
@@ -268,7 +283,10 @@ mod function_pointer_tests {
 
     #[test]
     fn test_function_pointer_chain() {
-        let composed = FnTransformerOnceOps::and_then(double, FnTransformerOnceOps::and_then(add_ten, to_string));
+        let composed = FnTransformerOnceOps::and_then(
+            double,
+            FnTransformerOnceOps::and_then(add_ten, to_string),
+        );
         assert_eq!(composed.apply(16), "42");
     }
 
@@ -349,7 +367,10 @@ mod type_conversion_tests {
         let double = |opt: Option<i32>| opt.map(|x| x * 2);
         let unwrap_or = |opt: Option<i32>| opt.unwrap_or(0);
 
-        let composed = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(double, unwrap_or));
+        let composed = FnTransformerOnceOps::and_then(
+            parse,
+            FnTransformerOnceOps::and_then(double, unwrap_or),
+        );
         assert_eq!(composed.apply("21".to_string()), 42);
     }
 
@@ -359,7 +380,10 @@ mod type_conversion_tests {
         let double = |r: Result<i32, _>| r.map(|x| x * 2);
         let unwrap_or = |r: Result<i32, _>| r.unwrap_or(0);
 
-        let composed = FnTransformerOnceOps::and_then(parse, FnTransformerOnceOps::and_then(double, unwrap_or));
+        let composed = FnTransformerOnceOps::and_then(
+            parse,
+            FnTransformerOnceOps::and_then(double, unwrap_or),
+        );
         assert_eq!(composed.apply("21".to_string()), 42);
     }
 }
@@ -443,8 +467,10 @@ mod advanced_usage_tests {
 
         let composed = FnTransformerOnceOps::and_then(parse, double_if_positive);
         assert_eq!(composed.apply("21".to_string()), Some(42));
-        let composed2 = FnTransformerOnceOps::and_then(|s: String| s.parse::<i32>().ok(),
-            |opt: Option<i32>| opt.and_then(|x| if x > 0 { Some(x * 2) } else { None }));
+        let composed2 = FnTransformerOnceOps::and_then(
+            |s: String| s.parse::<i32>().ok(),
+            |opt: Option<i32>| opt.and_then(|x| if x > 0 { Some(x * 2) } else { None }),
+        );
         assert_eq!(composed2.apply("-10".to_string()), None);
     }
 
@@ -467,7 +493,8 @@ mod advanced_usage_tests {
         let double = |x: i32| x * 2;
         let rebox = |x: i32| Box::new(x);
 
-        let composed = FnTransformerOnceOps::and_then(unbox, FnTransformerOnceOps::and_then(double, rebox));
+        let composed =
+            FnTransformerOnceOps::and_then(unbox, FnTransformerOnceOps::and_then(double, rebox));
         let result = composed.apply(Box::new(21));
         assert_eq!(*result, 42);
     }

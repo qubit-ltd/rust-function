@@ -744,7 +744,10 @@ mod conditional_bi_transformer_once_display_debug_tests {
         let add = BoxBiTransformerOnce::new(|x: i32, y: i32| x + y);
         let conditional = add.when(|x: &i32, y: &i32| *x > 0 && *y > 0);
         let display_str = format!("{}", conditional);
-        assert_eq!(display_str, "BoxConditionalBiTransformerOnce(BoxBiTransformerOnce, BoxBiPredicate(unnamed))");
+        assert_eq!(
+            display_str,
+            "BoxConditionalBiTransformerOnce(BoxBiTransformerOnce, BoxBiPredicate(unnamed))"
+        );
     }
 
     #[test]
