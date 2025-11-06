@@ -182,7 +182,7 @@ macro_rules! impl_shared_predicate_methods {
             P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
         {
             let self_fn = self.function.clone();
-            $struct_name::new(move |x| !((self_fn(x) && other.test(x))))
+            $struct_name::new(move |x| !(self_fn(x) && other.test(x)))
         }
 
         /// Returns a predicate that represents the logical XOR (exclusive OR) of
@@ -227,7 +227,7 @@ macro_rules! impl_shared_predicate_methods {
             P: $predicate_trait_name<$t> + $($predicate_extra_bounds)+
         {
             let self_fn = self.function.clone();
-            $struct_name::new(move |x| !((self_fn(x) || other.test(x))))
+            $struct_name::new(move |x| !(self_fn(x) || other.test(x)))
         }
     };
 
@@ -313,7 +313,7 @@ macro_rules! impl_shared_predicate_methods {
             P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
         {
             let self_fn = self.function.clone();
-            $struct_name::new(move |x, y| !((self_fn(x, y) && other.test(x, y))))
+            $struct_name::new(move |x, y| !(self_fn(x, y) && other.test(x, y)))
         }
 
         /// Returns a bi-predicate that represents the logical XOR
@@ -359,7 +359,7 @@ macro_rules! impl_shared_predicate_methods {
             P: $predicate_trait_name<$t, $u> + $($predicate_extra_bounds)+
         {
             let self_fn = self.function.clone();
-            $struct_name::new(move |x, y| !((self_fn(x, y) || other.test(x, y))))
+            $struct_name::new(move |x, y| !(self_fn(x, y) || other.test(x, y)))
         }
     };
 
