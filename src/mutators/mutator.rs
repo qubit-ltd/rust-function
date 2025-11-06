@@ -22,6 +22,8 @@
 //! - **`RcMutator<T>`**: Rc-based single-threaded shared
 //!   ownership implementation with no lock overhead
 //!
+//! It is similar to the `Fn(&mut T)` trait in the standard library.
+//!
 //! # Design Philosophy
 //!
 //! `Mutator` is designed for **stateless** operations using `Fn(&mut T)`.

@@ -21,6 +21,8 @@
 //! - **`RcMutator<T>`**: Rc<RefCell<>>-based single-threaded shared
 //!   ownership implementation with no lock overhead
 //!
+//! It is similar to the `FnMut(&mut T)` trait in the standard library.
+//!
 //! # Design Philosophy
 //!
 //! Unlike `Consumer` which observes values without modifying them (`FnMut(&T)`),

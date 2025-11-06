@@ -11,6 +11,8 @@
 //! Provides Java-style one-time `Mutator` interface implementations for performing
 //! operations that consume self and modify the input value.
 //!
+//! It is similar to the `FnOnce(&mut T)` trait in the standard library.
+//!
 //! This module provides a unified `MutatorOnce` trait and a Box-based single
 //! ownership implementation:
 //!
