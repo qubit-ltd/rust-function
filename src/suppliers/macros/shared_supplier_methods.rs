@@ -22,14 +22,13 @@
 //!   - Single parameter: `ArcSupplier<T>`
 //! * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
 //! * `($extra_bounds)` - Extra trait bounds in parentheses ('static for Rc, Send + Sync + 'static for Arc)
-//! * `$conversion_method` - Method to convert objects to match the wrapper type (into_arc or into_rc)
 //!
 //! # All Macro Invocations
 //!
-//! | Supplier Type | Struct Signature | `$supplier_trait` | `($extra_bounds)` | `$conversion_method` |
-//! |---------------|------------------|-------------------|------------------|----------------------|
-//! | **ArcSupplier** | `ArcSupplier<T>` | Supplier | (Send + Sync + 'static) | into_arc |
-//! | **RcSupplier** | `RcSupplier<T>` | Supplier | ('static) | into_rc |
+//! | Supplier Type | Struct Signature | `$supplier_trait` | `($extra_bounds)` |
+//! |---------------|------------------|-------------------|------------------|
+//! | **ArcSupplier** | `ArcSupplier<T>` | Supplier | (Send + Sync + 'static) |
+//! | **RcSupplier** | `RcSupplier<T>` | Supplier | ('static) |
 //!
 //! # Examples
 //!
@@ -38,16 +37,14 @@
 //! impl_shared_supplier_methods!(
 //!     ArcSupplier<T>,
 //!     Supplier,
-//!     (Send + Sync + 'static),
-//!     into_arc
+//!     (Send + Sync + 'static)
 //! );
 //!
 //! // Single-parameter with Rc
 //! impl_shared_supplier_methods!(
 //!     RcSupplier<T>,
 //!     Supplier,
-//!     ('static),
-//!     into_rc
+//!     ('static)
 //! );
 //! ```
 //!
@@ -70,14 +67,13 @@
 ///   - Single parameter: `ArcSupplier<T>`
 /// * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
 /// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
-/// * `$conversion_method` - Method to convert objects to match the wrapper type (into_arc or into_rc)
 ///
 /// # All Macro Invocations
 ///
-/// | Supplier Type | Struct Signature | `$supplier_trait` | `$extra_bounds` | `$conversion_method` |
-/// |---------------|------------------|-------------------|----------------|---------------|
-/// | **ArcSupplier** | `ArcSupplier<T>` | Supplier | Send + Sync + 'static | into_arc |
-/// | **RcSupplier** | `RcSupplier<T>` | Supplier | 'static | into_rc |
+/// | Supplier Type | Struct Signature | `$supplier_trait` | `$extra_bounds` |
+/// |---------------|------------------|-------------------|----------------|
+/// | **ArcSupplier** | `ArcSupplier<T>` | Supplier | Send + Sync + 'static |
+/// | **RcSupplier** | `RcSupplier<T>` | Supplier | 'static |
 ///
 /// # Examples
 ///
@@ -86,16 +82,14 @@
 /// impl_shared_supplier_methods!(
 ///     ArcSupplier<T>,
 ///     Supplier,
-///     Send + Sync + 'static,
-///     Arc
+///     Send + Sync + 'static
 /// );
 ///
 /// // Single-parameter with Rc
 /// impl_shared_supplier_methods!(
 ///     RcSupplier<T>,
 ///     Supplier,
-///     'static,
-///     Rc
+///     'static
 /// );
 /// ```
 /// # Author
@@ -106,8 +100,7 @@ macro_rules! impl_shared_supplier_methods {
     (
         $struct_name:ident < $t:ident >,
         $supplier_trait:ident,
-        ($($extra_bounds:tt)*),
-        $conversion_method:ident
+        ($($extra_bounds:tt)*)
     ) => {
         /// Maps the output using a transformation function.
         ///
@@ -129,15 +122,15 @@ macro_rules! impl_shared_supplier_methods {
         /// // source is still usable
         /// assert_eq!(mapped.get(), 20);
         /// ```
+        #[allow(unused_mut)]
         pub fn map<U, M>(&self, mapper: M) -> $struct_name<U>
         where
             M: Transformer<$t, U> + $($extra_bounds)+,
             U: $($extra_bounds)+,
         {
-            let self_fn = self.function.clone();
-            // let mapper_converted = mapper.$conversion_method();
+            let mut self_cloned = self.clone();
             $struct_name::new(move || {
-                let value = self_fn();
+                let value = self_cloned.get();
                 mapper.apply(value)
             })
         }
@@ -162,14 +155,14 @@ macro_rules! impl_shared_supplier_methods {
         ///
         /// assert_eq!(filtered.get(), Some(42));
         /// ```
+        #[allow(unused_mut)]
         pub fn filter<P>(&self, predicate: P) -> $struct_name<Option<$t>>
         where
             P: Predicate<$t> + $($extra_bounds)+,
         {
-            let self_fn = self.function.clone();
-            // let predicate_converted = predicate.$conversion_method();
+            let mut self_cloned = self.clone();
             $struct_name::new(move || {
-                let value = self_fn();
+                let value = self_cloned.get();
                 if predicate.test(&value) {
                     Some(value)
                 } else {
@@ -200,16 +193,17 @@ macro_rules! impl_shared_supplier_methods {
         ///
         /// assert_eq!(zipped.get(), (42, "hello"));
         /// ```
-        pub fn zip<U, S>(&self, other: S) -> $struct_name<($t, U)>
+        #[allow(unused_mut)]
+        pub fn zip<U, S>(&self, mut other: S) -> $struct_name<($t, U)>
         where
             S: $supplier_trait<U> + $($extra_bounds)+,
             U: $($extra_bounds)+,
         {
-            let first = self.function.clone();
-            // let other_converted = other.$conversion_method();
+            let mut self_cloned = self.clone();
             $struct_name::new(move || {
+                let first = self_cloned.get();
                 let second = other.get();
-                (first(), second)
+                (first, second)
             })
         }
     };
