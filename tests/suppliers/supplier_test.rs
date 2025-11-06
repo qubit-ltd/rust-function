@@ -232,7 +232,9 @@ mod test_box_readonly_supplier {
         #[test]
         fn test_filter_with_map() {
             // Test combining filter and map
-            let pipeline = BoxSupplier::new(|| 10).map(|x| x * 2).filter(|x: &i32| *x > 15);
+            let pipeline = BoxSupplier::new(|| 10)
+                .map(|x| x * 2)
+                .filter(|x: &i32| *x > 15);
             assert_eq!(pipeline.get(), Some(20));
         }
     }
