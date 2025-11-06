@@ -455,11 +455,9 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(
-        BoxStatefulSupplier<T>,
-        (FnMut() -> T + 'static),
-        |f| Box::new(f)
-    );
+    impl_supplier_common_methods!(BoxStatefulSupplier<T>, (FnMut() -> T + 'static), |f| {
+        Box::new(f)
+    });
 
     // Generates: map(), filter(), zip()
     impl_box_supplier_methods!(BoxStatefulSupplier<T>, StatefulSupplier);
@@ -897,7 +895,6 @@ impl_supplier_debug_display!(RcStatefulSupplier<T>);
 
 // Generates: Clone implementation for RcStatefulSupplier<T>
 impl_supplier_clone!(RcStatefulSupplier<T>);
-
 
 impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
     fn get(&mut self) -> T {
