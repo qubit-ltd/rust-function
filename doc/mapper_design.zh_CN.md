@@ -585,7 +585,7 @@ where
     {
         BoxConditionalMapper {
             mapper: self,
-            predicate: predicate.into_box_once(),
+            predicate: predicate.into_box(),
         }
     }
 }
