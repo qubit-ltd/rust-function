@@ -870,10 +870,6 @@ where
         self()
     }
 
-    // Use optimized implementations for closures instead of the
-    // default implementations. This avoids double wrapping by
-    // directly creating the target type.
-
     fn into_box(self) -> BoxSupplier<T>
     where
         Self: Sized + 'static,
@@ -903,35 +899,6 @@ where
         Self: Sized,
     {
         self
-    }
-
-    // Optimized implementations for to_* methods
-
-    fn to_box(&self) -> BoxSupplier<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        let self_fn = self.clone();
-        BoxSupplier::new(self_fn)
-    }
-
-    fn to_rc(&self) -> RcSupplier<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        let self_fn = self.clone();
-        RcSupplier::new(self_fn)
-    }
-
-    fn to_arc(&self) -> ArcSupplier<T>
-    where
-        Self: Clone + Send + Sync + 'static,
-        T: Send + Sync + 'static,
-    {
-        let self_fn = self.clone();
-        ArcSupplier::new(self_fn)
     }
 
     fn to_fn(&self) -> impl FnMut() -> T

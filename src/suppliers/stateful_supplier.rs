@@ -1114,30 +1114,6 @@ where
         self
     }
 
-    fn to_box(&self) -> BoxStatefulSupplier<T>
-    where
-        Self: Clone + Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_box()
-    }
-
-    fn to_rc(&self) -> RcStatefulSupplier<T>
-    where
-        Self: Clone + Sized + 'static,
-        T: 'static,
-    {
-        self.clone().into_rc()
-    }
-
-    fn to_arc(&self) -> ArcStatefulSupplier<T>
-    where
-        Self: Clone + Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        self.clone().into_arc()
-    }
-
     fn to_fn(&self) -> impl FnMut() -> T
     where
         Self: Clone + Sized,
