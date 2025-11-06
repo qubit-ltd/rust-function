@@ -132,10 +132,6 @@ use crate::suppliers::macros::{
     impl_supplier_common_methods,
     impl_supplier_debug_display,
 };
-use crate::suppliers::supplier_once::{
-    BoxSupplierOnce,
-    SupplierOnce,
-};
 use crate::transformers::transformer::Transformer;
 
 // ==========================================================================
@@ -459,9 +455,11 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(BoxStatefulSupplier<T>, (FnMut() -> T + 'static), |f| {
-        Box::new(f)
-    });
+    impl_supplier_common_methods!(
+        BoxStatefulSupplier<T>,
+        (FnMut() -> T + 'static),
+        |f| Box::new(f)
+    );
 
     // Generates: map(), filter(), zip()
     impl_box_supplier_methods!(BoxStatefulSupplier<T>, StatefulSupplier);
@@ -506,6 +504,9 @@ where
     }
 }
 
+// Generates: Debug and Display implementations for BoxStatefulSupplier<T>
+impl_supplier_debug_display!(BoxStatefulSupplier<T>);
+
 impl<T> StatefulSupplier<T> for BoxStatefulSupplier<T> {
     fn get(&mut self) -> T {
         (self.function)()
@@ -538,38 +539,6 @@ impl<T> StatefulSupplier<T> for BoxStatefulSupplier<T> {
     // `to_box`, `to_rc`, `to_arc`, or `to_fn` implementations. Invoking
     // the default trait methods will not compile because the required
     // `Clone` bound is not satisfied.
-}
-
-// Generates: Debug and Display implementations for BoxStatefulSupplier<T>
-impl_supplier_debug_display!(BoxStatefulSupplier<T>);
-
-impl<T> SupplierOnce<T> for BoxStatefulSupplier<T>
-where
-    T: 'static,
-{
-    fn get_once(mut self) -> T {
-        StatefulSupplier::get(&mut self)
-    }
-
-    fn into_box_once(self) -> BoxSupplierOnce<T>
-    where
-        Self: Sized + 'static,
-    {
-        BoxSupplierOnce::new(self.function)
-    }
-
-    fn into_fn_once(self) -> impl FnOnce() -> T
-    where
-        Self: Sized + 'static,
-    {
-        let mut f = self.function;
-        move || f()
-    }
-
-    // NOTE: `BoxStatefulSupplier` is not `Clone`, so it cannot offer
-    // `to_box_once` or `to_fn_once` implementations. Invoking the default
-    // trait methods will not compile because the required `Clone`
-    // bound is not satisfied.
 }
 
 // ==========================================================================
@@ -711,6 +680,12 @@ where
     }
 }
 
+// Generates: Debug and Display implementations for ArcStatefulSupplier<T>
+impl_supplier_debug_display!(ArcStatefulSupplier<T>);
+
+// Generates: Clone implementation for ArcStatefulSupplier<T>
+impl_supplier_clone!(ArcStatefulSupplier<T>);
+
 impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
     fn get(&mut self) -> T {
         (self.function.lock().unwrap())()
@@ -776,53 +751,6 @@ impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
     {
         let function = Arc::clone(&self.function);
         move || function.lock().unwrap()()
-    }
-}
-
-// Generates: Debug and Display implementations for ArcStatefulSupplier<T>
-impl_supplier_debug_display!(ArcStatefulSupplier<T>);
-
-// Generates: Clone implementation for ArcStatefulSupplier<T>
-impl_supplier_clone!(ArcStatefulSupplier<T>);
-
-impl<T> SupplierOnce<T> for ArcStatefulSupplier<T>
-where
-    T: Send + 'static,
-{
-    fn get_once(mut self) -> T {
-        StatefulSupplier::get(&mut self)
-    }
-
-    fn into_box_once(self) -> BoxSupplierOnce<T>
-    where
-        Self: Sized + 'static,
-    {
-        let f = self.function;
-        BoxSupplierOnce::new(move || f.lock().unwrap()())
-    }
-
-    fn into_fn_once(self) -> impl FnOnce() -> T
-    where
-        Self: Sized + 'static,
-    {
-        let f = self.function;
-        move || f.lock().unwrap()()
-    }
-
-    fn to_box_once(&self) -> BoxSupplierOnce<T>
-    where
-        Self: Clone + Sized + 'static,
-    {
-        let f = Arc::clone(&self.function);
-        BoxSupplierOnce::new(move || f.lock().unwrap()())
-    }
-
-    fn to_fn_once(&self) -> impl FnOnce() -> T
-    where
-        Self: Clone + Sized + 'static,
-    {
-        let f = Arc::clone(&self.function);
-        move || f.lock().unwrap()()
     }
 }
 
@@ -964,6 +892,13 @@ where
     }
 }
 
+// Generates: Debug and Display implementations for RcStatefulSupplier<T>
+impl_supplier_debug_display!(RcStatefulSupplier<T>);
+
+// Generates: Clone implementation for RcStatefulSupplier<T>
+impl_supplier_clone!(RcStatefulSupplier<T>);
+
+
 impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
     fn get(&mut self) -> T {
         (self.function.borrow_mut())()
@@ -1021,53 +956,6 @@ impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
     {
         let function = Rc::clone(&self.function);
         move || function.borrow_mut()()
-    }
-}
-
-// Generates: Debug and Display implementations for RcStatefulSupplier<T>
-impl_supplier_debug_display!(RcStatefulSupplier<T>);
-
-// Generates: Clone implementation for RcStatefulSupplier<T>
-impl_supplier_clone!(RcStatefulSupplier<T>);
-
-impl<T> SupplierOnce<T> for RcStatefulSupplier<T>
-where
-    T: 'static,
-{
-    fn get_once(mut self) -> T {
-        StatefulSupplier::get(&mut self)
-    }
-
-    fn into_box_once(self) -> BoxSupplierOnce<T>
-    where
-        Self: Sized + 'static,
-    {
-        let f = self.function;
-        BoxSupplierOnce::new(move || f.borrow_mut()())
-    }
-
-    fn into_fn_once(self) -> impl FnOnce() -> T
-    where
-        Self: Sized + 'static,
-    {
-        let f = self.function;
-        move || f.borrow_mut()()
-    }
-
-    fn to_box_once(&self) -> BoxSupplierOnce<T>
-    where
-        Self: Clone + Sized + 'static,
-    {
-        let f = Rc::clone(&self.function);
-        BoxSupplierOnce::new(move || f.borrow_mut()())
-    }
-
-    fn to_fn_once(&self) -> impl FnOnce() -> T
-    where
-        Self: Clone + Sized + 'static,
-    {
-        let f = Rc::clone(&self.function);
-        move || f.borrow_mut()()
     }
 }
 
