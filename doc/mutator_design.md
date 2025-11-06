@@ -303,7 +303,7 @@ impl<T> BoxMutator<T> {
     {
         BoxConditionalMutator {
             mutator: self,
-            predicate: predicate.into_box_once(),
+            predicate: predicate.into_box(),
         }
     }
 }

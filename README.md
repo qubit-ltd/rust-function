@@ -210,7 +210,7 @@ assert_eq!(factory.get(), "Hello");
 Generates a value once without input parameters.
 
 **Trait**: `SupplierOnce<T>`
-**Core Method**: `get_once(self) -> T`
+**Core Method**: `get(self) -> T`
 **Closure Equivalent**: `FnOnce() -> T`
 
 **Implementations**:
@@ -465,7 +465,7 @@ assert!(!tester.test());
 | `Mutator<T>` | `mutate(&mut self, value: &mut T)` | `FnMut(&mut T)` |
 | `MutatorOnce<T>` | `apply(self, value: &mut T)` | `FnOnce(&mut T)` |
 | `Supplier<T>` | `get(&self) -> T` | `Fn() -> T` |
-| `SupplierOnce<T>` | `get_once(self) -> T` | `FnOnce() -> T` |
+| `SupplierOnce<T>` | `get(self) -> T` | `FnOnce() -> T` |
 | `StatefulSupplier<T>` | `get(&mut self) -> T` | `FnMut() -> T` |
 | `Function<T, R>` | `apply(&self, input: &T) -> R` | `Fn(&T) -> R` |
 | `FunctionOnce<T, R>` | `apply_once(self, input: &T) -> R` | `FnOnce(&T) -> R` |

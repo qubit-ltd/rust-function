@@ -210,7 +210,7 @@ assert_eq!(factory.get(), "你好");
 无需输入参数生成一次值。
 
 **Trait**: `SupplierOnce<T>`
-**核心方法**: `get_once(self) -> T`
+**核心方法**: `get(self) -> T`
 **等价闭包**: `FnOnce() -> T`
 
 **实现类型**:
@@ -465,7 +465,7 @@ assert!(!tester.test());
 | `Mutator<T>` | `mutate(&mut self, value: &mut T)` | `FnMut(&mut T)` |
 | `MutatorOnce<T>` | `apply(self, value: &mut T)` | `FnOnce(&mut T)` |
 | `Supplier<T>` | `get(&self) -> T` | `Fn() -> T` |
-| `SupplierOnce<T>` | `get_once(self) -> T` | `FnOnce() -> T` |
+| `SupplierOnce<T>` | `get(self) -> T` | `FnOnce() -> T` |
 | `StatefulSupplier<T>` | `get(&mut self) -> T` | `FnMut() -> T` |
 | `Function<T, R>` | `apply(&self, input: &T) -> R` | `Fn(&T) -> R` |
 | `FunctionOnce<T, R>` | `apply_once(self, input: &T) -> R` | `FnOnce(&T) -> R` |
