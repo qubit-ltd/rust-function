@@ -124,12 +124,19 @@ use std::sync::{
     Mutex,
 };
 
-use crate::suppliers::macros::impl_supplier_debug_display;
+use crate::predicates::predicate::Predicate;
+use crate::suppliers::macros::{
+    impl_box_supplier_methods,
+    impl_shared_supplier_methods,
+    impl_supplier_clone,
+    impl_supplier_common_methods,
+    impl_supplier_debug_display,
+};
 use crate::suppliers::supplier_once::{
     BoxSupplierOnce,
     SupplierOnce,
 };
-use crate::transformers::stateful_transformer::StatefulTransformer;
+use crate::transformers::transformer::Transformer;
 
 // ==========================================================================
 // Supplier Trait
@@ -451,230 +458,13 @@ impl<T> BoxStatefulSupplier<T>
 where
     T: 'static,
 {
-    /// Creates a new `BoxStatefulSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxStatefulSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, Supplier};
-    ///
-    /// let mut supplier = BoxStatefulSupplier::new(|| 42);
-    /// assert_eq!(supplier.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut() -> T + 'static,
-    {
-        BoxStatefulSupplier {
-            function: Box::new(f),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(BoxStatefulSupplier<T>, (FnMut() -> T + 'static), |f| {
+        Box::new(f)
+    });
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `BoxStatefulSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: FnMut() -> T + 'static,
-    {
-        BoxStatefulSupplier {
-            function: Box::new(f),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// Returns a supplier that always produces the same value (via
-    /// cloning).
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, Supplier};
-    ///
-    /// let mut constant = BoxStatefulSupplier::constant(42);
-    /// assert_eq!(constant.get(), 42);
-    /// assert_eq!(constant.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + 'static,
-    {
-        BoxStatefulSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Consumes self and returns a new supplier that applies the
-    /// mapper to each output.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The mapper to apply to the output. Can be:
-    ///   - A closure: `|x: T| -> U`
-    ///   - A function pointer: `fn(T) -> U`
-    ///   - A `BoxMapper<T, U>`, `RcMapper<T, U>`, `ArcMapper<T, U>`
-    ///   - Any type implementing `StatefulTransformer<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `BoxStatefulSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using with closure
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, Supplier};
-    ///
-    /// let mut mapped = BoxStatefulSupplier::new(|| 10)
-    ///     .map(|x| x * 2)
-    ///     .map(|x| x + 5);
-    /// assert_eq!(mapped.get(), 25);
-    /// ```
-    ///
-    /// ## Using with StatefulTransformer object
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, BoxMapper, Supplier, StatefulTransformer};
-    ///
-    /// let mapper = BoxMapper::new(|x: i32| x * 2);
-    /// let mut supplier = BoxStatefulSupplier::new(|| 10)
-    ///     .map(mapper);
-    /// assert_eq!(supplier.get(), 20);
-    /// ```
-    pub fn map<U, F>(mut self, mut mapper: F) -> BoxStatefulSupplier<U>
-    where
-        F: StatefulTransformer<T, U> + 'static,
-        U: 'static,
-    {
-        BoxStatefulSupplier::new(move || mapper.apply(StatefulSupplier::get(&mut self)))
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// Returns a new supplier that returns `Some(value)` if the
-    /// predicate is satisfied, `None` otherwise.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `BoxStatefulSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, Supplier};
-    ///
-    /// let mut counter = 0;
-    /// let mut filtered = BoxStatefulSupplier::new(move || {
-    ///     counter += 1;
-    ///     counter
-    /// }).filter(|x| x % 2 == 0);
-    ///
-    /// assert_eq!(filtered.get(), None);     // 1 is odd
-    /// assert_eq!(filtered.get(), Some(2));  // 2 is even
-    /// ```
-    pub fn filter<P>(mut self, mut predicate: P) -> BoxStatefulSupplier<Option<T>>
-    where
-        P: FnMut(&T) -> bool + 'static,
-    {
-        BoxStatefulSupplier::new(move || {
-            let value = StatefulSupplier::get(&mut self);
-            if predicate(&value) {
-                Some(value)
-            } else {
-                None
-            }
-        })
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// Consumes both suppliers and returns a new supplier that
-    /// produces `(T, U)` tuples.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with. Can be any type
-    ///   implementing `Supplier<U>`
-    ///
-    /// # Returns
-    ///
-    /// A new `BoxStatefulSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{BoxStatefulSupplier, Supplier};
-    ///
-    /// let first = BoxStatefulSupplier::new(|| 42);
-    /// let second = BoxStatefulSupplier::new(|| "hello");
-    /// let mut zipped = first.zip(second);
-    ///
-    /// assert_eq!(zipped.get(), (42, "hello"));
-    /// ```
-    pub fn zip<S, U>(mut self, mut other: S) -> BoxStatefulSupplier<(T, U)>
-    where
-        S: StatefulSupplier<U> + 'static,
-        U: 'static,
-    {
-        BoxStatefulSupplier::new(move || {
-            (
-                StatefulSupplier::get(&mut self),
-                StatefulSupplier::get(&mut other),
-            )
-        })
-    }
+    // Generates: map(), filter(), zip()
+    impl_box_supplier_methods!(BoxStatefulSupplier<T>, StatefulSupplier);
 
     /// Creates a memoizing supplier.
     ///
@@ -750,6 +540,9 @@ impl<T> StatefulSupplier<T> for BoxStatefulSupplier<T> {
     // `Clone` bound is not satisfied.
 }
 
+// Generates: Debug and Display implementations for BoxStatefulSupplier<T>
+impl_supplier_debug_display!(BoxStatefulSupplier<T>);
+
 impl<T> SupplierOnce<T> for BoxStatefulSupplier<T>
 where
     T: 'static,
@@ -778,9 +571,6 @@ where
     // trait methods will not compile because the required `Clone`
     // bound is not satisfied.
 }
-
-// Generates: Debug and Display implementations for BoxStatefulSupplier<T>
-impl_supplier_debug_display!(BoxStatefulSupplier<T>);
 
 // ==========================================================================
 // ArcStatefulSupplier - Thread-safe Shared Ownership Implementation
@@ -863,246 +653,15 @@ impl<T> ArcStatefulSupplier<T>
 where
     T: Send + 'static,
 {
-    /// Creates a new `ArcStatefulSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcStatefulSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
-    ///
-    /// let supplier = ArcStatefulSupplier::new(|| 42);
-    /// let mut s = supplier;
-    /// assert_eq!(s.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut() -> T + Send + 'static,
-    {
-        ArcStatefulSupplier {
-            function: Arc::new(Mutex::new(f)),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        ArcStatefulSupplier<T>,
+        (FnMut() -> T + Send + 'static),
+        |f| Arc::new(Mutex::new(f))
+    );
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `ArcStatefulSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: FnMut() -> T + Send + 'static,
-    {
-        ArcStatefulSupplier {
-            function: Arc::new(Mutex::new(f)),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
-    ///
-    /// let constant = ArcStatefulSupplier::constant(42);
-    /// let mut s = constant;
-    /// assert_eq!(s.get(), 42);
-    /// assert_eq!(s.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + 'static,
-    {
-        ArcStatefulSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Borrows `&self`, doesn't consume the original supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The mapper to apply to the output. Can be:
-    ///   - A closure: `|x: T| -> U` (must be `Send`)
-    ///   - A function pointer: `fn(T) -> U`
-    ///   - A `BoxMapper<T, U>`, `RcMapper<T, U>`, `ArcMapper<T, U>`
-    ///   - Any type implementing `StatefulTransformer<T, U> + Send`
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `ArcStatefulSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using with closure
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
-    ///
-    /// let source = ArcStatefulSupplier::new(|| 10);
-    /// let mapped = source.map(|x| x * 2);
-    /// // source is still usable
-    /// let mut s = mapped;
-    /// assert_eq!(s.get(), 20);
-    /// ```
-    ///
-    /// ## Using with StatefulTransformer object
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, ArcMapper, Supplier, StatefulTransformer};
-    ///
-    /// let mapper = ArcMapper::new(|x: i32| x * 2);
-    /// let source = ArcStatefulSupplier::new(|| 10);
-    /// let mut supplier = source.map(mapper);
-    /// assert_eq!(supplier.get(), 20);
-    /// ```
-    pub fn map<U, F>(&self, mapper: F) -> ArcStatefulSupplier<U>
-    where
-        F: StatefulTransformer<T, U> + Send + 'static,
-        U: Send + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        let mapper = Arc::new(Mutex::new(mapper));
-        ArcStatefulSupplier {
-            function: Arc::new(Mutex::new(move || {
-                let value = self_fn.lock().unwrap()();
-                mapper.lock().unwrap().apply(value)
-            })),
-            name: None,
-        }
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `ArcStatefulSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
-    /// use std::sync::{Arc, Mutex};
-    ///
-    /// let counter = Arc::new(Mutex::new(0));
-    /// let counter_clone = Arc::clone(&counter);
-    /// let source = ArcStatefulSupplier::new(move || {
-    ///     let mut c = counter_clone.lock().unwrap();
-    ///     *c += 1;
-    ///     *c
-    /// });
-    /// let filtered = source.filter(|x| x % 2 == 0);
-    ///
-    /// let mut s = filtered;
-    /// assert_eq!(s.get(), None);     // 1 is odd
-    /// assert_eq!(s.get(), Some(2));  // 2 is even
-    /// ```
-    pub fn filter<P>(&self, predicate: P) -> ArcStatefulSupplier<Option<T>>
-    where
-        P: FnMut(&T) -> bool + Send + 'static,
-    {
-        let self_fn = Arc::clone(&self.function);
-        let predicate = Arc::new(Mutex::new(predicate));
-        ArcStatefulSupplier {
-            function: Arc::new(Mutex::new(move || {
-                let value = self_fn.lock().unwrap()();
-                if predicate.lock().unwrap()(&value) {
-                    Some(value)
-                } else {
-                    None
-                }
-            })),
-            name: None,
-        }
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with. Can be any type
-    ///   implementing `Supplier<U> + Send`. The supplier is consumed.
-    ///
-    /// # Returns
-    ///
-    /// A new `ArcStatefulSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
-    ///
-    /// let first = ArcStatefulSupplier::new(|| 42);
-    /// let second = ArcStatefulSupplier::new(|| "hello");
-    ///
-    /// let zipped = first.zip(second.clone());
-    ///
-    /// let mut z = zipped;
-    /// assert_eq!(z.get(), (42, "hello"));
-    ///
-    /// // second is still usable because it was cloned
-    /// let mut s = second;
-    /// assert_eq!(s.get(), "hello");
-    /// ```
-    pub fn zip<S, U>(&self, mut other: S) -> ArcStatefulSupplier<(T, U)>
-    where
-        S: StatefulSupplier<U> + Send + 'static,
-        U: Send + 'static,
-    {
-        let first = Arc::clone(&self.function);
-        ArcStatefulSupplier {
-            function: Arc::new(Mutex::new(move || (first.lock().unwrap()(), other.get()))),
-            name: None,
-        }
-    }
+    // Generates: map(), filter(), zip()
+    impl_shared_supplier_methods!(ArcStatefulSupplier<T>, StatefulSupplier, (Send + 'static));
 
     /// Creates a memoizing supplier.
     ///
@@ -1220,18 +779,11 @@ impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
     }
 }
 
-impl<T> Clone for ArcStatefulSupplier<T> {
-    /// Clones the `ArcStatefulSupplier`.
-    ///
-    /// Creates a new instance that shares the underlying function
-    /// with the original.
-    fn clone(&self) -> Self {
-        Self {
-            function: Arc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
+// Generates: Debug and Display implementations for ArcStatefulSupplier<T>
+impl_supplier_debug_display!(ArcStatefulSupplier<T>);
+
+// Generates: Clone implementation for ArcStatefulSupplier<T>
+impl_supplier_clone!(ArcStatefulSupplier<T>);
 
 impl<T> SupplierOnce<T> for ArcStatefulSupplier<T>
 where
@@ -1273,9 +825,6 @@ where
         move || f.lock().unwrap()()
     }
 }
-
-// Generates: Debug and Display implementations for ArcStatefulSupplier<T>
-impl_supplier_debug_display!(ArcStatefulSupplier<T>);
 
 // ==========================================================================
 // RcStatefulSupplier - Single-threaded Shared Ownership Implementation
@@ -1352,247 +901,19 @@ impl<T> RcStatefulSupplier<T>
 where
     T: 'static,
 {
-    /// Creates a new `RcStatefulSupplier`.
-    ///
-    /// # Parameters
-    ///
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new `RcStatefulSupplier<T>` instance
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    ///
-    /// let supplier = RcStatefulSupplier::new(|| 42);
-    /// let mut s = supplier;
-    /// assert_eq!(s.get(), 42);
-    /// ```
-    pub fn new<F>(f: F) -> Self
-    where
-        F: FnMut() -> T + 'static,
-    {
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(f)),
-            name: None,
-        }
-    }
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        RcStatefulSupplier<T>,
+        (FnMut() -> T + 'static),
+        |f| Rc::new(RefCell::new(f))
+    );
 
-    /// Creates a new named supplier.
-    ///
-    /// Wraps the provided closure and assigns it a name, which is
-    /// useful for debugging and logging purposes.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name for this supplier
-    /// * `f` - The closure to wrap
-    ///
-    /// # Returns
-    ///
-    /// A new named `RcStatefulSupplier<T>` instance wrapping the closure.
-    pub fn new_with_name<F>(name: &str, f: F) -> Self
-    where
-        F: FnMut() -> T + 'static,
-    {
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(f)),
-            name: Some(name.to_string()),
-        }
-    }
-
-    /// Gets the name of this supplier.
-    ///
-    /// # Returns
-    ///
-    /// Returns `Some(&str)` if a name was set, `None` otherwise.
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    /// Sets the name of this supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `name` - The name to set for this supplier
-    pub fn set_name(&mut self, name: &str) {
-        self.name = Some(name.to_string());
-    }
-
-    /// Creates a constant supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `value` - The constant value to return
-    ///
-    /// # Returns
-    ///
-    /// A constant supplier
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    ///
-    /// let constant = RcStatefulSupplier::constant(42);
-    /// let mut s = constant;
-    /// assert_eq!(s.get(), 42);
-    /// assert_eq!(s.get(), 42);
-    /// ```
-    pub fn constant(value: T) -> Self
-    where
-        T: Clone + 'static,
-    {
-        RcStatefulSupplier::new(move || value.clone())
-    }
-
-    /// Maps the output using a transformation function.
-    ///
-    /// Borrows `&self`, doesn't consume the original supplier.
-    ///
-    /// # Parameters
-    ///
-    /// * `mapper` - The mapper to apply to the output. Can be:
-    ///   - A closure: `|x: T| -> U`
-    ///   - A function pointer: `fn(T) -> U`
-    ///   - A `BoxMapper<T, U>`, `RcMapper<T, U>`, `ArcMapper<T, U>`
-    ///   - Any type implementing `StatefulTransformer<T, U>`
-    ///
-    /// # Returns
-    ///
-    /// A new mapped `RcStatefulSupplier<U>`
-    ///
-    /// # Examples
-    ///
-    /// ## Using with closure
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    ///
-    /// let source = RcStatefulSupplier::new(|| 10);
-    /// let mapped = source.map(|x| x * 2);
-    /// // source is still usable
-    /// let mut s = mapped;
-    /// assert_eq!(s.get(), 20);
-    /// ```
-    ///
-    /// ## Using with StatefulTransformer object
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, RcMapper, Supplier, StatefulTransformer};
-    ///
-    /// let mapper = RcMapper::new(|x: i32| x * 2);
-    /// let source = RcStatefulSupplier::new(|| 10);
-    /// let mut supplier = source.map(mapper);
-    /// assert_eq!(supplier.get(), 20);
-    /// ```
-    pub fn map<U, F>(&self, mapper: F) -> RcStatefulSupplier<U>
-    where
-        F: StatefulTransformer<T, U> + 'static,
-        U: 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        let mapper = Rc::new(RefCell::new(mapper));
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(move || {
-                let value = self_fn.borrow_mut()();
-                mapper.borrow_mut().apply(value)
-            })),
-            name: None,
-        }
-    }
-
-    /// Filters output based on a predicate.
-    ///
-    /// # Parameters
-    ///
-    /// * `predicate` - The predicate to test the supplied value
-    ///
-    /// # Returns
-    ///
-    /// A new filtered `RcStatefulSupplier<Option<T>>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    /// use std::rc::Rc;
-    /// use std::cell::RefCell;
-    ///
-    /// let counter = Rc::new(RefCell::new(0));
-    /// let counter_clone = Rc::clone(&counter);
-    /// let source = RcStatefulSupplier::new(move || {
-    ///     let mut c = counter_clone.borrow_mut();
-    ///     *c += 1;
-    ///     *c
-    /// });
-    /// let filtered = source.filter(|x| x % 2 == 0);
-    ///
-    /// let mut s = filtered;
-    /// assert_eq!(s.get(), None);     // 1 is odd
-    /// assert_eq!(s.get(), Some(2));  // 2 is even
-    /// ```
-    pub fn filter<P>(&self, predicate: P) -> RcStatefulSupplier<Option<T>>
-    where
-        P: FnMut(&T) -> bool + 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        let predicate = Rc::new(RefCell::new(predicate));
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(move || {
-                let value = self_fn.borrow_mut()();
-                if predicate.borrow_mut()(&value) {
-                    Some(value)
-                } else {
-                    None
-                }
-            })),
-            name: None,
-        }
-    }
-
-    /// Combines this supplier with another, producing a tuple.
-    ///
-    /// # Parameters
-    ///
-    /// * `other` - The other supplier to combine with. Can be any type
-    ///   implementing `Supplier<U>`. The supplier is consumed.
-    ///
-    /// # Returns
-    ///
-    /// A new `RcStatefulSupplier<(T, U)>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    ///
-    /// let first = RcStatefulSupplier::new(|| 42);
-    /// let second = RcStatefulSupplier::new(|| "hello");
-    ///
-    /// let zipped = first.zip(second.clone());
-    ///
-    /// let mut z = zipped;
-    /// assert_eq!(z.get(), (42, "hello"));
-    ///
-    /// // second is still usable because it was cloned
-    /// let mut s = second;
-    /// assert_eq!(s.get(), "hello");
-    /// ```
-    pub fn zip<S, U>(&self, mut other: S) -> RcStatefulSupplier<(T, U)>
-    where
-        S: StatefulSupplier<U> + 'static,
-        U: 'static,
-    {
-        let first = Rc::clone(&self.function);
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(move || (first.borrow_mut()(), other.get()))),
-            name: None,
-        }
-    }
+    // Generates: map(), filter(), zip()
+    impl_shared_supplier_methods!(
+        RcStatefulSupplier<T>,
+        StatefulSupplier,
+        ('static)
+    );
 
     /// Creates a memoizing supplier.
     ///
@@ -1703,18 +1024,11 @@ impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
     }
 }
 
-impl<T> Clone for RcStatefulSupplier<T> {
-    /// Clones the `RcStatefulSupplier`.
-    ///
-    /// Creates a new instance that shares the underlying function
-    /// with the original.
-    fn clone(&self) -> Self {
-        Self {
-            function: Rc::clone(&self.function),
-            name: self.name.clone(),
-        }
-    }
-}
+// Generates: Debug and Display implementations for RcStatefulSupplier<T>
+impl_supplier_debug_display!(RcStatefulSupplier<T>);
+
+// Generates: Clone implementation for RcStatefulSupplier<T>
+impl_supplier_clone!(RcStatefulSupplier<T>);
 
 impl<T> SupplierOnce<T> for RcStatefulSupplier<T>
 where
@@ -1756,9 +1070,6 @@ where
         move || f.borrow_mut()()
     }
 }
-
-// Generates: Debug and Display implementations for RcStatefulSupplier<T>
-impl_supplier_debug_display!(RcStatefulSupplier<T>);
 
 // ==========================================================================
 // Implement Supplier for Closures
@@ -1928,7 +1239,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn map<U, M>(self, mapper: M) -> BoxStatefulSupplier<U>
     where
-        M: StatefulTransformer<T, U> + 'static,
+        M: Transformer<T, U> + 'static,
         U: 'static,
         T: 'static,
     {
@@ -1964,7 +1275,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn filter<P>(self, predicate: P) -> BoxStatefulSupplier<Option<T>>
     where
-        P: FnMut(&T) -> bool + 'static,
+        P: Predicate<T> + 'static,
         T: 'static,
     {
         BoxStatefulSupplier::new(self).filter(predicate)
