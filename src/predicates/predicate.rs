@@ -22,6 +22,8 @@
 //! - **Repeatable**: Same input should produce the same result
 //! - **Deterministic**: Judgment logic should be predictable
 //!
+//! It is similar to the `Fn(&T) -> bool` trait in the standard library.
+//!
 //! ## Design Philosophy
 //!
 //! This module follows these principles:
