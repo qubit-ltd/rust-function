@@ -67,6 +67,8 @@
 //!
 //! Haixing Hu
 
+use crate::suppliers::macros::impl_supplier_debug_display;
+
 // ==========================================================================
 // SupplierOnce Trait
 // ==========================================================================
@@ -400,6 +402,9 @@ impl<T> SupplierOnce<T> for BoxSupplierOnce<T> {
     // does not implement. This limitation is inherent to any `FnOnce`-based
     // supplier that takes ownership of a non-cloneable resource.
 }
+
+// Generates: Debug and Display implementations for BoxSupplierOnce<T>
+impl_supplier_debug_display!(BoxSupplierOnce<T>);
 
 // ==========================================================================
 // Implement SupplierOnce for Closures

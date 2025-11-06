@@ -124,6 +124,7 @@ use std::sync::{
     Mutex,
 };
 
+use crate::suppliers::macros::impl_supplier_debug_display;
 use crate::suppliers::supplier_once::{
     BoxSupplierOnce,
     SupplierOnce,
@@ -778,6 +779,9 @@ where
     // bound is not satisfied.
 }
 
+// Generates: Debug and Display implementations for BoxStatefulSupplier<T>
+impl_supplier_debug_display!(BoxStatefulSupplier<T>);
+
 // ==========================================================================
 // ArcStatefulSupplier - Thread-safe Shared Ownership Implementation
 // ==========================================================================
@@ -1270,6 +1274,9 @@ where
     }
 }
 
+// Generates: Debug and Display implementations for ArcStatefulSupplier<T>
+impl_supplier_debug_display!(ArcStatefulSupplier<T>);
+
 // ==========================================================================
 // RcStatefulSupplier - Single-threaded Shared Ownership Implementation
 // ==========================================================================
@@ -1749,6 +1756,9 @@ where
         move || f.borrow_mut()()
     }
 }
+
+// Generates: Debug and Display implementations for RcStatefulSupplier<T>
+impl_supplier_debug_display!(RcStatefulSupplier<T>);
 
 // ==========================================================================
 // Implement Supplier for Closures
