@@ -22,7 +22,7 @@
 //!   - Single parameter: `ArcFunction<T, R>`
 //!   - Two parameters: `ArcBiFunction<T, U, R>`
 //! * `$conditional_type` - The conditional function type for when (e.g.,
-//!    ArcConditionalFunction)
+//!   ArcConditionalFunction)
 //! * `$predicate_conversion` - Method to convert predicate (into_arc or into_rc)
 //! * `$chained_function_trait` - The name of the function trait that chained
 //!   after the execution of this function (e.g., Function, BiFunction)

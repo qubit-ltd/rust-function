@@ -22,7 +22,7 @@
 //!   - Single parameter: `BoxFunction<T, R>`
 //!   - Two parameters: `BoxBiFunction<T, U, R>`
 //! * `$conditional_type` - The conditional function type for when (e.g.,
-//!    BoxConditionalFunction)
+//!   BoxConditionalFunction)
 //! * `$chained_function_trait` - The name of the function trait that chained
 //!   after the execution of this function (e.g., Function, BiFunction)
 //!
@@ -75,7 +75,7 @@
 ///   - Single parameter: `BoxFunction<T, R>`
 ///   - Two parameters: `BoxBiFunction<T, U, R>`
 /// * `$conditional_type` - The conditional function type for when (e.g.,
-///    BoxConditionalFunction)
+///   BoxConditionalFunction)
 /// * `$chained_function_trait` - The name of the function trait that chained
 ///   after the execution of this function (e.g., Function, BiFunction)
 ///
