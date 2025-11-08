@@ -45,6 +45,7 @@ use crate::transformers::macros::{
     impl_transformer_constant_method,
     impl_transformer_debug_display,
 };
+use crate::macros::impl_rc_conversions;
 use crate::macros::impl_box_conversions;
 use crate::transformers::transformer::Transformer;
 
@@ -397,68 +398,19 @@ impl<T, U, R> BiTransformer<T, U, R> for RcBiTransformer<T, U, R> {
         (self.function)(first, second)
     }
 
-    fn into_box(self) -> BoxBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        BoxBiTransformer::new(move |t, u| (self.function)(t, u))
-    }
-
-    fn into_rc(self) -> RcBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        // Zero-cost: directly return itself
-        self
-    }
+    // Generate all conversion methods using the unified macro
+    impl_rc_conversions!(
+        RcBiTransformer<T, U, R>,
+        BoxBiTransformer,
+        BoxBiTransformerOnce,
+        Fn(first: T, second: U) -> R
+    );
 
     // do NOT override RcBiTransformer::into_arc() because RcBiTransformer is not Send + Sync
     // and calling RcBiTransformer::into_arc() will cause a compile error
 
-    fn into_fn(self) -> impl Fn(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        move |t: T, u: U| (self.function)(t, u)
-    }
-
-    fn to_box(&self) -> BoxBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxBiTransformer::new(move |t, u| self_fn(t, u))
-    }
-
-    fn to_rc(&self) -> RcBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
-
     // do NOT override RcBiTransformer::to_arc() because RcBiTransformer is not Send + Sync
     // and calling RcBiTransformer::to_arc() will cause a compile error
-
-    fn to_fn(&self) -> impl Fn(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t: T, u: U| self_fn(t, u)
-    }
 }
 
 // ============================================================================

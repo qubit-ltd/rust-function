@@ -36,6 +36,8 @@ use crate::predicates::bi_predicate::{
     BoxBiPredicate,
     RcBiPredicate,
 };
+use crate::macros::impl_rc_conversions;
+use crate::BoxBiTransformerOnce;
 use crate::transformers::macros::{
     impl_box_conditional_transformer,
     impl_box_transformer_methods,
@@ -182,6 +184,31 @@ pub trait StatefulBiTransformer<T, U, R> {
         move |t, u| trans.apply(t, u)
     }
 
+    /// Converts to BoxBiTransformerOnce
+    ///
+    /// **⚠️ Consumes `self`**: The original bi-transformer becomes unavailable
+    /// after calling this method.
+    ///
+    /// # Default Implementation
+    ///
+    /// The default implementation wraps `self` in a `Box` and creates a
+    /// `BoxBiTransformerOnce`. Types can override this method to provide more
+    /// efficient conversions.
+    ///
+    /// # Returns
+    ///
+    /// Returns `BoxBiTransformerOnce<T, U, R>`
+    fn into_once(self) -> BoxBiTransformerOnce<T, U, R>
+    where
+        Self: Sized + 'static,
+        T: 'static,
+        U: 'static,
+        R: 'static,
+    {
+        let mut trans = self;
+        BoxBiTransformerOnce::new(move |t, u| trans.apply(t, u))
+    }
+
     /// Non-consuming conversion to `BoxStatefulBiTransformer` using `&self`.
     ///
     /// Default implementation clones `self` and delegates to `into_box`.
@@ -233,6 +260,19 @@ pub trait StatefulBiTransformer<T, U, R> {
         R: 'static,
     {
         self.clone().into_fn()
+    }
+
+    /// Non-consuming conversion to `BoxBiTransformerOnce` using `&self`.
+    ///
+    /// Default implementation clones `self` and delegates to `into_once`.
+    fn to_once(&self) -> BoxBiTransformerOnce<T, U, R>
+    where
+        Self: Sized + Clone + 'static,
+        T: 'static,
+        U: 'static,
+        R: 'static,
+    {
+        self.clone().into_once()
     }
 }
 
@@ -390,51 +430,13 @@ impl<T, U, R> StatefulBiTransformer<T, U, R> for RcStatefulBiTransformer<T, U, R
         self_fn(first, second)
     }
 
-    fn into_box(self) -> BoxStatefulBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        BoxStatefulBiTransformer::new(move |t, u| {
-            let mut self_fn = self.function.borrow_mut();
-            self_fn(t, u)
-        })
-    }
-
-    fn into_rc(self) -> RcStatefulBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        // Zero-cost: directly return itself
-        self
-    }
-
-    // do NOT override RcStatefulBiTransformer::into_arc() because RcStatefulBiTransformer is not Send + Sync
-    // and calling RcStatefulBiTransformer::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl FnMut(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        move |t: T, u: U| {
-            let mut self_fn = self.function.borrow_mut();
-            self_fn(t, u)
-        }
-    }
-
-    fn to_rc(&self) -> RcStatefulBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
+    // Generate all conversion methods using the unified macro
+    impl_rc_conversions!(
+        RcStatefulBiTransformer<T, U, R>,
+        BoxStatefulBiTransformer,
+        BoxBiTransformerOnce,
+        FnMut(first: T, second: U) -> R
+    );
 }
 
 // ============================================================================
