@@ -469,7 +469,103 @@ impl<T, U> BiConsumer<T, U> for BoxBiConsumer<T, U> {
 impl_consumer_debug_display!(BoxBiConsumer<T, U>);
 
 // =======================================================================
-// 3. ArcBiConsumer - Thread-Safe Shared Ownership
+// 3. RcBiConsumer - Single-Threaded Shared Ownership
+// =======================================================================
+
+/// RcBiConsumer struct
+///
+/// A readonly bi-consumer implementation based on `Rc<dyn Fn(&T, &U)>`
+/// for single-threaded shared ownership scenarios. No need for RefCell
+/// because operations are readonly.
+///
+/// # Features
+///
+/// - **Shared Ownership**: Cloneable via `Rc`, multiple owners allowed
+/// - **Single-Threaded**: Not thread-safe, cannot send across threads
+/// - **No Interior Mutability Overhead**: No need for RefCell because
+///   readonly
+/// - **Non-Consuming API**: `and_then` borrows `&self`, original remains
+///   usable
+///
+/// # Use Cases
+///
+/// Choose `RcBiConsumer` when:
+/// - Need to share readonly bi-consumer within a single thread
+/// - Pure observation operations, performance critical
+/// - Single-threaded UI framework event handling
+///
+/// # Performance Advantages
+///
+/// `RcBiConsumer` has neither Arc's atomic operation overhead nor
+/// RefCell's runtime borrow checking overhead, making it the best
+/// performing among the three readonly bi-consumer types.
+///
+/// # Examples
+///
+/// ```rust
+/// use prism3_function::{BiConsumer, RcBiConsumer};
+///
+/// let consumer = RcBiConsumer::new(|x: &i32, y: &i32| {
+///     println!("Sum: {}", x + y);
+/// });
+/// let clone = consumer.clone();
+///
+/// consumer.accept(&5, &3);
+/// clone.accept(&10, &20);
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct RcBiConsumer<T, U> {
+    function: Rc<BiConsumerFn<T, U>>,
+    name: Option<String>,
+}
+
+impl<T, U> RcBiConsumer<T, U>
+where
+    T: 'static,
+    U: 'static,
+{
+    // Generates: new(), new_with_name(), name(), set_name(), noop()
+    impl_consumer_common_methods!(
+        RcBiConsumer<T, U>,
+        (Fn(&T, &U) + 'static),
+        |f| Rc::new(f)
+    );
+
+    // Generates: when() and and_then() methods that borrow &self (Rc can clone)
+    impl_shared_consumer_methods!(
+        RcBiConsumer<T, U>,
+        RcConditionalBiConsumer,
+        into_rc,
+        BiConsumer,
+        'static
+    );
+}
+
+impl<T, U> BiConsumer<T, U> for RcBiConsumer<T, U> {
+    fn accept(&self, first: &T, second: &U) {
+        (self.function)(first, second)
+    }
+
+    // Use macro to implement conversion methods
+    impl_rc_conversions!(
+        RcBiConsumer<T, U>,
+        BoxBiConsumer,
+        BoxBiConsumerOnce,
+        Fn(t: &T, u: &U)
+    );
+}
+
+// Use macro to generate Clone implementation
+impl_consumer_clone!(RcBiConsumer<T, U>);
+
+// Use macro to generate Debug and Display implementations
+impl_consumer_debug_display!(RcBiConsumer<T, U>);
+
+// =======================================================================
+// 4. ArcBiConsumer - Thread-Safe Shared Ownership
 // =======================================================================
 
 /// ArcBiConsumer struct
@@ -621,102 +717,6 @@ impl_consumer_clone!(ArcBiConsumer<T, U>);
 
 // Use macro to generate Debug and Display implementations
 impl_consumer_debug_display!(ArcBiConsumer<T, U>);
-
-// =======================================================================
-// 4. RcBiConsumer - Single-Threaded Shared Ownership
-// =======================================================================
-
-/// RcBiConsumer struct
-///
-/// A readonly bi-consumer implementation based on `Rc<dyn Fn(&T, &U)>`
-/// for single-threaded shared ownership scenarios. No need for RefCell
-/// because operations are readonly.
-///
-/// # Features
-///
-/// - **Shared Ownership**: Cloneable via `Rc`, multiple owners allowed
-/// - **Single-Threaded**: Not thread-safe, cannot send across threads
-/// - **No Interior Mutability Overhead**: No need for RefCell because
-///   readonly
-/// - **Non-Consuming API**: `and_then` borrows `&self`, original remains
-///   usable
-///
-/// # Use Cases
-///
-/// Choose `RcBiConsumer` when:
-/// - Need to share readonly bi-consumer within a single thread
-/// - Pure observation operations, performance critical
-/// - Single-threaded UI framework event handling
-///
-/// # Performance Advantages
-///
-/// `RcBiConsumer` has neither Arc's atomic operation overhead nor
-/// RefCell's runtime borrow checking overhead, making it the best
-/// performing among the three readonly bi-consumer types.
-///
-/// # Examples
-///
-/// ```rust
-/// use prism3_function::{BiConsumer, RcBiConsumer};
-///
-/// let consumer = RcBiConsumer::new(|x: &i32, y: &i32| {
-///     println!("Sum: {}", x + y);
-/// });
-/// let clone = consumer.clone();
-///
-/// consumer.accept(&5, &3);
-/// clone.accept(&10, &20);
-/// ```
-///
-/// # Author
-///
-/// Haixing Hu
-pub struct RcBiConsumer<T, U> {
-    function: Rc<BiConsumerFn<T, U>>,
-    name: Option<String>,
-}
-
-impl<T, U> RcBiConsumer<T, U>
-where
-    T: 'static,
-    U: 'static,
-{
-    // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(
-        RcBiConsumer<T, U>,
-        (Fn(&T, &U) + 'static),
-        |f| Rc::new(f)
-    );
-
-    // Generates: when() and and_then() methods that borrow &self (Rc can clone)
-    impl_shared_consumer_methods!(
-        RcBiConsumer<T, U>,
-        RcConditionalBiConsumer,
-        into_rc,
-        BiConsumer,
-        'static
-    );
-}
-
-impl<T, U> BiConsumer<T, U> for RcBiConsumer<T, U> {
-    fn accept(&self, first: &T, second: &U) {
-        (self.function)(first, second)
-    }
-
-    // Use macro to implement conversion methods
-    impl_rc_conversions!(
-        RcBiConsumer<T, U>,
-        BoxBiConsumer,
-        BoxBiConsumerOnce,
-        Fn(t: &T, u: &U)
-    );
-}
-
-// Use macro to generate Clone implementation
-impl_consumer_clone!(RcBiConsumer<T, U>);
-
-// Use macro to generate Debug and Display implementations
-impl_consumer_debug_display!(RcBiConsumer<T, U>);
 
 // =======================================================================
 // 5. Implement BiConsumer trait for closures
