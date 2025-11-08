@@ -175,6 +175,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::impl_box_into_conversions;
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -506,26 +507,12 @@ impl<T: 'static> Predicate<T> for BoxPredicate<T> {
         (self.function)(value)
     }
 
-    fn into_box(self) -> BoxPredicate<T> {
-        self
-    }
-
-    fn into_rc(self) -> RcPredicate<T> {
-        RcPredicate {
-            function: Rc::from(self.function),
-            name: self.name,
-        }
-    }
-
-    // do NOT override Predicate::into_arc() because BoxPredicate is not Send + Sync
-    // and calling BoxPredicate::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl Fn(&T) -> bool {
-        move |value: &T| (self.function)(value)
-    }
-
-    // do NOT override Predicate::to_xxx() because BoxPredicate is not Clone
-    // and calling BoxPredicate::to_xxx() will cause a compile error
+    // Generates: into_box(), into_rc(), into_fn()
+    impl_box_into_conversions!(
+        BoxPredicate<T>,
+        RcPredicate,
+        impl Fn(&T) -> bool
+    );
 }
 
 /// An Rc-based predicate with single-threaded shared ownership.

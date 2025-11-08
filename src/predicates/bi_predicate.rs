@@ -148,6 +148,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::impl_box_into_conversions;
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -469,40 +470,12 @@ impl<T, U> BiPredicate<T, U> for BoxBiPredicate<T, U> {
         (self.function)(first, second)
     }
 
-    // Use optimized zero-cost conversion for into_box
-    fn into_box(self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self
-    }
-
-    fn into_rc(self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        RcBiPredicate {
-            function: Rc::new(move |first, second| (self.function)(first, second)),
-            name: self.name.clone(),
-        }
-    }
-
-    // do NOT override BoxBiPredicate::into_arc() because BoxBiPredicate is not Send + Sync
-    // and calling BoxBiPredicate::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl Fn(&T, &U) -> bool
-    where
-        Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        move |first, second| (self.function)(first, second)
-    }
-
-    // do NOT override BoxBiPredicate::to_xxx() because BoxBiPredicate is not Clone
-    // and calling BoxBiPredicate::to_xxx() will cause a compile error
+    // Generates: into_box(), into_rc(), into_fn()
+    impl_box_into_conversions!(
+        BoxBiPredicate<T, U>,
+        RcBiPredicate,
+        impl Fn(&T, &U) -> bool
+    );
 }
 
 /// An Rc-based bi-predicate with single-threaded shared ownership.
