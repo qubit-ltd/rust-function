@@ -562,6 +562,164 @@ impl<T> StatefulSupplier<T> for BoxStatefulSupplier<T> {
 }
 
 // ==========================================================================
+// RcStatefulSupplier - Single-threaded Shared Ownership Implementation
+// ==========================================================================
+
+/// Single-threaded shared ownership supplier.
+///
+/// Uses `Rc<RefCell<dyn FnMut() -> T>>` for single-threaded shared
+/// ownership. Can be cloned but not sent across threads.
+///
+/// # Ownership Model
+///
+/// Like `ArcStatefulSupplier`, methods borrow `&self` instead of consuming
+/// `self`:
+///
+/// ```rust
+/// use prism3_function::{RcStatefulSupplier, Supplier};
+///
+/// let source = RcStatefulSupplier::new(|| 10);
+/// let mapped = source.map(|x| x * 2);
+/// // source is still usable here!
+/// ```
+///
+/// # Examples
+///
+/// ## Shared Counter
+///
+/// ```rust
+/// use prism3_function::{RcStatefulSupplier, Supplier};
+/// use std::rc::Rc;
+/// use std::cell::RefCell;
+///
+/// let counter = Rc::new(RefCell::new(0));
+/// let counter_clone = Rc::clone(&counter);
+///
+/// let supplier = RcStatefulSupplier::new(move || {
+///     let mut c = counter_clone.borrow_mut();
+///     *c += 1;
+///     *c
+/// });
+///
+/// let mut s1 = supplier.clone();
+/// let mut s2 = supplier.clone();
+/// assert_eq!(s1.get(), 1);
+/// assert_eq!(s2.get(), 2);
+/// ```
+///
+/// ## Reusable Transformations
+///
+/// ```rust
+/// use prism3_function::{RcStatefulSupplier, Supplier};
+///
+/// let base = RcStatefulSupplier::new(|| 10);
+/// let doubled = base.map(|x| x * 2);
+/// let tripled = base.map(|x| x * 3);
+///
+/// let mut b = base;
+/// let mut d = doubled;
+/// let mut t = tripled;
+/// assert_eq!(b.get(), 10);
+/// assert_eq!(d.get(), 20);
+/// assert_eq!(t.get(), 30);
+/// ```
+///
+/// # Author
+///
+/// Haixing Hu
+pub struct RcStatefulSupplier<T> {
+    function: Rc<RefCell<dyn FnMut() -> T>>,
+    name: Option<String>,
+}
+
+impl<T> RcStatefulSupplier<T>
+where
+    T: 'static,
+{
+    // Generates: new(), new_with_name(), name(), set_name(), constant()
+    impl_supplier_common_methods!(
+        RcStatefulSupplier<T>,
+        (FnMut() -> T + 'static),
+        |f| Rc::new(RefCell::new(f))
+    );
+
+    // Generates: map(), filter(), zip()
+    impl_shared_supplier_methods!(
+        RcStatefulSupplier<T>,
+        StatefulSupplier,
+        ('static)
+    );
+
+    /// Creates a memoizing supplier.
+    ///
+    /// # Returns
+    ///
+    /// A new memoized `RcStatefulSupplier<T>`
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{RcStatefulSupplier, Supplier};
+    /// use std::rc::Rc;
+    /// use std::cell::RefCell;
+    ///
+    /// let call_count = Rc::new(RefCell::new(0));
+    /// let call_count_clone = Rc::clone(&call_count);
+    /// let source = RcStatefulSupplier::new(move || {
+    ///     let mut c = call_count_clone.borrow_mut();
+    ///     *c += 1;
+    ///     42
+    /// });
+    /// let memoized = source.memoize();
+    ///
+    /// let mut s = memoized;
+    /// assert_eq!(s.get(), 42); // Calls underlying function
+    /// assert_eq!(s.get(), 42); // Returns cached value
+    /// assert_eq!(*call_count.borrow(), 1);
+    /// ```
+    pub fn memoize(&self) -> RcStatefulSupplier<T>
+    where
+        T: Clone + 'static,
+    {
+        let self_fn = Rc::clone(&self.function);
+        let cache: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None));
+        RcStatefulSupplier {
+            function: Rc::new(RefCell::new(move || {
+                let mut cache_ref = cache.borrow_mut();
+                if let Some(ref cached) = *cache_ref {
+                    cached.clone()
+                } else {
+                    let value = self_fn.borrow_mut()();
+                    *cache_ref = Some(value.clone());
+                    value
+                }
+            })),
+            name: None,
+        }
+    }
+}
+
+// Generates: Debug and Display implementations for RcStatefulSupplier<T>
+impl_supplier_debug_display!(RcStatefulSupplier<T>);
+
+// Generates: Clone implementation for RcStatefulSupplier<T>
+impl_supplier_clone!(RcStatefulSupplier<T>);
+
+impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
+    fn get(&mut self) -> T {
+        (self.function.borrow_mut())()
+    }
+
+    // Generate all conversion methods using the unified macro
+    impl_rc_conversions!(
+        RcStatefulSupplier<T>,
+        BoxStatefulSupplier,
+        BoxSupplierOnce,
+        FnMut() -> T
+    );
+}
+
+// ==========================================================================
 // ArcStatefulSupplier - Thread-safe Shared Ownership Implementation
 // ==========================================================================
 
@@ -772,164 +930,6 @@ impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
         let function = Arc::clone(&self.function);
         move || function.lock().unwrap()()
     }
-}
-
-// ==========================================================================
-// RcStatefulSupplier - Single-threaded Shared Ownership Implementation
-// ==========================================================================
-
-/// Single-threaded shared ownership supplier.
-///
-/// Uses `Rc<RefCell<dyn FnMut() -> T>>` for single-threaded shared
-/// ownership. Can be cloned but not sent across threads.
-///
-/// # Ownership Model
-///
-/// Like `ArcStatefulSupplier`, methods borrow `&self` instead of consuming
-/// `self`:
-///
-/// ```rust
-/// use prism3_function::{RcStatefulSupplier, Supplier};
-///
-/// let source = RcStatefulSupplier::new(|| 10);
-/// let mapped = source.map(|x| x * 2);
-/// // source is still usable here!
-/// ```
-///
-/// # Examples
-///
-/// ## Shared Counter
-///
-/// ```rust
-/// use prism3_function::{RcStatefulSupplier, Supplier};
-/// use std::rc::Rc;
-/// use std::cell::RefCell;
-///
-/// let counter = Rc::new(RefCell::new(0));
-/// let counter_clone = Rc::clone(&counter);
-///
-/// let supplier = RcStatefulSupplier::new(move || {
-///     let mut c = counter_clone.borrow_mut();
-///     *c += 1;
-///     *c
-/// });
-///
-/// let mut s1 = supplier.clone();
-/// let mut s2 = supplier.clone();
-/// assert_eq!(s1.get(), 1);
-/// assert_eq!(s2.get(), 2);
-/// ```
-///
-/// ## Reusable Transformations
-///
-/// ```rust
-/// use prism3_function::{RcStatefulSupplier, Supplier};
-///
-/// let base = RcStatefulSupplier::new(|| 10);
-/// let doubled = base.map(|x| x * 2);
-/// let tripled = base.map(|x| x * 3);
-///
-/// let mut b = base;
-/// let mut d = doubled;
-/// let mut t = tripled;
-/// assert_eq!(b.get(), 10);
-/// assert_eq!(d.get(), 20);
-/// assert_eq!(t.get(), 30);
-/// ```
-///
-/// # Author
-///
-/// Haixing Hu
-pub struct RcStatefulSupplier<T> {
-    function: Rc<RefCell<dyn FnMut() -> T>>,
-    name: Option<String>,
-}
-
-impl<T> RcStatefulSupplier<T>
-where
-    T: 'static,
-{
-    // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(
-        RcStatefulSupplier<T>,
-        (FnMut() -> T + 'static),
-        |f| Rc::new(RefCell::new(f))
-    );
-
-    // Generates: map(), filter(), zip()
-    impl_shared_supplier_methods!(
-        RcStatefulSupplier<T>,
-        StatefulSupplier,
-        ('static)
-    );
-
-    /// Creates a memoizing supplier.
-    ///
-    /// # Returns
-    ///
-    /// A new memoized `RcStatefulSupplier<T>`
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use prism3_function::{RcStatefulSupplier, Supplier};
-    /// use std::rc::Rc;
-    /// use std::cell::RefCell;
-    ///
-    /// let call_count = Rc::new(RefCell::new(0));
-    /// let call_count_clone = Rc::clone(&call_count);
-    /// let source = RcStatefulSupplier::new(move || {
-    ///     let mut c = call_count_clone.borrow_mut();
-    ///     *c += 1;
-    ///     42
-    /// });
-    /// let memoized = source.memoize();
-    ///
-    /// let mut s = memoized;
-    /// assert_eq!(s.get(), 42); // Calls underlying function
-    /// assert_eq!(s.get(), 42); // Returns cached value
-    /// assert_eq!(*call_count.borrow(), 1);
-    /// ```
-    pub fn memoize(&self) -> RcStatefulSupplier<T>
-    where
-        T: Clone + 'static,
-    {
-        let self_fn = Rc::clone(&self.function);
-        let cache: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None));
-        RcStatefulSupplier {
-            function: Rc::new(RefCell::new(move || {
-                let mut cache_ref = cache.borrow_mut();
-                if let Some(ref cached) = *cache_ref {
-                    cached.clone()
-                } else {
-                    let value = self_fn.borrow_mut()();
-                    *cache_ref = Some(value.clone());
-                    value
-                }
-            })),
-            name: None,
-        }
-    }
-}
-
-// Generates: Debug and Display implementations for RcStatefulSupplier<T>
-impl_supplier_debug_display!(RcStatefulSupplier<T>);
-
-// Generates: Clone implementation for RcStatefulSupplier<T>
-impl_supplier_clone!(RcStatefulSupplier<T>);
-
-impl<T> StatefulSupplier<T> for RcStatefulSupplier<T> {
-    fn get(&mut self) -> T {
-        (self.function.borrow_mut())()
-    }
-
-    // Generate all conversion methods using the unified macro
-    impl_rc_conversions!(
-        RcStatefulSupplier<T>,
-        BoxStatefulSupplier,
-        BoxSupplierOnce,
-        FnMut() -> T
-    );
 }
 
 // ==========================================================================
