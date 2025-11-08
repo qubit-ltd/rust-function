@@ -32,6 +32,7 @@ use crate::predicates::bi_predicate::{
     BoxBiPredicate,
     RcBiPredicate,
 };
+use crate::transformers::bi_transformer_once::BoxBiTransformerOnce;
 use crate::transformers::macros::{
     impl_box_conditional_transformer,
     impl_box_transformer_methods,
@@ -44,6 +45,7 @@ use crate::transformers::macros::{
     impl_transformer_constant_method,
     impl_transformer_debug_display,
 };
+use crate::macros::impl_box_into_conversions;
 use crate::transformers::transformer::Transformer;
 
 // ============================================================================
@@ -174,6 +176,26 @@ pub trait BiTransformer<T, U, R> {
         move |t, u| self.apply(t, u)
     }
 
+    /// Convert to BiTransformerOnce
+    ///
+    /// **⚠️ Consumes `self`**: The original bi-transformer will be unavailable after calling this method.
+    ///
+    /// Converts a reusable bi-transformer to a one-time bi-transformer that consumes itself on use.
+    /// This enables passing `BiTransformer` to functions that require `BiTransformerOnce`.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `BoxBiTransformerOnce<T, U, R>`
+    fn into_once(self) -> BoxBiTransformerOnce<T, U, R>
+    where
+        Self: Sized + 'static,
+        T: 'static,
+        U: 'static,
+        R: 'static,
+    {
+        BoxBiTransformerOnce::new(move |t, u| self.apply(t, u))
+    }
+
     /// Non-consuming conversion to `BoxBiTransformer` using `&self`.
     ///
     /// Default implementation clones `self` and delegates to `into_box`.
@@ -225,6 +247,24 @@ pub trait BiTransformer<T, U, R> {
         R: 'static,
     {
         self.clone().into_fn()
+    }
+
+    /// Convert to BiTransformerOnce without consuming self
+    ///
+    /// **⚠️ Requires Clone**: This method requires `Self` to implement `Clone`.
+    /// Clones the current bi-transformer and converts the clone to a one-time bi-transformer.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `BoxBiTransformerOnce<T, U, R>`
+    fn to_once(&self) -> BoxBiTransformerOnce<T, U, R>
+    where
+        Self: Clone + 'static,
+        T: 'static,
+        U: 'static,
+        R: 'static,
+    {
+        self.clone().into_once()
     }
 }
 

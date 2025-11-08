@@ -51,6 +51,7 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
+use crate::macros::impl_box_into_conversions;
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
