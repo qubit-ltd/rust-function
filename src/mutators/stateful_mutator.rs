@@ -668,9 +668,6 @@ impl<T> StatefulMutator<T> for BoxStatefulMutator<T> {
         BoxMutatorOnce,
         impl FnMut(&mut T)
     );
-
-    // do NOT override Mutator::to_xxx() because BoxMutator is not Clone
-    // and calling BoxMutator::to_xxx() will cause a compile error
 }
 
 // Generate Debug and Display trait implementations

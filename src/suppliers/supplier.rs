@@ -534,7 +534,11 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(BoxSupplier<T>, (Fn() -> T + 'static), |f| Box::new(f));
+    impl_supplier_common_methods!(
+        BoxSupplier<T>,
+        (Fn() -> T + 'static),
+        |f| Box::new(f)
+    );
 
     // Generates: map(), filter(), zip()
     impl_box_supplier_methods!(BoxSupplier<T>, Supplier);
@@ -555,16 +559,6 @@ impl<T> Supplier<T> for BoxSupplier<T> {
         BoxSupplierOnce,
         impl FnMut() -> T
     );
-
-    // Note: to_box, to_rc, to_arc, and to_fn cannot be implemented
-    // for BoxSupplier because it does not implement Clone.
-    // Box provides unique ownership and cannot be cloned unless
-    // the inner type implements Clone, which dyn Fn() -> T does not.
-    //
-    // If you call these methods on BoxSupplier, the compiler
-    // will fail with an error indicating that BoxSupplier<T>
-    // does not implement Clone, which is required by the default
-    // implementations of to_box, to_rc, to_arc, and to_fn.
 }
 
 // ======================================================================

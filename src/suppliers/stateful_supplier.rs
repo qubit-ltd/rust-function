@@ -546,11 +546,6 @@ impl<T> StatefulSupplier<T> for BoxStatefulSupplier<T> {
         BoxSupplierOnce,
         impl FnMut() -> T
     );
-
-    // NOTE: `BoxStatefulSupplier` is not `Clone`, so it cannot offer optimized
-    // `to_box`, `to_rc`, `to_arc`, or `to_fn` implementations. Invoking
-    // the default trait methods will not compile because the required
-    // `Clone` bound is not satisfied.
 }
 
 // ==========================================================================
