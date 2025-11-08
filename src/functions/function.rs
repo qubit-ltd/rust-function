@@ -45,7 +45,7 @@ use crate::{
             impl_shared_function_methods,
         },
     },
-    macros::impl_box_into_conversions,
+    macros::{impl_box_into_conversions, impl_rc_conversions},
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
@@ -519,88 +519,13 @@ impl<T, R> Function<T, R> for RcFunction<T, R> {
         (self.function)(t)
     }
 
-    fn into_box(self) -> BoxFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxFunction::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    // Override with zero-cost implementation: directly return itself
-    fn into_rc(self) -> RcFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        self
-    }
-
-    // do NOT override RcFunction::into_arc() because RcFunction is not Send + Sync
-    // and calling RcFunction::into_arc() will cause a compile error
-
-    // Override with optimized implementation: wrap the Rc in a
-    // closure to avoid double indirection
-    fn into_fn(self) -> impl Fn(&T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        move |t| (self.function)(t)
-    }
-
-    // Override with optimized implementation: create BoxFunctionOnce
-    fn into_once(self) -> BoxFunctionOnce<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxFunctionOnce::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    // Override with optimized implementation: clone the Rc (cheap)
-    fn to_box(&self) -> BoxFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxFunction::new_with_optional_name(move |t| self_fn(t), self_name)
-    }
-
-    // Override with zero-cost implementation: clone itself
-    fn to_rc(&self) -> RcFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
-
-    // do NOT override RcFunction::to_arc() because RcFunction is not Send + Sync
-    // and calling RcFunction::to_arc() will cause a compile error
-
-    // Override with optimized implementation: clone the Rc (cheap)
-    fn to_fn(&self) -> impl Fn(&T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| self_fn(t)
-    }
-
-    // Override with optimized implementation: clone the Rc (cheap)
-    fn to_once(&self) -> BoxFunctionOnce<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxFunctionOnce::new_with_optional_name(move |t| self_fn(t), self_name)
-    }
+    // Use macro to implement conversion methods
+    impl_rc_conversions!(
+        RcFunction<T, R>,
+        BoxFunction,
+        BoxFunctionOnce,
+        Fn(t: &T) -> R
+    );
 }
 
 // ============================================================================

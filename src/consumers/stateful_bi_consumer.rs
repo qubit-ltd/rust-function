@@ -900,8 +900,7 @@ impl<T, U> StatefulBiConsumer<T, U> for RcStatefulBiConsumer<T, U> {
         RcStatefulBiConsumer<T, U>,
         BoxStatefulBiConsumer,
         BoxBiConsumerOnce,
-        impl FnMut(&T, &U),
-        borrow_mut
+        FnMut(t: &T, u: &U)
     );
 }
 

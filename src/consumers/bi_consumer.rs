@@ -708,7 +708,7 @@ impl<T, U> BiConsumer<T, U> for RcBiConsumer<T, U> {
         RcBiConsumer<T, U>,
         BoxBiConsumer,
         BoxBiConsumerOnce,
-        impl Fn(&T, &U)
+        Fn(t: &T, u: &U)
     );
 }
 

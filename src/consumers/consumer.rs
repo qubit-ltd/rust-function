@@ -483,7 +483,7 @@ impl<T> Consumer<T> for RcConsumer<T> {
         RcConsumer<T>,
         BoxConsumer,
         BoxConsumerOnce,
-        impl Fn(&T)
+        Fn(t: &T)
     );
 }
 

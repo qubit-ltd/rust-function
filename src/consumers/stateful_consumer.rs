@@ -688,8 +688,7 @@ impl<T> StatefulConsumer<T> for RcStatefulConsumer<T> {
         RcStatefulConsumer<T>,
         BoxStatefulConsumer,
         BoxConsumerOnce,
-        impl FnMut(&T),
-        borrow_mut
+        FnMut(t: &T)
     );
 }
 

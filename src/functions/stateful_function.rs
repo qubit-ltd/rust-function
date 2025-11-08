@@ -46,7 +46,7 @@ use crate::{
         impl_shared_function_methods,
     },
     functions::function_once::BoxFunctionOnce,
-    macros::impl_box_into_conversions,
+    macros::{impl_box_into_conversions, impl_rc_conversions},
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
@@ -517,91 +517,13 @@ impl<T, R> StatefulFunction<T, R> for RcStatefulFunction<T, R> {
         (self.function.borrow_mut())(t)
     }
 
-    fn into_box(self) -> BoxStatefulFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxStatefulFunction::new_with_optional_name(
-            move |t| self.function.borrow_mut()(t),
-            self.name,
-        )
-    }
-
-    fn into_rc(self) -> RcStatefulFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        self
-    }
-
-    // do NOT override StatefulFunction::into_arc() because RcStatefulFunction is not Send + Sync
-    // and calling RcStatefulFunction::into_arc() will cause a compile error
-
-    fn into_fn(self) -> impl FnMut(&T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        move |t| (self.function.borrow_mut())(t)
-    }
-
-    fn into_once(self) -> BoxFunctionOnce<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxFunctionOnce::new_with_optional_name(
-            move |t| (self.function.borrow_mut())(t),
-            self.name,
-        )
-    }
-
-    // Override with optimized implementation: clone the Rc (cheap)
-    fn to_box(&self) -> BoxStatefulFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxStatefulFunction::new_with_optional_name(move |t| self_fn.borrow_mut()(t), self_name)
-    }
-
-    // Override with zero-cost implementation: clone itself
-    fn to_rc(&self) -> RcStatefulFunction<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
-
-    // do NOT override RcFunction::to_arc() because RcFunction is not Send + Sync
-    // and calling RcFunction::to_arc() will cause a compile error
-
-    // Override with optimized implementation: clone the Rc (cheap)
-    fn to_fn(&self) -> impl FnMut(&T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| self_fn.borrow_mut()(t)
-    }
-
-    fn to_once(&self) -> BoxFunctionOnce<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxFunctionOnce::new_with_optional_name(
-            move |t| self_fn.borrow_mut()(t),
-            self.name.clone(),
-        )
-    }
+    // Use macro to implement conversion methods
+    impl_rc_conversions!(
+        RcStatefulFunction<T, R>,
+        BoxStatefulFunction,
+        BoxFunctionOnce,
+        FnMut(t: &T) -> R
+    );
 }
 
 // ============================================================================
