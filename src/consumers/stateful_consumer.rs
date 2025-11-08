@@ -54,7 +54,11 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -785,90 +789,14 @@ impl<T> StatefulConsumer<T> for ArcStatefulConsumer<T> {
         (self.function.lock().unwrap())(value)
     }
 
-    fn into_box(self) -> BoxStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        BoxStatefulConsumer::new_with_optional_name(
-            move |t| self.function.lock().unwrap()(t),
-            self.name,
-        )
-    }
-
-    fn into_rc(self) -> RcStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        RcStatefulConsumer::new_with_optional_name(
-            move |t| self.function.lock().unwrap()(t),
-            self.name,
-        )
-    }
-
-    fn into_arc(self) -> ArcStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl FnMut(&T)
-    where
-        T: 'static,
-    {
-        move |t: &T| self.function.lock().unwrap()(t)
-    }
-
-    fn into_once(self) -> BoxConsumerOnce<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function;
-        BoxConsumerOnce::new_with_optional_name(move |t| self_fn.lock().unwrap()(t), self.name)
-    }
-
-    fn to_box(&self) -> BoxStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxStatefulConsumer::new_with_optional_name(
-            move |t| self_fn.lock().unwrap()(t),
-            self.name.clone(),
-        )
-    }
-
-    fn to_rc(&self) -> RcStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcStatefulConsumer::new_with_optional_name(
-            move |t| self_fn.lock().unwrap()(t),
-            self.name.clone(),
-        )
-    }
-
-    fn to_arc(&self) -> ArcStatefulConsumer<T>
-    where
-        T: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl FnMut(&T) {
-        let self_fn = self.function.clone();
-        move |t| self_fn.lock().unwrap()(t)
-    }
-
-    fn to_once(&self) -> BoxConsumerOnce<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxConsumerOnce::new_with_optional_name(move |t| self_fn.lock().unwrap()(t), self_name)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcStatefulConsumer<T>,
+        BoxStatefulConsumer,
+        RcStatefulConsumer,
+        BoxConsumerOnce,
+        FnMut(t: &T)
+    );
 }
 
 // Use macro to generate Clone implementation

@@ -51,7 +51,11 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
@@ -644,72 +648,14 @@ impl<T, U> BiConsumer<T, U> for ArcBiConsumer<T, U> {
         (self.function)(first, second)
     }
 
-    fn into_box(self) -> BoxBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
-    }
-
-    fn into_rc(self) -> RcBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        RcBiConsumer::new_with_optional_name(move |t, u| (self.function)(t, u), self.name)
-    }
-
-    fn into_arc(self) -> ArcBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(&T, &U)
-    where
-        T: 'static,
-        U: 'static,
-    {
-        move |t, u| (self.function)(t, u)
-    }
-
-    fn to_box(&self) -> BoxBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxBiConsumer::new_with_optional_name(move |t, u| self_fn(t, u), self.name.clone())
-    }
-
-    fn to_rc(&self) -> RcBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcBiConsumer::new_with_optional_name(move |t, u| self_fn(t, u), self.name.clone())
-    }
-
-    fn to_arc(&self) -> ArcBiConsumer<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&T, &U)
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t, u| self_fn(t, u)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcBiConsumer<T, U>,
+        BoxBiConsumer,
+        RcBiConsumer,
+        BoxBiConsumerOnce,
+        Fn(t: &T, u: &U)
+    );
 }
 
 // Use macro to generate Clone implementation

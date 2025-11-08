@@ -51,7 +51,11 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -392,12 +396,7 @@ impl<T: 'static> Consumer<T> for BoxConsumer<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_conversions!(
-        BoxConsumer<T>,
-        RcConsumer,
-        Fn(&T),
-        BoxConsumerOnce
-    );
+    impl_box_conversions!(BoxConsumer<T>, RcConsumer, Fn(&T), BoxConsumerOnce);
 }
 
 // Use macro to generate Debug and Display implementations
@@ -569,80 +568,14 @@ impl<T> Consumer<T> for ArcConsumer<T> {
         (self.function)(value)
     }
 
-    fn into_box(self) -> BoxConsumer<T>
-    where
-        T: 'static,
-    {
-        BoxConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    fn into_rc(self) -> RcConsumer<T>
-    where
-        T: 'static,
-    {
-        RcConsumer::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    fn into_arc(self) -> ArcConsumer<T>
-    where
-        T: 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(&T)
-    where
-        T: 'static,
-    {
-        move |t| (self.function)(t)
-    }
-
-    fn into_once(self) -> BoxConsumerOnce<T>
-    where
-        T: 'static,
-    {
-        BoxConsumerOnce::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    fn to_box(&self) -> BoxConsumer<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxConsumer::new_with_optional_name(move |t| self_fn(t), self.name.clone())
-    }
-
-    fn to_rc(&self) -> RcConsumer<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcConsumer::new_with_optional_name(move |t| self_fn(t), self.name.clone())
-    }
-
-    fn to_arc(&self) -> ArcConsumer<T>
-    where
-        T: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&T)
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| self_fn(t)
-    }
-
-    fn to_once(&self) -> BoxConsumerOnce<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxConsumerOnce::new_with_optional_name(move |t| self_fn(t), self_name)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcConsumer<T>,
+        BoxConsumer,
+        RcConsumer,
+        BoxConsumerOnce,
+        Fn(t: &T)
+    );
 }
 
 // Use macro to generate Clone implementation
