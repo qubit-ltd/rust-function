@@ -33,7 +33,7 @@ use crate::predicates::predicate::{
     Predicate,
     RcPredicate,
 };
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::transformers::macros::{
     impl_box_conditional_transformer,
     impl_box_transformer_methods,
@@ -401,11 +401,11 @@ impl<T, R> Transformer<T, R> for BoxTransformer<T, R> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxTransformer<T, R>,
         RcTransformer,
-        BoxTransformerOnce,
-        impl Fn(T) -> R
+        Fn(T) -> R,
+        BoxTransformerOnce
     );
 }
 

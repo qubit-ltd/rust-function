@@ -29,7 +29,7 @@ use std::sync::{
     Mutex,
 };
 
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -395,11 +395,11 @@ impl<T, R> StatefulTransformer<T, R> for BoxStatefulTransformer<T, R> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxStatefulTransformer<T, R>,
         RcStatefulTransformer,
-        BoxTransformerOnce,
-        impl FnMut(T) -> R
+        FnMut(T) -> R,
+        BoxTransformerOnce
     );
 
     // do NOT override StatefulTransformer::to_xxx() because BoxStatefulTransformer is not Clone

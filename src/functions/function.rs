@@ -45,7 +45,7 @@ use crate::{
             impl_shared_function_methods,
         },
     },
-    macros::{impl_box_into_conversions, impl_rc_conversions},
+    macros::{impl_box_conversions, impl_rc_conversions},
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
@@ -445,11 +445,11 @@ impl<T, R> Function<T, R> for BoxFunction<T, R> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxFunction<T, R>,
         RcFunction,
-        BoxFunctionOnce,
-        impl Fn(&T) -> R
+        Fn(&T) -> R,
+        BoxFunctionOnce
     );
 }
 

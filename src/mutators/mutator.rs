@@ -213,7 +213,7 @@ use crate::mutators::macros::{
     impl_shared_conditional_mutator,
     impl_shared_mutator_methods,
 };
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::mutators::mutator_once::BoxMutatorOnce;
 use crate::predicates::predicate::{
     ArcPredicate,
@@ -654,11 +654,11 @@ impl<T> Mutator<T> for BoxMutator<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxMutator<T>,
         RcMutator,
-        BoxMutatorOnce,
-        impl Fn(&mut T)
+        Fn(&mut T),
+        BoxMutatorOnce
     );
 }
 

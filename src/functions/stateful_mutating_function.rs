@@ -145,7 +145,7 @@ use crate::{
             impl_shared_function_methods,
         },
     },
-    macros::{impl_box_into_conversions, impl_rc_conversions},
+    macros::{impl_box_conversions, impl_rc_conversions},
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
@@ -711,11 +711,11 @@ impl<T, R> StatefulMutatingFunction<T, R> for BoxStatefulMutatingFunction<T, R> 
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxStatefulMutatingFunction<T, R>,
         RcStatefulMutatingFunction,
-        BoxMutatingFunctionOnce,
-        impl FnMut(&mut T) -> R
+        FnMut(&mut T) -> R,
+        BoxMutatingFunctionOnce
     );
 }
 

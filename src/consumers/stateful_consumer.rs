@@ -54,7 +54,7 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_box_into_conversions, impl_rc_conversions};
+use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -575,11 +575,11 @@ impl<T> StatefulConsumer<T> for BoxStatefulConsumer<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxStatefulConsumer<T>,
         RcStatefulConsumer,
-        BoxConsumerOnce,
-        impl FnMut(&T)
+        FnMut(&T),
+        BoxConsumerOnce
     );
 }
 

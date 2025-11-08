@@ -51,7 +51,7 @@ use crate::consumers::macros::{
     impl_shared_conditional_consumer,
     impl_shared_consumer_methods,
 };
-use crate::macros::{impl_box_into_conversions, impl_rc_conversions};
+use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
@@ -457,11 +457,11 @@ impl<T, U> BiConsumer<T, U> for BoxBiConsumer<T, U> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxBiConsumer<T, U>,
         RcBiConsumer,
-        BoxBiConsumerOnce,
-        impl Fn(&T, &U)
+        Fn(&T, &U),
+        BoxBiConsumerOnce
     );
 }
 

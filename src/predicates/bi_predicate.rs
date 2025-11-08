@@ -148,7 +148,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -471,10 +471,10 @@ impl<T, U> BiPredicate<T, U> for BoxBiPredicate<T, U> {
     }
 
     // Generates: into_box(), into_rc(), into_fn()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxBiPredicate<T, U>,
         RcBiPredicate,
-        impl Fn(&T, &U) -> bool
+        Fn(&T, &U) -> bool
     );
 }
 

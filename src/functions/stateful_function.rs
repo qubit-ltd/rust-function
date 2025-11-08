@@ -46,7 +46,7 @@ use crate::{
         impl_shared_function_methods,
     },
     functions::function_once::BoxFunctionOnce,
-    macros::{impl_box_into_conversions, impl_rc_conversions},
+    macros::{impl_box_conversions, impl_rc_conversions},
     predicates::predicate::{
         ArcPredicate,
         BoxPredicate,
@@ -440,11 +440,11 @@ impl<T: 'static, R: 'static> StatefulFunction<T, R> for BoxStatefulFunction<T, R
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxStatefulFunction<T, R>,
         RcStatefulFunction,
-        BoxFunctionOnce,
-        impl FnMut(&T) -> R
+        FnMut(&T) -> R,
+        BoxFunctionOnce
     );
 }
 

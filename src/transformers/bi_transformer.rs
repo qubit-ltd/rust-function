@@ -45,7 +45,7 @@ use crate::transformers::macros::{
     impl_transformer_constant_method,
     impl_transformer_debug_display,
 };
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::transformers::transformer::Transformer;
 
 // ============================================================================
@@ -327,11 +327,11 @@ impl<T, U, R> BiTransformer<T, U, R> for BoxBiTransformer<T, U, R> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxBiTransformer<T, U, R>,
         RcBiTransformer,
-        BoxBiTransformerOnce,
-        impl Fn(T, U) -> R
+        Fn(T, U) -> R,
+        BoxBiTransformerOnce
     );
 }
 

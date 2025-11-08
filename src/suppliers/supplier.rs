@@ -130,7 +130,7 @@ use crate::suppliers::macros::{
     impl_supplier_common_methods,
     impl_supplier_debug_display,
 };
-use crate::macros::impl_box_into_conversions;
+use crate::macros::impl_box_conversions;
 use crate::transformers::transformer::Transformer;
 use crate::BoxSupplierOnce;
 
@@ -553,11 +553,11 @@ impl<T> Supplier<T> for BoxSupplier<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_into_conversions!(
+    impl_box_conversions!(
         BoxSupplier<T>,
         RcSupplier,
-        BoxSupplierOnce,
-        impl FnMut() -> T
+        FnMut() -> T,
+        BoxSupplierOnce
     );
 }
 
