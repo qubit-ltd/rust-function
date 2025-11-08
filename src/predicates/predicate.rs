@@ -175,7 +175,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::impl_box_conversions;
+use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -558,45 +558,14 @@ impl<T: 'static> Predicate<T> for RcPredicate<T> {
         (self.function)(value)
     }
 
-    fn into_box(self) -> BoxPredicate<T> {
-        let self_fn = self.function;
-        BoxPredicate {
-            function: Box::new(move |value: &T| self_fn(value)),
-            name: self.name,
-        }
-    }
-
-    fn into_rc(self) -> RcPredicate<T> {
-        self
-    }
+    // Generates: into_box(), into_rc(), into_fn(), to_box(), to_rc(), to_fn()
+    impl_rc_conversions!(RcPredicate<T>, BoxPredicate, Fn(t: &T) -> bool);
 
     // do NOT override Predicate::into_arc() because RcPredicate is not Send + Sync
     // and calling RcPredicate::into_arc() will cause a compile error
 
-    fn into_fn(self) -> impl Fn(&T) -> bool {
-        let self_fn = self.function;
-        move |value: &T| self_fn(value)
-    }
-
-    fn to_box(&self) -> BoxPredicate<T> {
-        let self_fn = self.function.clone();
-        BoxPredicate {
-            function: Box::new(move |value: &T| self_fn(value)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_rc(&self) -> RcPredicate<T> {
-        self.clone()
-    }
-
     // do NOT override Predicate::to_arc() because RcPredicate is not Send + Sync
     // and calling RcPredicate::to_arc() will cause a compile error
-
-    fn to_fn(&self) -> impl Fn(&T) -> bool {
-        let self_fn = self.function.clone();
-        move |value: &T| self_fn(value)
-    }
 }
 
 /// An Arc-based predicate with thread-safe shared ownership.

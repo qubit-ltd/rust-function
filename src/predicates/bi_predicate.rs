@@ -148,7 +148,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::impl_box_conversions;
+use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -530,68 +530,14 @@ impl<T, U> BiPredicate<T, U> for RcBiPredicate<T, U> {
         (self.function)(first, second)
     }
 
-    // Use optimized conversion for into_box that preserves the
-    // existing Rc
-    fn into_box(self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate {
-            function: Box::new(move |first, second| (self.function)(first, second)),
-            name: self.name,
-        }
-    }
-
-    // Use optimized zero-cost conversion for into_rc
-    fn into_rc(self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self
-    }
+    // Generates: into_box(), into_rc(), into_fn(), to_box(), to_rc(), to_fn()
+    impl_rc_conversions!(RcBiPredicate<T, U>, BoxBiPredicate, Fn(first: &T, second: &U) -> bool);
 
     // do NOT override RcBiPredicate::into_arc() because RcBiPredicate is not Send + Sync
     // and calling RcBiPredicate::into_arc() will cause a compile error
 
-    fn into_fn(self) -> impl Fn(&T, &U) -> bool
-    where
-        Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        move |first, second| (self.function)(first, second)
-    }
-
-    fn to_box(&self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxBiPredicate {
-            function: Box::new(move |first, second| self_fn(first, second)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_rc(&self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&T, &U) -> bool
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |first, second| self_fn(first, second)
-    }
+    // do NOT override RcBiPredicate::to_arc() because RcBiPredicate is not Send + Sync
+    // and calling RcBiPredicate::to_arc() will cause a compile error
 }
 
 /// An Arc-based bi-predicate with thread-safe shared ownership.
