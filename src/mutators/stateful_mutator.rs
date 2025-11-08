@@ -201,6 +201,11 @@ use std::sync::{
     Mutex,
 };
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::mutators::macros::{
     impl_box_conditional_mutator,
     impl_box_mutator_methods,
@@ -213,7 +218,6 @@ use crate::mutators::macros::{
     impl_shared_conditional_mutator,
     impl_shared_mutator_methods,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::mutators::mutator_once::BoxMutatorOnce;
 use crate::predicates::predicate::{
     ArcPredicate,
@@ -833,81 +837,14 @@ impl<T> StatefulMutator<T> for ArcStatefulMutator<T> {
         (self.function.lock().unwrap())(value)
     }
 
-    fn into_box(self) -> BoxStatefulMutator<T>
-    where
-        T: 'static,
-    {
-        BoxStatefulMutator::new_with_optional_name(
-            move |t| self.function.lock().unwrap()(t),
-            self.name,
-        )
-    }
-
-    fn into_rc(self) -> RcStatefulMutator<T>
-    where
-        T: 'static,
-    {
-        RcStatefulMutator::new_with_optional_name(
-            move |t| self.function.lock().unwrap()(t),
-            self.name,
-        )
-    }
-
-    fn into_arc(self) -> ArcStatefulMutator<T>
-    where
-        T: Send + 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl FnMut(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        move |t| self.function.lock().unwrap()(t)
-    }
-
-    fn to_box(&self) -> BoxStatefulMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxStatefulMutator::new_with_optional_name(
-            move |t| self_fn.lock().unwrap()(t),
-            self.name.clone(),
-        )
-    }
-
-    fn to_rc(&self) -> RcStatefulMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcStatefulMutator::new_with_optional_name(
-            move |t| self_fn.lock().unwrap()(t),
-            self.name.clone(),
-        )
-    }
-
-    fn to_arc(&self) -> ArcStatefulMutator<T>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl FnMut(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| self_fn.lock().unwrap()(t)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcStatefulMutator<T>,
+        BoxStatefulMutator,
+        RcStatefulMutator,
+        BoxMutatorOnce,
+        FnMut(input: &mut T)
+    );
 }
 
 // Use macro to generate Clone implementation

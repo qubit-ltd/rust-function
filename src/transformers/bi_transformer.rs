@@ -26,6 +26,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
@@ -45,8 +50,6 @@ use crate::transformers::macros::{
     impl_transformer_constant_method,
     impl_transformer_debug_display,
 };
-use crate::macros::impl_rc_conversions;
-use crate::macros::impl_box_conversions;
 use crate::transformers::transformer::Transformer;
 
 // ============================================================================
@@ -475,81 +478,14 @@ impl<T, U, R> BiTransformer<T, U, R> for ArcBiTransformer<T, U, R> {
         (self.function)(first, second)
     }
 
-    fn into_box(self) -> BoxBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        BoxBiTransformer::new(move |t, u| (self.function)(t, u))
-    }
-
-    fn into_rc(self) -> RcBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        RcBiTransformer::new(move |t, u| (self.function)(t, u))
-    }
-
-    fn into_arc(self) -> ArcBiTransformer<T, U, R>
-    where
-        T: Send + Sync + 'static,
-        U: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        // Zero-cost: directly return itself
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        move |t: T, u: U| (self.function)(t, u)
-    }
-
-    fn to_box(&self) -> BoxBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxBiTransformer::new(move |t, u| self_fn(t, u))
-    }
-
-    fn to_rc(&self) -> RcBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcBiTransformer::new(move |t, u| self_fn(t, u))
-    }
-
-    fn to_arc(&self) -> ArcBiTransformer<T, U, R>
-    where
-        T: Send + Sync + 'static,
-        U: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t: T, u: U| self_fn(t, u)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcBiTransformer<T, U, R>,
+        BoxBiTransformer,
+        RcBiTransformer,
+        BoxBiTransformerOnce,
+        Fn(t: T, u: U) -> R
+    );
 }
 
 // ============================================================================

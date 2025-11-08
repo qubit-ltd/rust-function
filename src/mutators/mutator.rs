@@ -201,6 +201,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::mutators::macros::{
     impl_box_conditional_mutator,
     impl_box_mutator_methods,
@@ -213,7 +218,6 @@ use crate::mutators::macros::{
     impl_shared_conditional_mutator,
     impl_shared_mutator_methods,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::mutators::mutator_once::BoxMutatorOnce;
 use crate::predicates::predicate::{
     ArcPredicate,
@@ -654,12 +658,7 @@ impl<T> Mutator<T> for BoxMutator<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), into_once()
-    impl_box_conversions!(
-        BoxMutator<T>,
-        RcMutator,
-        Fn(&mut T),
-        BoxMutatorOnce
-    );
+    impl_box_conversions!(BoxMutator<T>, RcMutator, Fn(&mut T), BoxMutatorOnce);
 }
 
 // Generate Debug and Display trait implementations
@@ -817,71 +816,14 @@ impl<T> Mutator<T> for ArcMutator<T> {
         (self.function)(value)
     }
 
-    fn into_box(self) -> BoxMutator<T>
-    where
-        T: 'static,
-    {
-        BoxMutator::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    fn into_rc(self) -> RcMutator<T>
-    where
-        T: 'static,
-    {
-        RcMutator::new_with_optional_name(move |t| (self.function)(t), self.name)
-    }
-
-    fn into_arc(self) -> ArcMutator<T>
-    where
-        T: Send + 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        move |t| (self.function)(t)
-    }
-
-    fn to_box(&self) -> BoxMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        BoxMutator::new_with_optional_name(move |t| (self_fn)(t), self_name)
-    }
-
-    fn to_rc(&self) -> RcMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        let self_name = self.name.clone();
-        RcMutator::new_with_optional_name(move |t| (self_fn)(t), self_name)
-    }
-
-    fn to_arc(&self) -> ArcMutator<T>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| (self_fn)(t)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcMutator<T>,
+        BoxMutator,
+        RcMutator,
+        BoxMutatorOnce,
+        Fn(input: &mut T)
+    );
 }
 
 // Generate Clone trait implementation for mutator

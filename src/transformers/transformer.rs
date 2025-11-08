@@ -27,13 +27,17 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
     Predicate,
     RcPredicate,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::transformers::macros::{
     impl_box_conditional_transformer,
     impl_box_transformer_methods,
@@ -558,72 +562,14 @@ impl<T, R> Transformer<T, R> for ArcTransformer<T, R> {
         (self.function)(input)
     }
 
-    fn into_box(self) -> BoxTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxTransformer::new(move |t| (self.function)(t))
-    }
-
-    fn into_rc(self) -> RcTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        RcTransformer::new(move |t| (self.function)(t))
-    }
-
-    fn into_arc(self) -> ArcTransformer<T, R>
-    where
-        T: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        move |t| (self.function)(t)
-    }
-
-    fn to_box(&self) -> BoxTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxTransformer::new(move |t| self_fn(t))
-    }
-
-    fn to_rc(&self) -> RcTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcTransformer::new(move |t| self_fn(t))
-    }
-
-    fn to_arc(&self) -> ArcTransformer<T, R>
-    where
-        T: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |t| self_fn(t)
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcTransformer<T, R>,
+        BoxTransformer,
+        RcTransformer,
+        BoxTransformerOnce,
+        Fn(t: T) -> R
+    );
 }
 
 // ============================================================================

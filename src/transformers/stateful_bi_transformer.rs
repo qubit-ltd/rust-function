@@ -30,14 +30,16 @@ use std::sync::{
     Mutex,
 };
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::bi_predicate::{
     ArcBiPredicate,
     BiPredicate,
     BoxBiPredicate,
     RcBiPredicate,
 };
-use crate::macros::impl_rc_conversions;
-use crate::BoxBiTransformerOnce;
 use crate::transformers::macros::{
     impl_box_conditional_transformer,
     impl_box_transformer_methods,
@@ -51,6 +53,7 @@ use crate::transformers::macros::{
     impl_transformer_debug_display,
 };
 use crate::transformers::stateful_transformer::StatefulTransformer;
+use crate::BoxBiTransformerOnce;
 
 // ============================================================================
 // Core Trait
@@ -502,60 +505,14 @@ impl<T, U, R> StatefulBiTransformer<T, U, R> for ArcStatefulBiTransformer<T, U, 
         func(first, second)
     }
 
-    fn into_box(self) -> BoxStatefulBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        BoxStatefulBiTransformer::new(move |t, u| {
-            let mut func = self.function.lock().unwrap();
-            func(t, u)
-        })
-    }
-
-    fn into_rc(self) -> RcStatefulBiTransformer<T, U, R>
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        RcStatefulBiTransformer::new(move |t, u| {
-            let mut func = self.function.lock().unwrap();
-            func(t, u)
-        })
-    }
-
-    fn into_arc(self) -> ArcStatefulBiTransformer<T, U, R>
-    where
-        T: Send + Sync + 'static,
-        U: Send + Sync + 'static,
-        R: Send + 'static,
-    {
-        // Zero-cost: directly return itself
-        self
-    }
-
-    fn into_fn(self) -> impl FnMut(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        move |t: T, u: U| {
-            let mut func = self.function.lock().unwrap();
-            func(t, u)
-        }
-    }
-
-    fn to_arc(&self) -> ArcStatefulBiTransformer<T, U, R>
-    where
-        T: Send + Sync + 'static,
-        U: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        self.clone()
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcStatefulBiTransformer<T, U, R>,
+        BoxStatefulBiTransformer,
+        RcStatefulBiTransformer,
+        BoxBiTransformerOnce,
+        FnMut(t: T, u: U) -> R
+    );
 }
 
 // ============================================================================

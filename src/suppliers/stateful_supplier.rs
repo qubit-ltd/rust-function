@@ -124,6 +124,11 @@ use std::sync::{
     Mutex,
 };
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::Predicate;
 use crate::suppliers::macros::{
     impl_box_supplier_methods,
@@ -132,7 +137,6 @@ use crate::suppliers::macros::{
     impl_supplier_common_methods,
     impl_supplier_debug_display,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::transformers::transformer::Transformer;
 use crate::BoxSupplierOnce;
 
@@ -869,67 +873,14 @@ impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
         (self.function.lock().unwrap())()
     }
 
-    fn into_box(self) -> BoxStatefulSupplier<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function;
-        BoxStatefulSupplier::new(move || self_fn.lock().unwrap()())
-    }
-
-    fn into_rc(self) -> RcStatefulSupplier<T>
-    where
-        T: 'static,
-    {
-        let self_fn = self.function;
-        RcStatefulSupplier::new(move || self_fn.lock().unwrap()())
-    }
-
-    fn into_arc(self) -> ArcStatefulSupplier<T>
-    where
-        T: Send + 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl FnMut() -> T {
-        let function = self.function;
-        move || function.lock().unwrap()()
-    }
-
-    fn to_box(&self) -> BoxStatefulSupplier<T>
-    where
-        Self: Clone + Sized + 'static,
-        T: 'static,
-    {
-        let function = Arc::clone(&self.function);
-        BoxStatefulSupplier::new(move || function.lock().unwrap()())
-    }
-
-    fn to_rc(&self) -> RcStatefulSupplier<T>
-    where
-        Self: Clone + Sized + 'static,
-        T: 'static,
-    {
-        let function = Arc::clone(&self.function);
-        RcStatefulSupplier::new(move || function.lock().unwrap()())
-    }
-
-    fn to_arc(&self) -> ArcStatefulSupplier<T>
-    where
-        Self: Clone + Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl FnMut() -> T
-    where
-        Self: Clone + Sized,
-    {
-        let function = Arc::clone(&self.function);
-        move || function.lock().unwrap()()
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcStatefulSupplier<T>,
+        BoxStatefulSupplier,
+        RcStatefulSupplier,
+        BoxSupplierOnce,
+        FnMut() -> T
+    );
 }
 
 // ==========================================================================

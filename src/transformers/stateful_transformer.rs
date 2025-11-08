@@ -29,7 +29,11 @@ use std::sync::{
     Mutex,
 };
 
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -556,56 +560,14 @@ impl<T, R> StatefulTransformer<T, R> for ArcStatefulTransformer<T, R> {
         func(input)
     }
 
-    fn into_box(self) -> BoxStatefulTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        BoxStatefulTransformer::new(move |x| {
-            let mut func = self.function.lock().unwrap();
-            func(x)
-        })
-    }
-
-    fn into_rc(self) -> RcStatefulTransformer<T, R>
-    where
-        T: 'static,
-        R: 'static,
-    {
-        RcStatefulTransformer::new(move |x| {
-            let mut func = self.function.lock().unwrap();
-            func(x)
-        })
-    }
-
-    fn into_arc(self) -> ArcStatefulTransformer<T, R>
-    where
-        T: Send + Sync + 'static,
-        R: Send + 'static,
-    {
-        // Zero-cost: directly return itself
-        self
-    }
-
-    fn into_fn(self) -> impl FnMut(T) -> R
-    where
-        T: 'static,
-        R: 'static,
-    {
-        // Efficient: use Arc cloning to create a closure
-        move |input: T| {
-            let mut func = self.function.lock().unwrap();
-            func(input)
-        }
-    }
-
-    fn to_arc(&self) -> ArcStatefulTransformer<T, R>
-    where
-        T: Send + Sync + 'static,
-        R: Send + 'static,
-    {
-        self.clone()
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcStatefulTransformer<T, R>,
+        BoxStatefulTransformer,
+        RcStatefulTransformer,
+        BoxTransformerOnce,
+        FnMut(t: T) -> R
+    );
 }
 
 // ============================================================================

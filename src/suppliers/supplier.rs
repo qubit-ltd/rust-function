@@ -122,6 +122,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::predicate::Predicate;
 use crate::suppliers::macros::{
     impl_box_supplier_methods,
@@ -130,7 +135,6 @@ use crate::suppliers::macros::{
     impl_supplier_common_methods,
     impl_supplier_debug_display,
 };
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
 use crate::transformers::transformer::Transformer;
 use crate::BoxSupplierOnce;
 
@@ -550,11 +554,7 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(
-        BoxSupplier<T>,
-        (Fn() -> T + 'static),
-        |f| Box::new(f)
-    );
+    impl_supplier_common_methods!(BoxSupplier<T>, (Fn() -> T + 'static), |f| Box::new(f));
 
     // Generates: map(), filter(), zip()
     impl_box_supplier_methods!(BoxSupplier<T>, Supplier);
@@ -675,67 +675,14 @@ impl<T> Supplier<T> for ArcSupplier<T> {
         (self.function)()
     }
 
-    fn into_box(self) -> BoxSupplier<T>
-    where
-        T: 'static,
-    {
-        BoxSupplier::new(move || (self.function)())
-    }
-
-    fn into_rc(self) -> RcSupplier<T>
-    where
-        T: 'static,
-    {
-        RcSupplier::new(move || (self.function)())
-    }
-
-    fn into_arc(self) -> ArcSupplier<T>
-    where
-        T: Send + 'static,
-    {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn() -> T {
-        move || (self.function)()
-    }
-
-    // Optimized implementations using Arc::clone instead of
-    // wrapping in a closure
-
-    fn to_box(&self) -> BoxSupplier<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxSupplier::new(move || self_fn())
-    }
-
-    fn to_rc(&self) -> RcSupplier<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcSupplier::new(move || self_fn())
-    }
-
-    fn to_arc(&self) -> ArcSupplier<T>
-    where
-        Self: Clone + Send + Sync + 'static,
-        T: Send + 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn() -> T
-    where
-        Self: Clone,
-    {
-        let self_fn = self.function.clone();
-        move || self_fn()
-    }
+    // Use macro to implement conversion methods
+    impl_arc_conversions!(
+        ArcSupplier<T>,
+        BoxSupplier,
+        RcSupplier,
+        BoxSupplierOnce,
+        Fn() -> T
+    );
 }
 
 // ======================================================================

@@ -488,11 +488,7 @@ pub struct BoxPredicate<T> {
 
 impl<T: 'static> BoxPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(
-        BoxPredicate<T>,
-        (Fn(&T) -> bool + 'static),
-        |f| Box::new(f)
-    );
+    impl_predicate_common_methods!(BoxPredicate<T>, (Fn(&T) -> bool + 'static), |f| Box::new(f));
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_box_predicate_methods!(BoxPredicate<T>);
