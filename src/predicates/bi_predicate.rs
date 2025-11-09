@@ -148,7 +148,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{impl_arc_conversions, impl_box_conversions, impl_rc_conversions};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -531,13 +531,11 @@ impl<T, U> BiPredicate<T, U> for RcBiPredicate<T, U> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), to_box(), to_rc(), to_fn()
-    impl_rc_conversions!(RcBiPredicate<T, U>, BoxBiPredicate, Fn(first: &T, second: &U) -> bool);
-
-    // do NOT override RcBiPredicate::into_arc() because RcBiPredicate is not Send + Sync
-    // and calling RcBiPredicate::into_arc() will cause a compile error
-
-    // do NOT override RcBiPredicate::to_arc() because RcBiPredicate is not Send + Sync
-    // and calling RcBiPredicate::to_arc() will cause a compile error
+    impl_rc_conversions!(
+        RcBiPredicate<T, U>,
+        BoxBiPredicate,
+        Fn(first: &T, second: &U) -> bool
+    );
 }
 
 /// An Arc-based bi-predicate with thread-safe shared ownership.
@@ -583,7 +581,10 @@ impl<T: 'static, U: 'static> ArcBiPredicate<T, U> {
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
-    impl_shared_predicate_methods!(ArcBiPredicate<T, U>, Send + Sync + 'static);
+    impl_shared_predicate_methods!(
+        ArcBiPredicate<T, U>,
+        Send + Sync + 'static
+    );
 }
 
 // Generates: impl Clone for ArcBiPredicate<T, U>
@@ -598,92 +599,13 @@ impl<T: 'static, U: 'static> BiPredicate<T, U> for ArcBiPredicate<T, U> {
         (self.function)(first, second)
     }
 
-    // Use optimized conversion for into_box that preserves the
-    // existing Arc
-    fn into_box(self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate {
-            function: Box::new(move |first, second| (self.function)(first, second)),
-            name: self.name,
-        }
-    }
-
-    // Use optimized conversion for into_rc that preserves the
-    // existing Arc
-    fn into_rc(self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        RcBiPredicate {
-            function: Rc::new(move |first, second| (self.function)(first, second)),
-            name: self.name,
-        }
-    }
-
-    // Use optimized zero-cost conversion for into_arc
-    fn into_arc(self) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self
-    }
-
-    // Use optimized conversion for into_fn that preserves the
-    // existing Arc
-    fn into_fn(self) -> impl Fn(&T, &U) -> bool
-    where
-        Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        move |first, second| (self.function)(first, second)
-    }
-
-    fn to_box(&self) -> BoxBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        BoxBiPredicate {
-            function: Box::new(move |first, second| self_fn(first, second)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_rc(&self) -> RcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        RcBiPredicate {
-            function: Rc::new(move |first, second| self_fn(first, second)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_arc(&self) -> ArcBiPredicate<T, U>
-    where
-        T: 'static,
-        U: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&T, &U) -> bool
-    where
-        T: 'static,
-        U: 'static,
-    {
-        let self_fn = self.function.clone();
-        move |first, second| self_fn(first, second)
-    }
+    // Generates: into_box, into_rc, into_arc, into_fn, to_box, to_rc, to_arc, to_fn
+    impl_arc_conversions!(
+        ArcBiPredicate<T, U>,
+        BoxBiPredicate,
+        RcBiPredicate,
+        Fn(first: &T, second: &U) -> bool
+    );
 }
 
 // Blanket implementation for all closures that match

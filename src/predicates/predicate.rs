@@ -175,7 +175,7 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::{impl_box_conversions, impl_rc_conversions};
+use crate::macros::{impl_arc_conversions, impl_box_conversions, impl_rc_conversions};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -488,7 +488,11 @@ pub struct BoxPredicate<T> {
 
 impl<T: 'static> BoxPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(BoxPredicate<T>, (Fn(&T) -> bool + 'static), |f| Box::new(f));
+    impl_predicate_common_methods!(
+        BoxPredicate<T>,
+        (Fn(&T) -> bool + 'static),
+        |f| Box::new(f)
+    );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_box_predicate_methods!(BoxPredicate<T>);
@@ -540,7 +544,11 @@ pub struct RcPredicate<T> {
 
 impl<T: 'static> RcPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(RcPredicate<T>, (Fn(&T) -> bool + 'static), |f| Rc::new(f));
+    impl_predicate_common_methods!(
+        RcPredicate<T>,
+        (Fn(&T) -> bool + 'static),
+        |f| Rc::new(f)
+    );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_shared_predicate_methods!(RcPredicate<T>, 'static);
@@ -559,13 +567,11 @@ impl<T: 'static> Predicate<T> for RcPredicate<T> {
     }
 
     // Generates: into_box(), into_rc(), into_fn(), to_box(), to_rc(), to_fn()
-    impl_rc_conversions!(RcPredicate<T>, BoxPredicate, Fn(t: &T) -> bool);
-
-    // do NOT override Predicate::into_arc() because RcPredicate is not Send + Sync
-    // and calling RcPredicate::into_arc() will cause a compile error
-
-    // do NOT override Predicate::to_arc() because RcPredicate is not Send + Sync
-    // and calling RcPredicate::to_arc() will cause a compile error
+    impl_rc_conversions!(
+        RcPredicate<T>,
+        BoxPredicate,
+        Fn(t: &T) -> bool
+    );
 }
 
 /// An Arc-based predicate with thread-safe shared ownership.
@@ -610,7 +616,10 @@ impl<T: 'static> ArcPredicate<T> {
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
-    impl_shared_predicate_methods!(ArcPredicate<T>, Send + Sync + 'static);
+    impl_shared_predicate_methods!(
+        ArcPredicate<T>,
+        Send + Sync + 'static
+    );
 }
 
 // Generates: impl Clone for ArcPredicate<T>
@@ -625,52 +634,13 @@ impl<T: 'static> Predicate<T> for ArcPredicate<T> {
         (self.function)(value)
     }
 
-    fn into_box(self) -> BoxPredicate<T> {
-        BoxPredicate {
-            function: Box::new(move |value: &T| (self.function)(value)),
-            name: self.name,
-        }
-    }
-
-    fn into_rc(self) -> RcPredicate<T> {
-        RcPredicate {
-            function: Rc::new(move |value: &T| (self.function)(value)),
-            name: self.name,
-        }
-    }
-
-    fn into_arc(self) -> ArcPredicate<T> {
-        self
-    }
-
-    fn into_fn(self) -> impl Fn(&T) -> bool {
-        move |value: &T| (self.function)(value)
-    }
-
-    fn to_box(&self) -> BoxPredicate<T> {
-        let self_fn = self.function.clone();
-        BoxPredicate {
-            function: Box::new(move |value: &T| self_fn(value)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_rc(&self) -> RcPredicate<T> {
-        let self_fn = self.function.clone();
-        RcPredicate {
-            function: Rc::new(move |value: &T| self_fn(value)),
-            name: self.name.clone(),
-        }
-    }
-
-    fn to_arc(&self) -> ArcPredicate<T> {
-        self.clone()
-    }
-
-    fn to_fn(&self) -> impl Fn(&T) -> bool {
-        let self_fn = self.function.clone();
-        move |value: &T| self_fn(value)
-    }
+    // Generates: into_box, into_rc, into_arc, into_fn, to_box, to_rc, to_arc, to_fn
+    impl_arc_conversions!(
+        ArcPredicate<T>,
+        BoxPredicate,
+        RcPredicate,
+        Fn(t: &T) -> bool
+    );
 }
 
 // Blanket implementation for all closures that match Fn(&T) -> bool
