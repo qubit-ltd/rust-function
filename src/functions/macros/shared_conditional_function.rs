@@ -186,12 +186,13 @@ macro_rules! impl_shared_conditional_function {
         }
     };
 
-    // Three generic parameters - BiFunction types
+    // Three generic parameters - BiFunction types (Rc version)
     (
         $struct_name:ident < $t:ident, $u:ident, $r:ident >,
         $shared_function_type:ident,
         $else_function_trait:ident,
-        $($extra_bounds:tt)+
+        into_rc,
+        'static
     ) => {
         impl<$t, $u, $r> $struct_name<$t, $u, $r>
         where
@@ -199,33 +200,33 @@ macro_rules! impl_shared_conditional_function {
             $u: 'static,
             $r: 'static,
         {
-            /// Provides an alternative function for when the predicate is not satisfied
+            /// Provides an alternative bi-function for when the predicate is not satisfied
             ///
-            /// Combines the current conditional bifunction with an alternative bifunction
-            /// into a new bifunction that implements the following semantics:
+            /// Combines the current conditional bi-function with an alternative bi-function
+            /// into a new bi-function that implements the following semantics:
             ///
-            /// When the returned bifunction is called with two arguments:
-            /// - If the predicate is satisfied, it executes the internal bifunction
-            /// - If the predicate is NOT satisfied, it executes the alternative bifunction
+            /// When the returned bi-function is called with arguments:
+            /// - If the predicate is satisfied, it executes the internal bi-function
+            /// - If the predicate is NOT satisfied, it executes the alternative bi-function
             ///
             /// # Parameters
             ///
-            /// * `else_function` - The alternative bifunction to execute when predicate fails
+            /// * `else_function` - The alternative bi-function to execute when predicate fails
             ///
             /// # Returns
             ///
-            /// Returns a new bifunction that handles both conditional branches
+            /// Returns a new bi-function that handles both conditional branches
             ///
             /// # Examples
             ///
             /// ```ignore
-            /// let func = ArcBiFunction::new(|x: i32, y: i32| x + y);
-            /// let alternative = ArcBiFunction::new(|x: i32, y: i32| x * y);
+            /// let func = RcBiFunction::new(|x: &i32, y: &i32| *x + *y);
+            /// let alternative = RcBiFunction::new(|x: &i32, y: &i32| *x * *y);
             ///
             /// let conditional = func.when(|x, y| *x > 0 && *y > 0).or_else(alternative);
             ///
-            /// assert_eq!(conditional.apply(3, 4), 7);   // 3 + 4 = 7 (predicate satisfied)
-            /// assert_eq!(conditional.apply(-2, 4), -8); // -2 * 4 = -8 (predicate failed)
+            /// assert_eq!(conditional.apply(3, 4), 7);   // 3 + 4 = 7
+            /// assert_eq!(conditional.apply(-2, 4), -8); // -2 * 4 = -8
             /// ```
             #[allow(unused_mut)]
             pub fn or_else<F>(&self, mut else_function: F) -> $shared_function_type<$t, $u, $r>
@@ -243,7 +244,106 @@ macro_rules! impl_shared_conditional_function {
                 })
             }
         }
+
+        impl<$t, $u, $r> $else_function_trait<$t, $u, $r> for $struct_name<$t, $u, $r>
+        where
+            $t: 'static,
+            $u: 'static,
+            $r: 'static,
+        {
+            fn apply(&self, first: &$t, second: &$u) -> $r {
+                if self.predicate.test(first, second) {
+                    self.function.apply(first, second)
+                } else {
+                    // This should not happen - conditional functions should always have an else
+                    // via or_else(), but we need to return something
+                    panic!("Conditional bi-function called without or_else() alternative")
+                }
+            }
+
+            // Use trait default implementations for conversion methods
+        }
     };
+
+    // Three generic parameters - BiFunction types (Arc version)
+    (
+        $struct_name:ident < $t:ident, $u:ident, $r:ident >,
+        $shared_function_type:ident,
+        $else_function_trait:ident,
+        into_arc,
+        Send + Sync + 'static
+    ) => {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r>
+        where
+            $t: 'static,
+            $u: 'static,
+            $r: 'static,
+        {
+            /// Provides an alternative bi-function for when the predicate is not satisfied
+            ///
+            /// Combines the current conditional bi-function with an alternative bi-function
+            /// into a new bi-function that implements the following semantics:
+            ///
+            /// When the returned bi-function is called with arguments:
+            /// - If the predicate is satisfied, it executes the internal bi-function
+            /// - If the predicate is NOT satisfied, it executes the alternative bi-function
+            ///
+            /// # Parameters
+            ///
+            /// * `else_function` - The alternative bi-function to execute when predicate fails
+            ///
+            /// # Returns
+            ///
+            /// Returns a new bi-function that handles both conditional branches
+            ///
+            /// # Examples
+            ///
+            /// ```ignore
+            /// let func = ArcBiFunction::new(|x: &i32, y: &i32| *x + *y);
+            /// let alternative = ArcBiFunction::new(|x: &i32, y: &i32| *x * *y);
+            ///
+            /// let conditional = func.when(|x, y| *x > 0 && *y > 0).or_else(alternative);
+            ///
+            /// assert_eq!(conditional.apply(3, 4), 7);   // 3 + 4 = 7
+            /// assert_eq!(conditional.apply(-2, 4), -8); // -2 * 4 = -8
+            /// ```
+            #[allow(unused_mut)]
+            pub fn or_else<F>(&self, mut else_function: F) -> $shared_function_type<$t, $u, $r>
+            where
+                F: $else_function_trait<$t, $u, $r> + Send + Sync + 'static,
+            {
+                let predicate = self.predicate.clone();
+                let mut then_function = self.function.clone();
+                $shared_function_type::new(move |t, u| {
+                    if predicate.test(t, u) {
+                        then_function.apply(t, u)
+                    } else {
+                        else_function.apply(t, u)
+                    }
+                })
+            }
+        }
+
+        impl<$t, $u, $r> $else_function_trait<$t, $u, $r> for $struct_name<$t, $u, $r>
+        where
+            $t: 'static,
+            $u: 'static,
+            $r: 'static,
+        {
+            fn apply(&self, first: &$t, second: &$u) -> $r {
+                if self.predicate.test(first, second) {
+                    self.function.apply(first, second)
+                } else {
+                    // This should not happen - conditional functions should always have an else
+                    // via or_else(), but we need to return something
+                    panic!("Conditional bi-function called without or_else() alternative")
+                }
+            }
+
+            // Use trait default implementations for conversion methods
+        }
+    };
+
 }
 
 pub(crate) use impl_shared_conditional_function;

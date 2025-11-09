@@ -131,8 +131,27 @@ macro_rules! impl_function_constant_method {
         }
     };
 
-    // Three generic parameters - BiFunction
+    // Three generic parameters - BiFunction (no extra bounds)
     ($struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r>
+        where
+            $t: 'static,
+            $u: 'static,
+            $r: Clone + 'static,
+        {
+            /// Creates a constant function
+            ///
+            /// # Examples
+            ///
+            #[doc = concat!("/// ```rust\n/// use prism3_function::{", stringify!($struct_name), ", BiFunction};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, \"test\"), \"hello\");\n/// ```")]
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
+                $struct_name::new(move |_, _| value.clone())
+            }
+        }
+    };
+
+    // Three generic parameters - BiFunction
+    ($struct_name:ident < $t:ident, $u:ident, $r:ident >, $($extra_bounds:tt)+) => {
         impl<$t, $u, $r> $struct_name<$t, $u, $r>
         where
             $t: 'static,

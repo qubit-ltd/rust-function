@@ -15,6 +15,8 @@
 //!
 //! Haixing Hu
 
+pub mod bi_function;
+pub mod bi_function_once;
 pub mod function;
 pub mod function_once;
 pub mod macros;
@@ -32,6 +34,24 @@ pub use function::{
     Function,
     RcConditionalFunction,
     RcFunction,
+};
+pub use bi_function::{
+    ArcBiFunction,
+    ArcBinaryFunction,
+    ArcConditionalBiFunction,
+    BiFunction,
+    BoxBiFunction,
+    BoxBinaryFunction,
+    BoxConditionalBiFunction,
+    FnBiFunctionOps,
+    RcBiFunction,
+    RcBinaryFunction,
+    RcConditionalBiFunction,
+};
+pub use bi_function_once::{
+    BoxBiFunctionOnce,
+    FnBiFunctionOnceOps,
+    BiFunctionOnce,
 };
 pub use function_once::{
     BoxFunctionOnce,
