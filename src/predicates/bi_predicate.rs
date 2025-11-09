@@ -148,7 +148,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::{impl_arc_conversions, impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,

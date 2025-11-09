@@ -175,7 +175,11 @@
 use std::rc::Rc;
 use std::sync::Arc;
 
-use crate::macros::{impl_arc_conversions, impl_box_conversions, impl_rc_conversions};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
 use crate::predicates::macros::{
     constants::{
         ALWAYS_FALSE_NAME,
@@ -488,11 +492,7 @@ pub struct BoxPredicate<T> {
 
 impl<T: 'static> BoxPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(
-        BoxPredicate<T>,
-        (Fn(&T) -> bool + 'static),
-        |f| Box::new(f)
-    );
+    impl_predicate_common_methods!(BoxPredicate<T>, (Fn(&T) -> bool + 'static), |f| Box::new(f));
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_box_predicate_methods!(BoxPredicate<T>);
@@ -544,11 +544,7 @@ pub struct RcPredicate<T> {
 
 impl<T: 'static> RcPredicate<T> {
     // Generates: new(), new_with_name(), name(), set_name(), always_true(), always_false()
-    impl_predicate_common_methods!(
-        RcPredicate<T>,
-        (Fn(&T) -> bool + 'static),
-        |f| Rc::new(f)
-    );
+    impl_predicate_common_methods!(RcPredicate<T>, (Fn(&T) -> bool + 'static), |f| Rc::new(f));
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
     impl_shared_predicate_methods!(RcPredicate<T>, 'static);
@@ -616,10 +612,7 @@ impl<T: 'static> ArcPredicate<T> {
     );
 
     // Generates: and(), or(), not(), nand(), xor(), nor()
-    impl_shared_predicate_methods!(
-        ArcPredicate<T>,
-        Send + Sync + 'static
-    );
+    impl_shared_predicate_methods!(ArcPredicate<T>, Send + Sync + 'static);
 }
 
 // Generates: impl Clone for ArcPredicate<T>
