@@ -17,6 +17,8 @@
 
 pub mod bi_function;
 pub mod bi_function_once;
+pub mod bi_mutating_function;
+pub mod bi_mutating_function_once;
 pub mod function;
 pub mod function_once;
 pub mod macros;
@@ -25,16 +27,6 @@ pub mod mutating_function_once;
 pub mod stateful_function;
 pub mod stateful_mutating_function;
 
-pub use function::{
-    ArcConditionalFunction,
-    ArcFunction,
-    BoxConditionalFunction,
-    BoxFunction,
-    FnFunctionOps,
-    Function,
-    RcConditionalFunction,
-    RcFunction,
-};
 pub use bi_function::{
     ArcBiFunction,
     ArcBinaryFunction,
@@ -49,9 +41,38 @@ pub use bi_function::{
     RcConditionalBiFunction,
 };
 pub use bi_function_once::{
+    BiFunctionOnce,
     BoxBiFunctionOnce,
     FnBiFunctionOnceOps,
-    BiFunctionOnce,
+};
+pub use bi_mutating_function::{
+    ArcBiMutatingFunction,
+    ArcBinaryMutatingFunction,
+    ArcConditionalBiMutatingFunction,
+    BiMutatingFunction,
+    BoxBiMutatingFunction,
+    BoxBinaryMutatingFunction,
+    BoxConditionalBiMutatingFunction,
+    FnBiMutatingFunctionOps,
+    RcBiMutatingFunction,
+    RcBinaryMutatingFunction,
+    RcConditionalBiMutatingFunction,
+};
+pub use bi_mutating_function_once::{
+    BiMutatingFunctionOnce,
+    BoxBiMutatingFunctionOnce,
+    BoxConditionalBiMutatingFunctionOnce,
+    FnBiMutatingFunctionOnceOps,
+};
+pub use function::{
+    ArcConditionalFunction,
+    ArcFunction,
+    BoxConditionalFunction,
+    BoxFunction,
+    FnFunctionOps,
+    Function,
+    RcConditionalFunction,
+    RcFunction,
 };
 pub use function_once::{
     BoxFunctionOnce,
