@@ -416,11 +416,7 @@ impl<T> MutatorOnce<T> for BoxMutatorOnce<T> {
         (self.function)(value)
     }
 
-    impl_box_once_conversions!(
-        BoxMutatorOnce<T>,
-        MutatorOnce,
-        FnOnce(&mut T)
-    );
+    impl_box_once_conversions!(BoxMutatorOnce<T>, MutatorOnce, FnOnce(&mut T));
 }
 
 // Generate Debug and Display trait implementations

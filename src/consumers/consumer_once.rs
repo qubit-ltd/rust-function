@@ -329,18 +329,10 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_consumer_common_methods!(
-        BoxConsumerOnce<T>,
-        (FnOnce(&T) + 'static),
-        |f| Box::new(f)
-    );
+    impl_consumer_common_methods!(BoxConsumerOnce<T>, (FnOnce(&T) + 'static), |f| Box::new(f));
 
     // Generates: when() and and_then() methods that consume self
-    impl_box_consumer_methods!(
-        BoxConsumerOnce<T>,
-        BoxConditionalConsumerOnce,
-        ConsumerOnce
-    );
+    impl_box_consumer_methods!(BoxConsumerOnce<T>, BoxConditionalConsumerOnce, ConsumerOnce);
 }
 
 impl<T> ConsumerOnce<T> for BoxConsumerOnce<T> {
@@ -348,11 +340,7 @@ impl<T> ConsumerOnce<T> for BoxConsumerOnce<T> {
         (self.function)(value)
     }
 
-    impl_box_once_conversions!(
-        BoxConsumerOnce<T>,
-        ConsumerOnce,
-        FnOnce(&T)
-    );
+    impl_box_once_conversions!(BoxConsumerOnce<T>, ConsumerOnce, FnOnce(&T));
 
     // do NOT override ConsumerOnce::to_xxxx() because BoxConsumerOnce is not Clone
     // and calling BoxConsumerOnce::to_xxxx() will cause a compile error
