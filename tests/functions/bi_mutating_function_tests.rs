@@ -901,7 +901,7 @@ fn test_impl_conditional_function_clone_three_params_bi_mutating_macro_coverage(
             *x += *y;
             *x
         });
-        let pred = ArcBiPredicate::new(|x: &i32, y: &i32| *x >= 0);
+        let pred = ArcBiPredicate::new(|x: &i32, _y: &i32| *x >= 0);
 
         let conditional_arc = increment.when(pred);
 

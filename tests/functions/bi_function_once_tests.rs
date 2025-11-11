@@ -542,7 +542,7 @@ fn test_box_bi_function_once_debug() {
 fn test_box_conditional_bi_function_once_display() {
     // Test Display implementation for conditional
     let add = BoxBiFunctionOnce::new(|x: &i32, y: &i32| *x + *y);
-    let conditional = add.when(|x: &i32, y: &i32| *x > 0);
+    let conditional = add.when(|x: &i32, _y: &i32| *x > 0);
     let display = format!("{}", conditional);
     assert!(display.contains("BoxConditionalBiFunctionOnce"));
 }
@@ -551,7 +551,7 @@ fn test_box_conditional_bi_function_once_display() {
 fn test_box_conditional_bi_function_once_debug() {
     // Test Debug implementation for conditional
     let add = BoxBiFunctionOnce::new(|x: &i32, y: &i32| *x + *y);
-    let conditional = add.when(|x: &i32, y: &i32| *x > 0);
+    let conditional = add.when(|x: &i32, _y: &i32| *x > 0);
     let debug = format!("{:?}", conditional);
     assert!(debug.contains("BoxConditionalBiFunctionOnce"));
 }
