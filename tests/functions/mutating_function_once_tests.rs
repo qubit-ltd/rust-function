@@ -500,3 +500,57 @@ fn test_box_conditional_mutating_function_once_debug_display() {
     assert!(named_display_str.contains("BoxPredicate"));
     assert!(named_display_str.ends_with(")"));
 }
+
+#[test]
+fn test_custom_cloneable_mutating_function_once_to_box() {
+    // Test to_box method on a custom struct that implements both MutatingFunctionOnce and Clone
+    #[derive(Clone, Debug)]
+    struct MyCloneableMutatingFunction {
+        multiplier: i32,
+        offset: i32,
+    }
+
+    impl MyCloneableMutatingFunction {
+        fn new(multiplier: i32, offset: i32) -> Self {
+            Self { multiplier, offset }
+        }
+    }
+
+    impl MutatingFunctionOnce<i32, i32> for MyCloneableMutatingFunction {
+        fn apply(self, input: &mut i32) -> i32 {
+            *input = *input * self.multiplier + self.offset;
+            *input
+        }
+    }
+
+    // Test that to_box method is available and works correctly
+    let func = MyCloneableMutatingFunction::new(2, 5);
+
+    // Use to_box method (should be available because struct implements Clone)
+    let mut input1 = 3;
+    let boxed = func.to_box();
+    let result1 = boxed.apply(&mut input1);
+    assert_eq!(result1, 11); // (3 * 2) + 5 = 11
+    assert_eq!(input1, 11);
+
+    // Original function should still be usable (because to_box borrows &self)
+    let mut input2 = 4;
+    let another_boxed = func.to_box();
+    let result2 = another_boxed.apply(&mut input2);
+    assert_eq!(result2, 13); // (4 * 2) + 5 = 13
+    assert_eq!(input2, 13);
+
+    // Test to_fn method as well
+    let func_closure = func.to_fn();
+    let mut input3 = 2;
+    let result3 = func_closure(&mut input3);
+    assert_eq!(result3, 9); // (2 * 2) + 5 = 9
+    assert_eq!(input3, 9);
+
+    // Original function should still be usable after to_fn
+    let mut input4 = 1;
+    let final_boxed = func.to_box();
+    let result4 = final_boxed.apply(&mut input4);
+    assert_eq!(result4, 7); // (1 * 2) + 5 = 7
+    assert_eq!(input4, 7);
+}
