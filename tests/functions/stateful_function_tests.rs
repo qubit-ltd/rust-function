@@ -23,6 +23,7 @@ use prism3_function::{
     ArcStatefulFunction,
     BoxPredicate,
     BoxStatefulFunction,
+    FunctionOnce,
     RcPredicate,
     RcStatefulFunction,
     StatefulFunction,
@@ -38,13 +39,13 @@ fn test_stateful_function_trait_apply() {
 
     let counter = Rc::new(RefCell::new(0));
     let counter_clone = Rc::clone(&counter);
-    let mut func = move |x: &i32| {
+    let func = move |x: &i32| {
         let current = *counter_clone.borrow();
         *counter_clone.borrow_mut() += 1;
         x + current
     };
-    assert_eq!(func.apply(&10), 10);
-    assert_eq!(func.apply(&10), 11);
+    assert_eq!(func.clone().apply(&10), 10);
+    assert_eq!(func.clone().apply(&10), 11);
     assert_eq!(func.apply(&10), 12);
 }
 
@@ -59,7 +60,7 @@ fn test_stateful_function_trait_into_box() {
         *counter_clone.borrow_mut() += 1;
         x + current
     };
-    let mut boxed = func.into_box();
+    let mut boxed = StatefulFunction::into_box(func);
     assert_eq!(boxed.apply(&10), 10);
     assert_eq!(boxed.apply(&10), 11);
 }
@@ -108,7 +109,7 @@ fn test_stateful_function_trait_into_fn() {
         *counter_clone.borrow_mut() += 1;
         x + current
     };
-    let mut closure = func.into_fn();
+    let mut closure = StatefulFunction::into_fn(func);
     assert_eq!(closure(&10), 10);
     assert_eq!(closure(&10), 11);
 }
@@ -124,7 +125,7 @@ fn test_stateful_function_trait_to_box() {
         *counter_clone.borrow_mut() += 1;
         x + current
     };
-    let mut boxed = func.to_box();
+    let mut boxed = StatefulFunction::to_box(&func);
     assert_eq!(boxed.apply(&10), 10);
     assert_eq!(boxed.apply(&10), 11);
 }
@@ -173,9 +174,42 @@ fn test_stateful_function_trait_to_fn() {
         *counter_clone.borrow_mut() += 1;
         x + current
     };
-    let mut closure = func.to_fn();
+    let mut closure = StatefulFunction::to_fn(&func);
     assert_eq!(closure(&10), 10);
     assert_eq!(closure(&10), 11);
+}
+
+#[test]
+fn test_stateful_function_trait_into_once() {
+    // Test consuming conversion to BoxFunctionOnce
+
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
+    let func = move |x: &i32| {
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
+    };
+
+    let once_func = func.into_once();
+    assert_eq!(once_func.apply(&10), 10);
+}
+
+#[test]
+fn test_stateful_function_trait_to_once() {
+    // Test non-consuming conversion to BoxFunctionOnce
+
+    let counter = Rc::new(RefCell::new(0));
+    let counter_clone = Rc::clone(&counter);
+    let func = move |x: &i32| {
+        let current = *counter_clone.borrow();
+        *counter_clone.borrow_mut() += 1;
+        x + current
+    };
+
+    let once_func = func.to_once();
+    assert_eq!(once_func.apply(&10), 10);
+    // Note: Original func is consumed by to_once since it calls clone().into_once()
 }
 
 // ============================================================================
@@ -1568,4 +1602,73 @@ fn test_arc_conditional_stateful_function_debug_display() {
     assert!(named_display_str.contains("ArcStatefulFunction(arc_stateful_double)"));
     assert!(named_display_str.contains("ArcPredicate"));
     assert!(named_display_str.ends_with(")"));
+}
+
+// ============================================================================
+// StatefulFunction Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_stateful_function_trait_default_methods {
+    use super::*;
+    use prism3_function::FunctionOnce;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn test_custom_stateful_function_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyStatefulFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulFunction<i32, i32> for MyStatefulFunction {
+            fn apply(&mut self, value: &i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value * 2
+            }
+        }
+
+        let my_func = MyStatefulFunction {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the function
+        let once_func = my_func.into_once();
+        let result = once_func.apply(&5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_stateful_function_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyStatefulFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulFunction<i32, i32> for MyStatefulFunction {
+            fn apply(&mut self, value: &i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value * 2
+            }
+        }
+
+        let mut my_func = MyStatefulFunction {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_func = my_func.to_once();
+        let result = once_func.apply(&5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original function should still be usable
+        let result2 = my_func.apply(&3);
+        assert_eq!(result2, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
 }

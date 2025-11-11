@@ -452,3 +452,79 @@ mod test_box_conditional_mutator_once_debug_display {
         assert_eq!(value, 6);
     }
 }
+
+// Tests for to_box() method
+#[cfg(test)]
+mod custom_mutator_to_methods_tests {
+    use super::*;
+    use std::sync::{Arc, Mutex};
+
+    /// Cloneable custom mutator for testing to_xxx() methods
+    #[derive(Clone)]
+    struct CloneableMutator {
+        log: Arc<Mutex<Vec<i32>>>,
+        multiplier: i32,
+    }
+
+    impl CloneableMutator {
+        fn new(log: Arc<Mutex<Vec<i32>>>, multiplier: i32) -> Self {
+            Self { log, multiplier }
+        }
+    }
+
+    impl MutatorOnce<i32> for CloneableMutator {
+        fn apply(self, value: &mut i32) {
+            *value *= self.multiplier;
+            self.log.lock().unwrap().push(*value);
+        }
+    }
+
+    #[test]
+    fn test_custom_mutator_to_box() {
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let mutator = CloneableMutator::new(log.clone(), 2);
+        let boxed = mutator.to_box();
+        let mut value = 7;
+        boxed.apply(&mut value);
+        assert_eq!(value, 14);
+        assert_eq!(*log.lock().unwrap(), vec![14]);
+    }
+
+    #[test]
+    fn test_custom_mutator_to_box_multiple_times() {
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let mutator = CloneableMutator::new(log.clone(), 3);
+
+        // to_box() should allow being called multiple times since the mutator is Clone
+        let boxed1 = mutator.to_box();
+        let boxed2 = mutator.to_box();
+
+        let mut value1 = 6;
+        boxed1.apply(&mut value1);
+        assert_eq!(value1, 18);
+
+        let mut value2 = 4;
+        boxed2.apply(&mut value2);
+        assert_eq!(value2, 12);
+
+        assert_eq!(*log.lock().unwrap(), vec![18, 12]);
+    }
+
+    #[test]
+    fn test_custom_mutator_to_box_original_still_usable() {
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let mutator = CloneableMutator::new(log.clone(), 2);
+
+        let boxed = mutator.to_box();
+        let mut value1 = 5;
+        boxed.apply(&mut value1);
+        assert_eq!(value1, 10);
+
+        // Original mutator should still be usable
+        let mut value2 = 10;
+        mutator.apply(&mut value2);
+        assert_eq!(value2, 20);
+
+        assert_eq!(*log.lock().unwrap(), vec![10, 20]);
+    }
+}

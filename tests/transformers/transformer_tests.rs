@@ -2620,3 +2620,75 @@ mod transformer_once_tests {
         }
     }
 }
+
+// ============================================================================
+// Transformer Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_transformer_trait_default_methods {
+    use prism3_function::TransformerOnce;
+    use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+
+    #[test]
+    fn test_custom_transformer_into_once() {
+        use prism3_function::Transformer;
+
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyTransformer {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl Transformer<i32, i32> for MyTransformer {
+            fn apply(&self, value: i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                value * 2
+            }
+        }
+
+        let my_transformer = MyTransformer {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the transformer
+        let once_transformer = my_transformer.into_once();
+        let result = once_transformer.apply(5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_transformer_to_once() {
+        use prism3_function::Transformer;
+
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyTransformer {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl Transformer<i32, i32> for MyTransformer {
+            fn apply(&self, value: i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                value * 2
+            }
+        }
+
+        let my_transformer = MyTransformer {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_transformer = my_transformer.to_once();
+        let result = once_transformer.apply(5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original transformer should still be usable
+        let result2 = my_transformer.apply(3);
+        assert_eq!(result2, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+}

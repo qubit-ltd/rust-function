@@ -1927,6 +1927,36 @@ mod closure_stateful_bi_consumer_tests {
         func(&10, &20);
         assert_eq!(*log.lock().unwrap(), vec![8, 30]);
     }
+
+    // Test into_once() on closure
+    #[test]
+    fn test_closure_into_once() {
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let l = log.clone();
+        let closure = move |x: &i32, y: &i32| {
+            l.lock().unwrap().push(*x + *y);
+        };
+        let once_consumer = StatefulBiConsumer::into_once(closure);
+        once_consumer.accept(&5, &3);
+        assert_eq!(*log.lock().unwrap(), vec![8]);
+    }
+
+    // Test to_once() on closure
+    #[test]
+    fn test_closure_to_once() {
+        let log = Arc::new(Mutex::new(Vec::new()));
+        let l1 = log.clone();
+        let _l2 = log.clone();
+        let closure = move |x: &i32, y: &i32| {
+            l1.lock().unwrap().push(*x + *y);
+        };
+        let once_consumer = StatefulBiConsumer::to_once(&closure);
+        once_consumer.accept(&5, &3);
+        assert_eq!(*log.lock().unwrap(), vec![8]);
+        // Original closure should still be usable
+        closure.accept(&10, &20);
+        assert_eq!(*log.lock().unwrap(), vec![8, 30]);
+    }
 }
 
 // ============================================================================

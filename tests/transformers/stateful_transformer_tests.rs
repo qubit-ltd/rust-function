@@ -1826,3 +1826,72 @@ fn test_arc_stateful_transformer_display_without_name() {
     let display_str = format!("{}", transformer);
     assert_eq!(display_str, "ArcStatefulTransformer");
 }
+
+// ============================================================================
+// StatefulTransformer Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_stateful_transformer_trait_default_methods {
+    use super::*;
+    use prism3_function::TransformerOnce;
+    use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+
+    #[test]
+    fn test_custom_stateful_transformer_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyStatefulTransformer {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulTransformer<i32, i32> for MyStatefulTransformer {
+            fn apply(&mut self, value: i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                value * 2
+            }
+        }
+
+        let my_transformer = MyStatefulTransformer {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the transformer
+        let once_transformer = my_transformer.into_once();
+        let result = once_transformer.apply(5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_stateful_transformer_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyStatefulTransformer {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulTransformer<i32, i32> for MyStatefulTransformer {
+            fn apply(&mut self, value: i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                value * 2
+            }
+        }
+
+        let mut my_transformer = MyStatefulTransformer {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_transformer = my_transformer.to_once();
+        let result = once_transformer.apply(5);
+        assert_eq!(result, 10);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original transformer should still be usable
+        let result2 = my_transformer.apply(3);
+        assert_eq!(result2, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+}

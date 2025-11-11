@@ -12,8 +12,10 @@
 
 use prism3_function::{
     ArcStatefulMutatingFunction,
+    BoxMutatingFunctionOnce,
     BoxStatefulMutatingFunction,
     FnStatefulMutatingFunctionOps,
+    MutatingFunctionOnce,
     RcStatefulMutatingFunction,
     StatefulMutatingFunction,
 };
@@ -738,18 +740,47 @@ mod test_closure {
 
     #[test]
     fn test_closure_implements_trait() {
-        let mut count = 0;
-        let mut closure = move |x: &mut i32| {
-            count += 1;
+        // Use Rc<RefCell<>> to properly test stateful behavior
+        let count = Rc::new(RefCell::new(0));
+        let count_clone = Rc::clone(&count);
+        let closure = move |x: &mut i32| {
+            let mut current = count_clone.borrow_mut();
+            *current += 1;
             *x *= 2;
-            count
+            *current
         };
 
+        // Test direct closure calls
         let mut value = 5;
-        assert_eq!(closure.apply(&mut value), 1);
+        let direct_result1 = closure(&mut value);
+        assert_eq!(direct_result1, 1);
         assert_eq!(value, 10);
-        assert_eq!(closure.apply(&mut value), 2);
+
+        let direct_result2 = closure(&mut value);
+        assert_eq!(direct_result2, 2);
         assert_eq!(value, 20);
+
+        // Test with trait
+        let count2 = Rc::new(RefCell::new(0));
+        let count2_clone = Rc::clone(&count2);
+        let mut closure2 = move |x: &mut i32| {
+            let mut current = count2_clone.borrow_mut();
+            *current += 1;
+            *x *= 2;
+            *current
+        };
+
+        // Test that closure implements StatefulMutatingFunction trait
+        let _trait_check: &mut dyn StatefulMutatingFunction<i32, i32> = &mut closure2;
+
+        let mut value2 = 5;
+        let result1 = StatefulMutatingFunction::apply(&mut closure2, &mut value2);
+        assert_eq!(result1, 1);
+        assert_eq!(value2, 10);
+
+        let result2 = StatefulMutatingFunction::apply(&mut closure2, &mut value2);
+        assert_eq!(result2, 2);
+        assert_eq!(value2, 20);
     }
 
     #[test]
@@ -797,11 +828,50 @@ mod test_closure {
             *x *= 2;
             count
         };
-        let mut boxed = closure.into_box();
+        let mut boxed = StatefulMutatingFunction::into_box(closure);
 
         let mut value = 5;
         assert_eq!(boxed.apply(&mut value), 1);
         assert_eq!(value, 10);
+    }
+
+    #[test]
+    fn test_closure_into_once() {
+        let mut count = 0;
+        let closure = move |x: &mut i32| {
+            count += 1;
+            *x *= 2;
+            count
+        };
+        let once_func: BoxMutatingFunctionOnce<i32, i32> = closure.into_once();
+
+        let mut value = 5;
+        assert_eq!(once_func.apply(&mut value), 1);
+        assert_eq!(value, 10);
+    }
+
+    #[test]
+    fn test_closure_to_once() {
+        // Use Rc<RefCell<>> to properly test shared state with to_once
+        let count = Rc::new(RefCell::new(0));
+        let count_clone = Rc::clone(&count);
+        let closure = move |x: &mut i32| {
+            let mut current = count_clone.borrow_mut();
+            *current += 1;
+            *x *= 2;
+            *current
+        };
+
+        let once_func: BoxMutatingFunctionOnce<i32, i32> = StatefulMutatingFunction::to_once(&closure);
+
+        let mut value = 5;
+        assert_eq!(once_func.apply(&mut value), 1);
+        assert_eq!(value, 10);
+
+        // Original closure should still be usable and have independent state
+        let mut value2 = 3;
+        assert_eq!(closure(&mut value2), 2);
+        assert_eq!(value2, 6);
     }
 
     #[test]
@@ -842,7 +912,7 @@ mod test_closure {
             *x *= 2;
             count
         };
-        let mut boxed = closure.to_box();
+        let mut boxed = StatefulMutatingFunction::to_box(&closure);
 
         let mut value = 5;
         assert_eq!(boxed.apply(&mut value), 1);
@@ -887,7 +957,7 @@ mod test_closure {
             *x *= 2;
             count
         };
-        let mut fn_closure = closure.to_fn();
+        let mut fn_closure = StatefulMutatingFunction::to_fn(&closure);
 
         let mut value = 5;
         assert_eq!(fn_closure(&mut value), 1);
@@ -902,7 +972,7 @@ mod test_closure {
             *x *= 2;
             count
         };
-        let mut fn_closure = closure.into_fn();
+        let mut fn_closure = StatefulMutatingFunction::into_fn(closure);
 
         let mut value = 5;
         assert_eq!(fn_closure(&mut value), 1);
@@ -1284,4 +1354,81 @@ fn test_arc_conditional_stateful_mutating_function_debug_display() {
     assert!(named_display_str.contains("ArcStatefulMutatingFunction(arc_stateful_mutating_double)"));
     assert!(named_display_str.contains("ArcPredicate"));
     assert!(named_display_str.ends_with(")"));
+}
+
+// ============================================================================
+// StatefulMutatingFunction Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_stateful_mutating_function_trait_default_methods {
+    use super::*;
+    use prism3_function::MutatingFunctionOnce;
+    use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+
+    #[test]
+    fn test_custom_stateful_mutating_function_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyStatefulMutatingFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulMutatingFunction<i32, i32> for MyStatefulMutatingFunction {
+            fn apply(&mut self, value: &mut i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value += 1;
+                *value
+            }
+        }
+
+        let my_func = MyStatefulMutatingFunction {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the function
+        let once_func = my_func.into_once();
+        let mut value = 5;
+        let result = once_func.apply(&mut value);
+        assert_eq!(result, 6);
+        assert_eq!(value, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_stateful_mutating_function_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyStatefulMutatingFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulMutatingFunction<i32, i32> for MyStatefulMutatingFunction {
+            fn apply(&mut self, value: &mut i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value += 1;
+                *value
+            }
+        }
+
+        let mut my_func = MyStatefulMutatingFunction {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_func = my_func.to_once();
+        let mut value = 5;
+        let result = once_func.apply(&mut value);
+        assert_eq!(result, 6);
+        assert_eq!(value, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original function should still be usable
+        let mut value2 = 10;
+        let result2 = my_func.apply(&mut value2);
+        assert_eq!(result2, 11);
+        assert_eq!(value2, 11);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
 }

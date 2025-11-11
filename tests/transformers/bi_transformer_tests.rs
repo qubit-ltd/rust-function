@@ -2019,3 +2019,117 @@ mod conditional_transformer_display_debug_tests {
         assert!(debug_str.contains("ArcConditionalBiTransformer"));
     }
 }
+
+// ============================================================================
+// Custom BiTransformer Implementation Tests - Test Trait Default Methods (into_*)
+// ============================================================================
+
+#[cfg(test)]
+mod custom_bi_transformer_into_tests {
+    use super::*;
+    use prism3_function::BiTransformerOnce;
+
+    /// Test custom BiTransformer that implements into_* methods by consuming self
+    #[derive(Clone)]
+    struct CustomBiTransformer {
+        multiplier: i32,
+    }
+
+    impl CustomBiTransformer {
+        fn new(multiplier: i32) -> Self {
+            Self { multiplier }
+        }
+    }
+
+    impl BiTransformer<i32, i32, i32> for CustomBiTransformer {
+        fn apply(&self, first: i32, second: i32) -> i32 {
+            (first + second) * self.multiplier
+        }
+    }
+
+    #[test]
+    fn test_custom_bi_transformer_default_into_box() {
+        // Test the default into_box() implementation provided by BiTransformer trait
+        let transformer = CustomBiTransformer::new(3);
+        let boxed = transformer.into_box();
+        assert_eq!(boxed.apply(5, 10), 45); // (5 + 10) * 3 = 45
+    }
+
+    #[test]
+    fn test_custom_bi_transformer_default_into_rc() {
+        // Test the default into_rc() implementation provided by BiTransformer trait
+        let transformer = CustomBiTransformer::new(4);
+        let rc = transformer.into_rc();
+        assert_eq!(rc.apply(3, 7), 40); // (3 + 7) * 4 = 40
+
+        // Test rc cloning
+        let rc_clone = rc.clone();
+        assert_eq!(rc_clone.apply(2, 3), 20); // (2 + 3) * 4 = 20
+    }
+
+    #[test]
+    fn test_custom_bi_transformer_default_into_fn() {
+        // Test the default into_fn() implementation provided by BiTransformer trait
+        let transformer = CustomBiTransformer::new(5);
+        let func = transformer.into_fn();
+        assert_eq!(func(4, 6), 50); // (4 + 6) * 5 = 50
+    }
+
+    #[test]
+    fn test_custom_bi_transformer_default_into_once() {
+        // Test the default into_once() implementation provided by BiTransformer trait
+        let transformer = CustomBiTransformer::new(2);
+        let once = transformer.into_once();
+        assert_eq!(once.apply(1, 2), 6); // (1 + 2) * 2 = 6
+    }
+
+    /// Test custom Send + Sync BiTransformer's default into_arc() implementation
+    #[derive(Clone)]
+    struct ThreadSafeBiTransformer {
+        multiplier: i32,
+    }
+
+    impl ThreadSafeBiTransformer {
+        fn new(multiplier: i32) -> Self {
+            Self { multiplier }
+        }
+    }
+
+    impl BiTransformer<i32, i32, i32> for ThreadSafeBiTransformer {
+        fn apply(&self, first: i32, second: i32) -> i32 {
+            (first + second) * self.multiplier
+        }
+    }
+
+    // Manual implementation of Send and Sync
+    unsafe impl Send for ThreadSafeBiTransformer {}
+    unsafe impl Sync for ThreadSafeBiTransformer {}
+
+    #[test]
+    fn test_custom_bi_transformer_default_into_arc() {
+        // Test the default into_arc() implementation provided by BiTransformer trait
+        let transformer = ThreadSafeBiTransformer::new(3);
+        let arc = transformer.into_arc();
+        assert_eq!(arc.apply(10, 5), 45); // (10 + 5) * 3 = 45
+
+        // Test arc cloning
+        let arc_clone = arc.clone();
+        assert_eq!(arc_clone.apply(3, 7), 30); // (3 + 7) * 3 = 30
+
+        // Test cross-thread usage
+        let arc_thread = arc.clone();
+        let handle = thread::spawn(move || arc_thread.apply(4, 6));
+        assert_eq!(handle.join().unwrap(), 30); // (4 + 6) * 3 = 30
+    }
+
+    #[test]
+    fn test_custom_bi_transformer_default_to_once() {
+        // Test the default to_once() implementation provided by BiTransformer trait (requires Clone)
+        let transformer = CustomBiTransformer::new(6);
+        let once = transformer.to_once();
+        assert_eq!(once.apply(2, 4), 36); // (2 + 4) * 6 = 36
+
+        // Original transformer still usable
+        assert_eq!(transformer.apply(1, 1), 12); // (1 + 1) * 6 = 12
+    }
+}

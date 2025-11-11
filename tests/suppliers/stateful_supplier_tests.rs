@@ -2607,3 +2607,106 @@ mod test_stateful_supplier_debug_display {
         }
     }
 }
+
+// ============================================================================
+// StatefulSupplier Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_stateful_supplier_trait_default_methods {
+    use super::*;
+    use prism3_function::SupplierOnce;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn test_custom_stateful_supplier_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyStatefulSupplier {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulSupplier<i32> for MyStatefulSupplier {
+            fn get(&mut self) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                42
+            }
+        }
+
+        let my_supplier = MyStatefulSupplier {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the supplier
+        let once_supplier = my_supplier.into_once();
+        let result = once_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_stateful_supplier_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyStatefulSupplier {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl StatefulSupplier<i32> for MyStatefulSupplier {
+            fn get(&mut self) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                42
+            }
+        }
+
+        let mut my_supplier = MyStatefulSupplier {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_supplier = my_supplier.to_once();
+        let result = once_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original supplier should still be usable
+        let result2 = my_supplier.get();
+        assert_eq!(result2, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+
+    #[test]
+    fn test_closure_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+        let c = counter.clone();
+
+        let closure = move || {
+            c.fetch_add(1, Ordering::SeqCst);
+            42
+        };
+
+        // Test into_once() - should consume the closure
+        let once_supplier = StatefulSupplier::into_once(closure);
+        let result = once_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_closure_into_box() {
+        let counter = Arc::new(AtomicUsize::new(0));
+        let c = counter.clone();
+
+        let closure = move || {
+            c.fetch_add(1, Ordering::SeqCst);
+            42
+        };
+
+        // Test into_box() - should consume the closure
+        let mut box_supplier = StatefulSupplier::into_box(closure);
+        let result = box_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+}

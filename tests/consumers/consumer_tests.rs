@@ -1293,6 +1293,40 @@ mod to_once_tests {
         once_consumer.accept(&1);
         assert_eq!(counter.load(Ordering::SeqCst), 1);
     }
+
+    #[test]
+    fn test_closure_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+        let c = counter.clone();
+
+        let closure = move |x: &i32| {
+            c.fetch_add(*x as usize, Ordering::SeqCst);
+        };
+
+        // Test into_once() - should consume the closure
+        let once_consumer = closure.into_once();
+        once_consumer.accept(&5);
+        assert_eq!(counter.load(Ordering::SeqCst), 5);
+    }
+
+    #[test]
+    fn test_closure_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+        let c = counter.clone();
+
+        let closure = move |x: &i32| {
+            c.fetch_add(*x as usize, Ordering::SeqCst);
+        };
+
+        // Test to_once() - should not consume the original closure
+        let once_consumer = closure.to_once();
+        once_consumer.accept(&3);
+        assert_eq!(counter.load(Ordering::SeqCst), 3);
+
+        // Original closure should still be usable
+        closure.accept(&2);
+        assert_eq!(counter.load(Ordering::SeqCst), 5);
+    }
 }
 
 // ============================================================================

@@ -14,6 +14,7 @@ use prism3_function::{
     BoxMutatingFunction,
     FnMutatingFunctionOps,
     MutatingFunction,
+    MutatingFunctionOnce,
     RcMutatingFunction,
 };
 
@@ -542,7 +543,7 @@ mod test_closure {
             *x *= 2;
             *x
         };
-        let boxed = closure.into_box();
+        let boxed = MutatingFunction::into_box(closure);
 
         let mut value = 5;
         assert_eq!(boxed.apply(&mut value), 10);
@@ -581,7 +582,7 @@ mod test_closure {
             *x *= 2;
             *x
         };
-        let boxed = closure.to_box();
+        let boxed = MutatingFunction::to_box(&closure);
 
         let mut value = 5;
         assert_eq!(boxed.apply(&mut value), 10);
@@ -620,7 +621,7 @@ mod test_closure {
             *x *= 2;
             *x
         };
-        let fn_closure = closure.to_fn();
+        let fn_closure = MutatingFunction::to_fn(&closure);
 
         let mut value = 5;
         assert_eq!(fn_closure(&mut value), 10);
@@ -633,10 +634,36 @@ mod test_closure {
             *x *= 2;
             *x
         };
-        let fn_closure = closure.into_fn();
+        let fn_closure = MutatingFunction::into_fn(closure);
 
         let mut value = 5;
         assert_eq!(fn_closure(&mut value), 10);
+        assert_eq!(value, 10);
+    }
+
+    #[test]
+    fn test_closure_into_once() {
+        let closure = |x: &mut i32| {
+            *x *= 2;
+            *x
+        };
+        let once_func = closure.into_once();
+
+        let mut value = 5;
+        assert_eq!(once_func.apply(&mut value), 10);
+        assert_eq!(value, 10);
+    }
+
+    #[test]
+    fn test_closure_to_once() {
+        let closure = |x: &mut i32| {
+            *x *= 2;
+            *x
+        };
+        let once_func = closure.to_once();
+
+        let mut value = 5;
+        assert_eq!(once_func.apply(&mut value), 10);
         assert_eq!(value, 10);
     }
 }
@@ -1044,4 +1071,81 @@ fn test_arc_conditional_mutating_function_debug_display() {
     assert!(named_display_str.contains("ArcMutatingFunction(arc_triple_mutating_func)"));
     assert!(named_display_str.contains("ArcPredicate"));
     assert!(named_display_str.ends_with(")"));
+}
+
+// ============================================================================
+// MutatingFunction Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_mutating_function_trait_default_methods {
+    use super::*;
+    use prism3_function::MutatingFunctionOnce;
+    use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+
+    #[test]
+    fn test_custom_mutating_function_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MyMutatingFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl MutatingFunction<i32, i32> for MyMutatingFunction {
+            fn apply(&self, value: &mut i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value += 1;
+                *value
+            }
+        }
+
+        let my_func = MyMutatingFunction {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the function
+        let once_func = my_func.into_once();
+        let mut value = 5;
+        let result = once_func.apply(&mut value);
+        assert_eq!(result, 6);
+        assert_eq!(value, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_mutating_function_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MyMutatingFunction {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl MutatingFunction<i32, i32> for MyMutatingFunction {
+            fn apply(&self, value: &mut i32) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                *value += 1;
+                *value
+            }
+        }
+
+        let my_func = MyMutatingFunction {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_func = my_func.to_once();
+        let mut value = 5;
+        let result = once_func.apply(&mut value);
+        assert_eq!(result, 6);
+        assert_eq!(value, 6);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original function should still be usable
+        let mut value2 = 10;
+        let result2 = my_func.apply(&mut value2);
+        assert_eq!(result2, 11);
+        assert_eq!(value2, 11);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
 }

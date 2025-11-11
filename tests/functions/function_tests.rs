@@ -724,6 +724,28 @@ fn test_fn_function_ops_when() {
     assert_eq!(conditional.apply(&-5), 5);
 }
 
+#[test]
+fn test_closure_function_into_once() {
+    // Test closure's into_once method (from blanket impl)
+    let multiply = |x: &i32| x * 3;
+
+    let once_func = multiply.into_once();
+    assert_eq!(once_func.apply(&4), 12); // 4 * 3 = 12
+}
+
+#[test]
+fn test_closure_function_to_once() {
+    // Test closure's to_once method (from blanket impl)
+    let add_five = |x: &i32| x + 5;
+
+    let once_func = add_five.to_once();
+    assert_eq!(once_func.apply(&7), 12); // 7 + 5 = 12
+
+    // Original closure should still be usable
+    let another_once_func = add_five.to_once();
+    assert_eq!(another_once_func.apply(&3), 8); // 3 + 5 = 8
+}
+
 // ============================================================================
 // Function Trait Default Implementation Tests
 // ============================================================================
@@ -734,6 +756,7 @@ mod function_default_impl_tests {
         ArcFunction,
         BoxFunction,
         Function,
+        FunctionOnce,
     };
 
     /// Custom struct that only implements the core apply method of Function trait
@@ -872,6 +895,51 @@ mod function_default_impl_tests {
 
         let composed = custom1.to_box().and_then(custom2.to_box());
         assert_eq!(composed.apply(&7), 42); // 7 * 2 = 14, 14 * 3 = 42
+    }
+
+    #[test]
+    fn test_custom_function_into_once() {
+        // Test Function trait default into_once method on custom implementation
+        struct CustomFunction {
+            multiplier: i32,
+        }
+
+        impl Function<i32, i32> for CustomFunction {
+            fn apply(&self, input: &i32) -> i32 {
+                input * self.multiplier
+            }
+        }
+
+        let custom_func = CustomFunction { multiplier: 3 };
+
+        // Test default into_once method
+        let once_func = custom_func.into_once();
+        assert_eq!(once_func.apply(&5), 15); // 5 * 3 = 15
+    }
+
+    #[test]
+    fn test_cloneable_custom_function_to_once() {
+        // Test Function trait default to_once method on cloneable custom implementation
+        #[derive(Clone)]
+        struct CloneableCustomFunction {
+            multiplier: i32,
+        }
+
+        impl Function<i32, i32> for CloneableCustomFunction {
+            fn apply(&self, input: &i32) -> i32 {
+                input * self.multiplier
+            }
+        }
+
+        let custom_func = CloneableCustomFunction { multiplier: 4 };
+
+        // Test default to_once method (requires Clone)
+        let once_func = custom_func.to_once();
+        assert_eq!(once_func.apply(&6), 24); // 6 * 4 = 24
+
+        // Original function should still be usable since it's Clone
+        let another_once_func = custom_func.to_once();
+        assert_eq!(another_once_func.apply(&2), 8); // 2 * 4 = 8
     }
 }
 

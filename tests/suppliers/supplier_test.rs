@@ -1965,3 +1965,72 @@ mod test_supplier_debug_display {
         }
     }
 }
+
+// ============================================================================
+// Supplier Trait Default Methods Tests - into_once, to_once
+// ============================================================================
+
+#[cfg(test)]
+mod test_supplier_trait_default_methods {
+    use super::*;
+    use prism3_function::SupplierOnce;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn test_custom_supplier_into_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        struct MySupplier {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl Supplier<i32> for MySupplier {
+            fn get(&self) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                42
+            }
+        }
+
+        let my_supplier = MySupplier {
+            counter: counter.clone(),
+        };
+
+        // Test into_once() - should consume the supplier
+        let once_supplier = my_supplier.into_once();
+        let result = once_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+    }
+
+    #[test]
+    fn test_custom_supplier_to_once() {
+        let counter = Arc::new(AtomicUsize::new(0));
+
+        #[derive(Clone)]
+        struct MySupplier {
+            counter: Arc<AtomicUsize>,
+        }
+
+        impl Supplier<i32> for MySupplier {
+            fn get(&self) -> i32 {
+                self.counter.fetch_add(1, Ordering::SeqCst);
+                42
+            }
+        }
+
+        let my_supplier = MySupplier {
+            counter: counter.clone(),
+        };
+
+        // Test to_once() - should not consume the original
+        let once_supplier = my_supplier.to_once();
+        let result = once_supplier.get();
+        assert_eq!(result, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 1);
+
+        // Original supplier should still be usable
+        let result2 = my_supplier.get();
+        assert_eq!(result2, 42);
+        assert_eq!(counter.load(Ordering::SeqCst), 2);
+    }
+}

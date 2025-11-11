@@ -225,6 +225,21 @@ fn test_box_function_once_into_fn() {
     assert_eq!(func(&21), 42);
 }
 
+#[test]
+fn test_box_function_once_to_box_unavailable() {
+    // Test that to_box method is not available for BoxFunctionOnce
+    // BoxFunctionOnce doesn't implement Clone, so to_box method is not generated
+    // by impl_box_once_conversions macro due to trait bounds
+    let func = BoxFunctionOnce::new(|x: &i32| x * 2);
+
+    // This would not compile: func.to_box()
+    // The method is not available because BoxFunctionOnce doesn't implement Clone
+
+    // Instead, use into_box() which consumes self
+    let boxed = func.into_box();
+    assert_eq!(boxed.apply(&21), 42);
+}
+
 // ============================================================================
 // Edge Cases and Boundary Tests
 // ============================================================================
@@ -536,6 +551,47 @@ mod function_once_default_impl_tests {
 
         assert_eq!(func.apply(&10), 23); // 10 * 2 + 3
     }
+}
+
+#[test]
+fn test_custom_cloneable_function_once_to_box() {
+    // Test to_box method on a custom struct that implements both FunctionOnce and Clone
+    #[derive(Clone, Debug)]
+    struct MyCloneableFunction {
+        multiplier: i32,
+        offset: i32,
+    }
+
+    impl MyCloneableFunction {
+        fn new(multiplier: i32, offset: i32) -> Self {
+            Self { multiplier, offset }
+        }
+    }
+
+    impl FunctionOnce<i32, i32> for MyCloneableFunction {
+        fn apply(self, input: &i32) -> i32 {
+            input * self.multiplier + self.offset
+        }
+    }
+
+    // Test that to_box method is available and works correctly
+    let func = MyCloneableFunction::new(3, 10);
+
+    // Use to_box method (should be available because struct implements Clone)
+    let boxed = func.to_box();
+    assert_eq!(boxed.apply(&5), 25); // 5 * 3 + 10 = 25
+
+    // Original function should still be usable (because to_box borrows &self)
+    let another_boxed = func.to_box();
+    assert_eq!(another_boxed.apply(&2), 16); // 2 * 3 + 10 = 16
+
+    // Test to_fn method as well
+    let func_closure = func.to_fn();
+    assert_eq!(func_closure(&4), 22); // 4 * 3 + 10 = 22
+
+    // Original function should still be usable after to_fn
+    let final_boxed = func.to_box();
+    assert_eq!(final_boxed.apply(&1), 13); // 1 * 3 + 10 = 13
 }
 
 // ============================================================================

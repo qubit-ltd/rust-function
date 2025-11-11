@@ -1175,6 +1175,7 @@ mod conditional_stateful_bi_transformer_display_debug_tests {
 #[cfg(test)]
 mod stateful_bi_transformer_trait_default_methods_tests {
     use super::*;
+    use prism3_function::BiTransformerOnce;
 
     // Custom struct implementing StatefulBiTransformer to test default methods
     #[derive(Clone)]
@@ -1283,6 +1284,28 @@ mod stateful_bi_transformer_trait_default_methods_tests {
         // Test that original transformer is still usable
         let mut original = transformer.clone();
         assert_eq!(original.apply(8, 2), 91); // 8 + 2 + 81 (independent state)
+    }
+
+    #[test]
+    fn test_into_once() {
+        let transformer = TestStatefulBiTransformer::new(90);
+        let once_transformer = StatefulBiTransformer::into_once(transformer);
+
+        // Test that the once transformer works
+        assert_eq!(once_transformer.apply(9, 1), 101); // 9 + 1 + 91
+    }
+
+    #[test]
+    fn test_to_once() {
+        let transformer = TestStatefulBiTransformer::new(100);
+        let once_transformer = StatefulBiTransformer::to_once(&transformer);
+
+        // Test that the once transformer works
+        assert_eq!(once_transformer.apply(10, 0), 111); // 10 + 0 + 101
+
+        // Test that original transformer is still usable
+        let mut original = transformer.clone();
+        assert_eq!(original.apply(10, 0), 111); // 10 + 0 + 101 (independent state)
     }
 }
 
