@@ -15,7 +15,8 @@
 
 ## 核心特性
 
-- **完整的函数式接口套件**: 11 种核心函数式抽象及其多种变体
+- **完整的函数式接口套件**: 24 种核心函数式抽象及其多种变体
+- **高性能并发**: 使用 parking_lot Mutex 提供卓越的线程同步性能
 - **多种所有权模型**: 基于 Box 的单一所有权、基于 Arc 的线程安全共享、基于 Rc 的单线程共享
 - **灵活的 API 设计**: 基于 trait 的统一接口,针对不同场景优化的具体实现
 - **方法链式调用**: 所有类型都支持流式 API 和函数组合
@@ -28,12 +29,12 @@
 
 ```toml
 [dependencies]
-prism3-function = "0.1.0"
+prism3-function = "0.5.0"
 ```
 
 ## 核心抽象
 
-本 crate 提供 11 种核心函数式抽象,每种都有多个实现:
+本 crate 提供 24 种核心函数式抽象,每种都有多个实现:
 
 ### 1. Predicate - 条件测试
 
@@ -226,7 +227,7 @@ assert_eq!(factory.get(), "你好");
 
 **实现类型**:
 - `BoxStatefulSupplier<T>` - 单一所有权
-- `ArcStatefulSupplier<T>` - 线程安全(使用 Mutex)
+- `ArcStatefulSupplier<T>` - 线程安全(使用 parking_lot::Mutex)
 - `RcStatefulSupplier<T>` - 单线程(使用 RefCell)
 
 **示例**:
@@ -287,7 +288,7 @@ assert_eq!(to_string.apply(&42), "值: 42");
 
 **实现类型**:
 - `BoxStatefulFunction<T, R>` - 单一所有权
-- `ArcStatefulFunction<T, R>` - 线程安全(使用 Mutex)
+- `ArcStatefulFunction<T, R>` - 线程安全(使用 parking_lot::Mutex)
 - `RcStatefulFunction<T, R>` - 单线程(使用 RefCell)
 
 ### 15. Transformer - 消耗式值转换
@@ -336,7 +337,7 @@ assert_eq!(parse.transform("42".to_string()), 42);
 
 **实现类型**:
 - `BoxStatefulTransformer<T, R>` - 单一所有权
-- `ArcStatefulTransformer<T, R>` - 线程安全(使用 Mutex)
+- `ArcStatefulTransformer<T, R>` - 线程安全(使用 parking_lot::Mutex)
 - `RcStatefulTransformer<T, R>` - 单线程(使用 RefCell)
 
 ### 18. BiTransformer - 双值转换
@@ -385,7 +386,7 @@ assert_eq!(add.transform(10, 20), 30);
 
 **实现类型**:
 - `BoxStatefulConsumer<T>` - 单一所有权
-- `ArcStatefulConsumer<T>` - 线程安全(使用 Mutex)
+- `ArcStatefulConsumer<T>` - 线程安全(使用 parking_lot::Mutex)
 - `RcStatefulConsumer<T>` - 单线程(使用 RefCell)
 
 ### 22. StatefulBiConsumer - 有状态双值观察
@@ -398,7 +399,7 @@ assert_eq!(add.transform(10, 20), 30);
 
 **实现类型**:
 - `BoxStatefulBiConsumer<T, U>` - 单一所有权
-- `ArcStatefulBiConsumer<T, U>` - 线程安全(使用 Mutex)
+- `ArcStatefulBiConsumer<T, U>` - 线程安全(使用 parking_lot::Mutex)
 - `RcStatefulBiConsumer<T, U>` - 单线程(使用 RefCell)
 
 ### 23. Comparator - 值比较
@@ -522,7 +523,8 @@ assert!(!tester.test());
 2. **专门实现**: 针对不同场景优化的多个具体类型
 3. **类型保持**: 组合方法返回相同的具体类型
 4. **所有权灵活性**: 在单一所有权、线程安全共享或单线程共享之间选择
-5. **人体工学 API**: 自然的方法链式调用和函数组合
+5. **高性能并发**: 使用 parking_lot Mutex 提供卓越的同步性能
+6. **人体工学 API**: 自然的方法链式调用和函数组合
 
 ## 示例
 
