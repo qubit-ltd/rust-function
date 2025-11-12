@@ -232,12 +232,6 @@ where
     );
 }
 
-// Implement constant method for BoxTransformerOnce
-impl_transformer_constant_method!(BoxTransformerOnce<T, R>);
-
-// Use macro to generate Debug and Display implementations
-impl_transformer_debug_display!(BoxTransformerOnce<T, R>);
-
 // Implement TransformerOnce trait for BoxTransformerOnce
 impl<T, R> TransformerOnce<T, R> for BoxTransformerOnce<T, R> {
     fn apply(self, input: T) -> R {
@@ -250,6 +244,12 @@ impl<T, R> TransformerOnce<T, R> for BoxTransformerOnce<T, R> {
         FnOnce(T) -> R
     );
 }
+
+// Implement constant method for BoxTransformerOnce
+impl_transformer_constant_method!(BoxTransformerOnce<T, R>);
+
+// Use macro to generate Debug and Display implementations
+impl_transformer_debug_display!(BoxTransformerOnce<T, R>);
 
 // ============================================================================
 // Blanket implementation for standard FnOnce trait

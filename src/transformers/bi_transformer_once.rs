@@ -208,12 +208,6 @@ where
     );
 }
 
-// Implement constant method for BoxBiTransformerOnce
-impl_transformer_constant_method!(BoxBiTransformerOnce<T, U, R>);
-
-// Use macro to generate Debug and Display implementations
-impl_transformer_debug_display!(BoxBiTransformerOnce<T, U, R>);
-
 // Implement BiTransformerOnce trait for BoxBiTransformerOnce
 impl<T, U, R> BiTransformerOnce<T, U, R> for BoxBiTransformerOnce<T, U, R> {
     fn apply(self, first: T, second: U) -> R {
@@ -226,6 +220,12 @@ impl<T, U, R> BiTransformerOnce<T, U, R> for BoxBiTransformerOnce<T, U, R> {
         FnOnce(T, U) -> R
     );
 }
+
+// Implement constant method for BoxBiTransformerOnce
+impl_transformer_constant_method!(BoxBiTransformerOnce<T, U, R>);
+
+// Use macro to generate Debug and Display implementations
+impl_transformer_debug_display!(BoxBiTransformerOnce<T, U, R>);
 
 // ============================================================================
 // Blanket implementation for standard FnOnce trait

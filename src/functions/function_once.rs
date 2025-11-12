@@ -233,15 +233,6 @@ where
     );
 }
 
-// Generates: constant() method for BoxFunctionOnce<T, R>
-impl_function_constant_method!(BoxFunctionOnce<T, R>, 'static);
-
-// Generates: identity() method for BoxFunctionOnce<T, T>
-impl_function_identity_method!(BoxFunctionOnce<T, T>);
-
-// Generates: Debug and Display implementations for BoxFunctionOnce<T, R>
-impl_function_debug_display!(BoxFunctionOnce<T, R>);
-
 impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
     fn apply(self, input: &T) -> R {
         (self.function)(input)
@@ -253,6 +244,15 @@ impl<T, R> FunctionOnce<T, R> for BoxFunctionOnce<T, R> {
         FnOnce(&T) -> R
     );
 }
+
+// Generates: constant() method for BoxFunctionOnce<T, R>
+impl_function_constant_method!(BoxFunctionOnce<T, R>, 'static);
+
+// Generates: identity() method for BoxFunctionOnce<T, T>
+impl_function_identity_method!(BoxFunctionOnce<T, T>);
+
+// Generates: Debug and Display implementations for BoxFunctionOnce<T, R>
+impl_function_debug_display!(BoxFunctionOnce<T, R>);
 
 // ============================================================================
 // Blanket implementation for standard FnOnce trait

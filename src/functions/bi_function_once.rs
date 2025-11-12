@@ -211,12 +211,6 @@ where
     );
 }
 
-// Implement constant method for BoxBiFunctionOnce
-impl_function_constant_method!(BoxBiFunctionOnce<T, U, R>);
-
-// Use macro to generate Debug and Display implementations
-impl_function_debug_display!(BoxBiFunctionOnce<T, U, R>);
-
 // Implement BiFunctionOnce trait for BoxBiFunctionOnce
 impl<T, U, R> BiFunctionOnce<T, U, R> for BoxBiFunctionOnce<T, U, R> {
     fn apply(self, first: &T, second: &U) -> R {
@@ -230,6 +224,12 @@ impl<T, U, R> BiFunctionOnce<T, U, R> for BoxBiFunctionOnce<T, U, R> {
         FnOnce(&T, &U) -> R
     );
 }
+
+// Implement constant method for BoxBiFunctionOnce
+impl_function_constant_method!(BoxBiFunctionOnce<T, U, R>);
+
+// Use macro to generate Debug and Display implementations
+impl_function_debug_display!(BoxBiFunctionOnce<T, U, R>);
 
 // ============================================================================
 // Blanket implementation for standard FnOnce trait

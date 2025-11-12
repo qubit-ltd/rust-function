@@ -69,9 +69,10 @@
 
 use crate::{
     macros::box_conversions::impl_box_once_conversions,
+    transformers::Transformer,
+    predicates::Predicate,
     suppliers::macros::{
-        impl_supplier_common_methods,
-        impl_supplier_debug_display,
+        impl_box_supplier_methods, impl_supplier_common_methods, impl_supplier_debug_display
     },
 };
 
@@ -300,15 +301,20 @@ pub struct BoxSupplierOnce<T> {
     name: Option<String>,
 }
 
-impl<T> BoxSupplierOnce<T> {
+impl<T> BoxSupplierOnce<T>
+where
+    T: 'static,
+{
     // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(BoxSupplierOnce<T>, (FnOnce() -> T + 'static), |f| Box::new(
-        f
-    ));
-}
+    impl_supplier_common_methods!(
+        BoxSupplierOnce<T>,
+        (FnOnce() -> T + 'static),
+        |f| Box::new(f)
+    );
 
-// Generates: Debug and Display implementations for BoxSupplierOnce<T>
-impl_supplier_debug_display!(BoxSupplierOnce<T>);
+    // Generates: map(), filter(), zip()
+    impl_box_supplier_methods!(BoxSupplierOnce<T>, SupplierOnce);
+}
 
 // Generates: implement SupplierOnce for BoxSupplierOnce<T>
 impl<T> SupplierOnce<T> for BoxSupplierOnce<T> {
@@ -322,6 +328,9 @@ impl<T> SupplierOnce<T> for BoxSupplierOnce<T> {
         FnOnce() -> T
     );
 }
+
+// Generates: Debug and Display implementations for BoxSupplierOnce<T>
+impl_supplier_debug_display!(BoxSupplierOnce<T>);
 
 // ==========================================================================
 // Implement SupplierOnce for Closures

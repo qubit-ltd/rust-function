@@ -341,9 +341,6 @@ impl<T> ConsumerOnce<T> for BoxConsumerOnce<T> {
     }
 
     impl_box_once_conversions!(BoxConsumerOnce<T>, ConsumerOnce, FnOnce(&T));
-
-    // do NOT override ConsumerOnce::to_xxxx() because BoxConsumerOnce is not Clone
-    // and calling BoxConsumerOnce::to_xxxx() will cause a compile error
 }
 
 // Use macro to generate Debug and Display implementations

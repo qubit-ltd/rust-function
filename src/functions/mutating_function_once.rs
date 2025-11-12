@@ -454,12 +454,6 @@ where
     );
 }
 
-// Generates: identity() method for BoxMutatingFunctionOnce<T, T>
-impl_function_identity_method!(BoxMutatingFunctionOnce<T, T>, mutating);
-
-// Generates: Debug and Display implementations for BoxMutatingFunctionOnce<T, R>
-impl_function_debug_display!(BoxMutatingFunctionOnce<T, R>);
-
 impl<T, R> MutatingFunctionOnce<T, R> for BoxMutatingFunctionOnce<T, R> {
     fn apply(self, input: &mut T) -> R {
         (self.function)(input)
@@ -471,6 +465,12 @@ impl<T, R> MutatingFunctionOnce<T, R> for BoxMutatingFunctionOnce<T, R> {
         FnOnce(&mut T) -> R
     );
 }
+
+// Generates: identity() method for BoxMutatingFunctionOnce<T, T>
+impl_function_identity_method!(BoxMutatingFunctionOnce<T, T>, mutating);
+
+// Generates: Debug and Display implementations for BoxMutatingFunctionOnce<T, R>
+impl_function_debug_display!(BoxMutatingFunctionOnce<T, R>);
 
 // =======================================================================
 // 3. Implement MutatingFunctionOnce trait for closures

@@ -182,14 +182,6 @@ macro_rules! impl_box_once_conversions {
         {
             self.function
         }
-
-        fn to_box(&self) -> $box_type<$($generics),*>
-        where
-            Self: Clone + 'static,
-            $($generics: 'static),*
-        {
-            self.clone()
-        }
     };
 }
 
