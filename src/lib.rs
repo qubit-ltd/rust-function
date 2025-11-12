@@ -47,97 +47,98 @@ pub mod transformers;
 
 // ---- Consumer Types (Fn(&T)) ----
 pub use consumers::{
-    // Core traits
-    Consumer,
-    ConsumerOnce,
-    StatefulConsumer,
+    // Arc-based (shared multi-threaded ownership)
+    ArcConsumer,
+    ArcStatefulConsumer,
 
     // Box-based (single ownership)
     BoxConsumer,
     BoxConsumerOnce,
     BoxStatefulConsumer,
 
+    // Core traits
+    Consumer,
+    ConsumerOnce,
+    FnConsumerOnceOps,
+    // Extension traits
+    FnConsumerOps,
+    FnStatefulConsumerOps,
     // Rc-based (shared single-threaded ownership)
     RcConsumer,
     RcStatefulConsumer,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcConsumer,
-    ArcStatefulConsumer,
-
-    // Extension traits
-    FnConsumerOps,
-    FnConsumerOnceOps,
-    FnStatefulConsumerOps,
+    StatefulConsumer,
 };
 
 // ---- BiConsumer Types (Fn(&T, &U)) ----
 pub use consumers::{
+    // Arc-based (shared multi-threaded ownership)
+    ArcBiConsumer,
+    ArcStatefulBiConsumer,
+
     // Core traits
     BiConsumer,
     BiConsumerOnce,
-    StatefulBiConsumer,
-
     // Box-based (single ownership)
     BoxBiConsumer,
     BoxBiConsumerOnce,
     BoxStatefulBiConsumer,
 
+    FnBiConsumerOnceOps,
+    // Extension traits
+    FnBiConsumerOps,
+    FnStatefulBiConsumerOps,
     // Rc-based (shared single-threaded ownership)
     RcBiConsumer,
     RcStatefulBiConsumer,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcBiConsumer,
-    ArcStatefulBiConsumer,
-
-    // Extension traits
-    FnBiConsumerOps,
-    FnBiConsumerOnceOps,
-    FnStatefulBiConsumerOps,
+    StatefulBiConsumer,
 };
 
 // ---- Function Types (Fn(&T) -> R) ----
 pub use functions::{
-    // Core traits
-    Function,
-    FunctionOnce,
-    StatefulFunction,
-    MutatingFunction,
-    MutatingFunctionOnce,
-    StatefulMutatingFunction,
+    // Arc-based (shared multi-threaded ownership)
+    ArcFunction,
+    ArcMutatingFunction,
+    ArcStatefulFunction,
+    ArcStatefulMutatingFunction,
 
     // Box-based (single ownership)
     BoxFunction,
     BoxFunctionOnce,
-    BoxStatefulFunction,
     BoxMutatingFunction,
     BoxMutatingFunctionOnce,
+    BoxStatefulFunction,
     BoxStatefulMutatingFunction,
 
-    // Rc-based (shared single-threaded ownership)
-    RcFunction,
-    RcStatefulFunction,
-    RcMutatingFunction,
-    RcStatefulMutatingFunction,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcFunction,
-    ArcStatefulFunction,
-    ArcMutatingFunction,
-    ArcStatefulMutatingFunction,
-
+    FnFunctionOnceOps,
     // Extension traits
     FnFunctionOps,
-    FnFunctionOnceOps,
-    FnStatefulFunctionOps,
-    FnMutatingFunctionOps,
     FnMutatingFunctionOnceOps,
+    FnMutatingFunctionOps,
+    FnStatefulFunctionOps,
     FnStatefulMutatingFunctionOps,
+    // Core traits
+    Function,
+    FunctionOnce,
+    MutatingFunction,
+    MutatingFunctionOnce,
+    // Rc-based (shared single-threaded ownership)
+    RcFunction,
+    RcMutatingFunction,
+    RcStatefulFunction,
+    RcStatefulMutatingFunction,
+
+    StatefulFunction,
+    StatefulMutatingFunction,
 };
 
 // ---- BiFunction Types (Fn(&T, &U) -> R) ----
 pub use functions::{
+    // Arc-based (shared multi-threaded ownership)
+    ArcBiFunction,
+    ArcBiMutatingFunction,
+
     // Core traits
     BiFunction,
     BiFunctionOnce,
@@ -150,23 +151,21 @@ pub use functions::{
     BoxBiMutatingFunction,
     BoxBiMutatingFunctionOnce,
 
+    FnBiFunctionOnceOps,
+    // Extension traits
+    FnBiFunctionOps,
+    FnBiMutatingFunctionOnceOps,
+    FnBiMutatingFunctionOps,
     // Rc-based (shared single-threaded ownership)
     RcBiFunction,
     RcBiMutatingFunction,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcBiFunction,
-    ArcBiMutatingFunction,
-
-    // Extension traits
-    FnBiFunctionOps,
-    FnBiFunctionOnceOps,
-    FnBiMutatingFunctionOps,
-    FnBiMutatingFunctionOnceOps,
 };
 
 // ---- Binary Function Types (Fn(&T, &T) -> R) ----
 pub use functions::{
+    // Arc-based (shared multi-threaded ownership)
+    ArcBinaryFunction,
+    ArcBinaryMutatingFunction,
     // Box-based (single ownership)
     BoxBinaryFunction,
     BoxBinaryMutatingFunction,
@@ -174,32 +173,28 @@ pub use functions::{
     // Rc-based (shared single-threaded ownership)
     RcBinaryFunction,
     RcBinaryMutatingFunction,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcBinaryFunction,
-    ArcBinaryMutatingFunction,
 };
 
 // ---- Conditional Function Types ----
 pub use functions::{
-    // Box-based (single ownership)
-    BoxConditionalFunction,
+    ArcConditionalBiFunction,
+    ArcConditionalBiMutatingFunction,
+    // Arc-based (shared multi-threaded ownership)
+    ArcConditionalFunction,
+    ArcConditionalStatefulFunction,
     BoxConditionalBiFunction,
-    BoxConditionalStatefulFunction,
     BoxConditionalBiMutatingFunction,
     BoxConditionalBiMutatingFunctionOnce,
 
-    // Rc-based (shared single-threaded ownership)
-    RcConditionalFunction,
+    // Box-based (single ownership)
+    BoxConditionalFunction,
+    BoxConditionalStatefulFunction,
     RcConditionalBiFunction,
-    RcConditionalStatefulFunction,
     RcConditionalBiMutatingFunction,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcConditionalFunction,
-    ArcConditionalBiFunction,
-    ArcConditionalStatefulFunction,
-    ArcConditionalBiMutatingFunction,
+    // Rc-based (shared single-threaded ownership)
+    RcConditionalFunction,
+    RcConditionalStatefulFunction,
 };
 
 // =============================================================================
@@ -208,37 +203,40 @@ pub use functions::{
 
 // ---- Transformer Types (Fn(T) -> R) ----
 pub use transformers::{
-    // Core traits
-    Transformer,
-    TransformerOnce,
-    StatefulTransformer,
-    StatefulBiTransformer,
+    ArcStatefulBiTransformer,
 
+    ArcStatefulTransformer,
+    // Arc-based (shared multi-threaded ownership)
+    ArcTransformer,
+    BoxStatefulBiTransformer,
+
+    BoxStatefulTransformer,
     // Box-based (single ownership)
     BoxTransformer,
     BoxTransformerOnce,
-    BoxStatefulTransformer,
-    BoxStatefulBiTransformer,
-
-    // Rc-based (shared single-threaded ownership)
-    RcTransformer,
-    RcStatefulTransformer,
-    RcStatefulBiTransformer,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcTransformer,
-    ArcStatefulTransformer,
-    ArcStatefulBiTransformer,
-
+    FnStatefulBiTransformerOps,
+    FnStatefulTransformerOps,
+    FnTransformerOnceOps,
     // Extension traits
     FnTransformerOps,
-    FnTransformerOnceOps,
-    FnStatefulTransformerOps,
-    FnStatefulBiTransformerOps,
+    RcStatefulBiTransformer,
+
+    RcStatefulTransformer,
+    // Rc-based (shared single-threaded ownership)
+    RcTransformer,
+    StatefulBiTransformer,
+
+    StatefulTransformer,
+    // Core traits
+    Transformer,
+    TransformerOnce,
 };
 
 // ---- BiTransformer Types (Fn(T, U) -> R) ----
 pub use transformers::{
+    // Arc-based (shared multi-threaded ownership)
+    ArcBiTransformer,
+
     // Core traits
     BiTransformer,
     BiTransformerOnce,
@@ -247,25 +245,16 @@ pub use transformers::{
     BoxBiTransformer,
     BoxBiTransformerOnce,
 
-    // Rc-based (shared single-threaded ownership)
-    RcBiTransformer,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcBiTransformer,
-
+    FnBiTransformerOnceOps,
     // Extension traits
     FnBiTransformerOps,
-    FnBiTransformerOnceOps,
+    // Rc-based (shared single-threaded ownership)
+    RcBiTransformer,
 };
 
 // ---- Operator Types ----
 pub use transformers::{
-    // Unary operators (Fn(T) -> T)
-    UnaryOperator,
-    UnaryOperatorOnce,
-    BoxUnaryOperator,
-    BoxUnaryOperatorOnce,
-    RcUnaryOperator,
+    ArcBinaryOperator,
     ArcUnaryOperator,
 
     // Binary operators (Fn(T, T) -> T)
@@ -273,27 +262,32 @@ pub use transformers::{
     BinaryOperatorOnce,
     BoxBinaryOperator,
     BoxBinaryOperatorOnce,
+    BoxUnaryOperator,
+    BoxUnaryOperatorOnce,
     RcBinaryOperator,
-    ArcBinaryOperator,
+    RcUnaryOperator,
+    // Unary operators (Fn(T) -> T)
+    UnaryOperator,
+    UnaryOperatorOnce,
 };
 
 // ---- Conditional Transformer Types ----
 pub use transformers::{
+    ArcConditionalStatefulBiTransformer,
+    ArcConditionalStatefulTransformer,
+    // Arc-based (shared multi-threaded ownership)
+    ArcConditionalTransformer,
+    BoxConditionalStatefulBiTransformer,
+
+    BoxConditionalStatefulTransformer,
     // Box-based (single ownership)
     BoxConditionalTransformer,
     BoxConditionalTransformerOnce,
-    BoxConditionalStatefulTransformer,
-    BoxConditionalStatefulBiTransformer,
-
-    // Rc-based (shared single-threaded ownership)
-    RcConditionalTransformer,
-    RcConditionalStatefulTransformer,
     RcConditionalStatefulBiTransformer,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcConditionalTransformer,
-    ArcConditionalStatefulTransformer,
-    ArcConditionalStatefulBiTransformer,
+    RcConditionalStatefulTransformer,
+    // Rc-based (shared single-threaded ownership)
+    RcConditionalTransformer,
 };
 
 // =============================================================================
@@ -302,19 +296,8 @@ pub use transformers::{
 
 // ---- Mutator Types (Fn(&mut T)) ----
 pub use mutators::{
-    // Core traits
-    Mutator,
-    MutatorOnce,
-    StatefulMutator,
-
-    // Box-based (single ownership)
-    BoxMutator,
-    BoxMutatorOnce,
-    BoxStatefulMutator,
-
-    // Rc-based (shared single-threaded ownership)
-    RcMutator,
-    RcStatefulMutator,
+    ArcConditionalMutator,
+    ArcConditionalStatefulMutator,
 
     // Arc-based (shared multi-threaded ownership)
     ArcMutator,
@@ -324,109 +307,115 @@ pub use mutators::{
     BoxConditionalMutator,
     BoxConditionalMutatorOnce,
     BoxConditionalStatefulMutator,
-    RcConditionalMutator,
-    RcConditionalStatefulMutator,
-    ArcConditionalMutator,
-    ArcConditionalStatefulMutator,
+    // Box-based (single ownership)
+    BoxMutator,
+    BoxMutatorOnce,
+    BoxStatefulMutator,
 
+    FnMutStatefulMutatorOps,
+    FnMutatorOnceOps,
     // Extension traits
     FnMutatorOps,
-    FnMutatorOnceOps,
-    FnMutStatefulMutatorOps,
+    // Core traits
+    Mutator,
+    MutatorOnce,
+    RcConditionalMutator,
+    RcConditionalStatefulMutator,
+    // Rc-based (shared single-threaded ownership)
+    RcMutator,
+    RcStatefulMutator,
+
+    StatefulMutator,
 };
 
 // ---- Predicate Types (Fn(&T) -> bool) ----
 pub use predicates::{
-    // Core traits
-    Predicate,
+    // Arc-based (shared multi-threaded ownership)
+    ArcPredicate,
 
     // Box-based (single ownership)
     BoxPredicate,
 
-    // Rc-based (shared single-threaded ownership)
-    RcPredicate,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcPredicate,
-
     // Extension traits
     FnPredicateOps,
+    // Core traits
+    Predicate,
+
+    // Rc-based (shared single-threaded ownership)
+    RcPredicate,
 };
 
 // ---- BiPredicate Types (Fn(&T, &U) -> bool) ----
 pub use predicates::{
+    // Arc-based (shared multi-threaded ownership)
+    ArcBiPredicate,
+
     // Core traits
     BiPredicate,
 
     // Box-based (single ownership)
     BoxBiPredicate,
 
-    // Rc-based (shared single-threaded ownership)
-    RcBiPredicate,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcBiPredicate,
-
     // Extension traits
     FnBiPredicateOps,
+    // Rc-based (shared single-threaded ownership)
+    RcBiPredicate,
 };
 
 // ---- Supplier Types (Fn() -> R) ----
 pub use suppliers::{
-    // Core traits
-    Supplier,
-    SupplierOnce,
-    StatefulSupplier,
+    ArcStatefulSupplier,
+
+    // Arc-based (shared multi-threaded ownership)
+    ArcSupplier,
+    BoxStatefulSupplier,
 
     // Box-based (single ownership)
     BoxSupplier,
     BoxSupplierOnce,
-    BoxStatefulSupplier,
+    // Extension traits
+    FnStatefulSupplierOps,
+    RcStatefulSupplier,
 
     // Rc-based (shared single-threaded ownership)
     RcSupplier,
-    RcStatefulSupplier,
+    StatefulSupplier,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcSupplier,
-    ArcStatefulSupplier,
-
-    // Extension traits
-    FnStatefulSupplierOps,
+    // Core traits
+    Supplier,
+    SupplierOnce,
 };
 
 // ---- Comparator Types (Fn(&T, &T) -> Ordering) ----
 pub use comparator::{
-    // Core traits
-    Comparator,
+    // Arc-based (shared multi-threaded ownership)
+    ArcComparator,
 
     // Box-based (single ownership)
     BoxComparator,
 
-    // Rc-based (shared single-threaded ownership)
-    RcComparator,
-
-    // Arc-based (shared multi-threaded ownership)
-    ArcComparator,
+    // Core traits
+    Comparator,
 
     // Extension traits
     FnComparatorOps,
+    // Rc-based (shared single-threaded ownership)
+    RcComparator,
 };
 
 // ---- Tester Types (FnMut() -> bool) ----
 pub use tester::{
-    // Core traits
-    Tester,
+    // Arc-based (shared multi-threaded ownership)
+    ArcTester,
 
     // Box-based (single ownership)
     BoxTester,
 
+    // Extension traits
+    FnTesterOps,
     // Rc-based (shared single-threaded ownership)
     RcTester,
 
-    // Arc-based (shared multi-threaded ownership)
-    ArcTester,
-
-    // Extension traits
-    FnTesterOps,
+    // Core traits
+    Tester,
 };
