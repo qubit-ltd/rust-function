@@ -16,6 +16,8 @@ exclude = [
     "coverage.sh",
     "COVERAGE.md",
     "COVERAGE.zh_CN.md",
+    "PROJECT_STRUCTURE.md",
+    "PROJECT_STRUCTURE.zh_CN.md",
     ".circleci/*",
     "ci-check.sh",
     ".llvm-cov.toml",
