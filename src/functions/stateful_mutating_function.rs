@@ -126,35 +126,33 @@ use std::sync::Arc;
 
 use parking_lot::Mutex;
 
-use crate::functions::macros::impl_function_identity_method;
-use crate::{
-    functions::{
-        function::Function,
-        macros::{
-            impl_box_conditional_function,
-            impl_box_function_methods,
-            impl_conditional_function_clone,
-            impl_conditional_function_debug_display,
-            impl_fn_ops_trait,
-            impl_function_clone,
-            impl_function_common_methods,
-            impl_function_debug_display,
-            impl_shared_conditional_function,
-            impl_shared_function_methods,
-        },
-        mutating_function_once::BoxMutatingFunctionOnce,
-    },
+use crate::functions::{
+    function::Function,
     macros::{
-        impl_arc_conversions,
-        impl_box_conversions,
-        impl_rc_conversions,
+        impl_box_conditional_function,
+        impl_box_function_methods,
+        impl_conditional_function_clone,
+        impl_conditional_function_debug_display,
+        impl_fn_ops_trait,
+        impl_function_clone,
+        impl_function_common_methods,
+        impl_function_debug_display,
+        impl_function_identity_method,
+        impl_shared_conditional_function,
+        impl_shared_function_methods,
     },
-    predicates::predicate::{
-        ArcPredicate,
-        BoxPredicate,
-        Predicate,
-        RcPredicate,
-    },
+    mutating_function_once::BoxMutatingFunctionOnce,
+};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
+use crate::predicates::predicate::{
+    ArcPredicate,
+    BoxPredicate,
+    Predicate,
+    RcPredicate,
 };
 
 // =======================================================================

@@ -29,9 +29,9 @@ use std::sync::Arc;
 
 use parking_lot::Mutex;
 
-use crate::{
-    functions::function_once::BoxFunctionOnce,
-    functions::macros::{
+use crate::functions::{
+    function_once::BoxFunctionOnce,
+    macros::{
         impl_box_conditional_function,
         impl_box_function_methods,
         impl_conditional_function_clone,
@@ -45,17 +45,17 @@ use crate::{
         impl_shared_conditional_function,
         impl_shared_function_methods,
     },
-    macros::{
-        impl_arc_conversions,
-        impl_box_conversions,
-        impl_rc_conversions,
-    },
-    predicates::predicate::{
-        ArcPredicate,
-        BoxPredicate,
-        Predicate,
-        RcPredicate,
-    },
+};
+use crate::macros::{
+    impl_arc_conversions,
+    impl_box_conversions,
+    impl_rc_conversions,
+};
+use crate::predicates::predicate::{
+    ArcPredicate,
+    BoxPredicate,
+    Predicate,
+    RcPredicate,
 };
 
 // ============================================================================

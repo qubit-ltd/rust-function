@@ -33,7 +33,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -56,6 +55,7 @@ use crate::consumers::macros::{
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::predicate::{
@@ -64,19 +64,6 @@ use crate::predicates::predicate::{
     Predicate,
     RcPredicate,
 };
-
-/// Type alias for consumer function to simplify complex types.
-///
-/// This type alias represents a mutable function that takes a reference and
-/// returns nothing. It is used to reduce type complexity in struct definitions.
-type ConsumerFn<T> = dyn FnMut(&T);
-
-/// Type alias for thread-safe consumer function to simplify complex types.
-///
-/// This type alias represents a mutable function that takes a reference and
-/// returns nothing, with Send bound for thread-safe usage. It is used to
-/// reduce type complexity in Arc-based struct definitions.
-type SendConsumerFn<T> = dyn FnMut(&T) + Send;
 
 // ============================================================================
 // 1. Consumer Trait - Unified Consumer Interface
@@ -658,7 +645,7 @@ impl_consumer_debug_display!(BoxStatefulConsumer<T>);
 ///
 /// Haixing Hu
 pub struct RcStatefulConsumer<T> {
-    function: Rc<RefCell<ConsumerFn<T>>>,
+    function: Rc<RefCell<dyn FnMut(&T)>>,
     name: Option<String>,
 }
 
@@ -760,7 +747,7 @@ impl_consumer_debug_display!(RcStatefulConsumer<T>);
 ///
 /// Haixing Hu
 pub struct ArcStatefulConsumer<T> {
-    function: Arc<Mutex<SendConsumerFn<T>>>,
+    function: Arc<Mutex<dyn FnMut(&T) + Send>>,
     name: Option<String>,
 }
 
@@ -808,98 +795,13 @@ impl_consumer_debug_display!(ArcStatefulConsumer<T>);
 // 5. Implement Consumer trait for closures
 // ============================================================================
 
-/// Implement Consumer for all FnMut(&T)
-impl<T, F> StatefulConsumer<T> for F
-where
-    F: FnMut(&T) + 'static,
-{
-    fn accept(&mut self, value: &T) {
-        self(value)
-    }
-
-    fn into_box(self) -> BoxStatefulConsumer<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxStatefulConsumer::new(self)
-    }
-
-    fn into_rc(self) -> RcStatefulConsumer<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        RcStatefulConsumer::new(self)
-    }
-
-    fn into_arc(self) -> ArcStatefulConsumer<T>
-    where
-        Self: Sized + Send + 'static,
-        T: 'static,
-    {
-        ArcStatefulConsumer::new(self)
-    }
-
-    fn into_fn(self) -> impl FnMut(&T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self
-    }
-
-    fn into_once(mut self) -> BoxConsumerOnce<T>
-    where
-        T: 'static,
-    {
-        BoxConsumerOnce::new(move |t| self(t))
-    }
-
-    fn to_box(&self) -> BoxStatefulConsumer<T>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        let cloned = self.clone();
-        BoxStatefulConsumer::new(cloned)
-    }
-
-    fn to_rc(&self) -> RcStatefulConsumer<T>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        let cloned = self.clone();
-        RcStatefulConsumer::new(cloned)
-    }
-
-    fn to_arc(&self) -> ArcStatefulConsumer<T>
-    where
-        Self: Sized + Clone + Send + 'static,
-        T: 'static,
-    {
-        let cloned = self.clone();
-        ArcStatefulConsumer::new(cloned)
-    }
-
-    fn to_fn(&self) -> impl FnMut(&T)
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_once(&self) -> BoxConsumerOnce<T>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-    {
-        let mut cloned = self.clone();
-        BoxConsumerOnce::new(move |t| cloned(t))
-    }
-}
+// Implement Consumer for all FnMut(&T)
+impl_closure_trait!(
+    StatefulConsumer<T>,
+    accept,
+    BoxConsumerOnce,
+    FnMut(value: &T)
+);
 
 // ============================================================================
 // 6. Extension methods for closures

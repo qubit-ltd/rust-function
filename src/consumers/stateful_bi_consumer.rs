@@ -33,28 +33,31 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
 use parking_lot::Mutex;
 
-use crate::consumers::macros::{
-    impl_box_conditional_consumer,
-    impl_box_consumer_methods,
-    impl_conditional_consumer_clone,
-    impl_conditional_consumer_conversions,
-    impl_conditional_consumer_debug_display,
-    impl_consumer_clone,
-    impl_consumer_common_methods,
-    impl_consumer_debug_display,
-    impl_shared_conditional_consumer,
-    impl_shared_consumer_methods,
+use crate::consumers::{
+    bi_consumer_once::BoxBiConsumerOnce,
+    macros::{
+        impl_box_conditional_consumer,
+        impl_box_consumer_methods,
+        impl_conditional_consumer_clone,
+        impl_conditional_consumer_conversions,
+        impl_conditional_consumer_debug_display,
+        impl_consumer_clone,
+        impl_consumer_common_methods,
+        impl_consumer_debug_display,
+        impl_shared_conditional_consumer,
+        impl_shared_consumer_methods,
+    },
 };
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::bi_predicate::{
@@ -63,18 +66,6 @@ use crate::predicates::bi_predicate::{
     BoxBiPredicate,
     RcBiPredicate,
 };
-use crate::BoxBiConsumerOnce;
-
-/// Type alias for bi-consumer function to simplify complex types.
-///
-/// Represents a mutable function taking two references and returning
-/// nothing. Used to reduce type complexity in struct definitions.
-type BiConsumerFn<T, U> = dyn FnMut(&T, &U);
-
-/// Type alias for thread-safe bi-consumer function.
-///
-/// Represents a mutable function with Send bound for thread-safe usage.
-type SendBiConsumerFn<T, U> = dyn FnMut(&T, &U) + Send;
 
 // =======================================================================
 // 1. BiConsumer Trait - Unified BiConsumer Interface
@@ -551,7 +542,7 @@ pub trait StatefulBiConsumer<T, U> {
 ///
 /// Haixing Hu
 pub struct BoxStatefulBiConsumer<T, U> {
-    function: Box<BiConsumerFn<T, U>>,
+    function: Box<dyn FnMut(&T, &U)>,
     name: Option<String>,
 }
 
@@ -663,7 +654,7 @@ impl_consumer_debug_display!(BoxStatefulBiConsumer<T, U>);
 ///
 /// Haixing Hu
 pub struct RcStatefulBiConsumer<T, U> {
-    function: Rc<RefCell<BiConsumerFn<T, U>>>,
+    function: Rc<RefCell<dyn FnMut(&T, &U)>>,
     name: Option<String>,
 }
 
@@ -769,7 +760,7 @@ impl_consumer_debug_display!(RcStatefulBiConsumer<T, U>);
 ///
 /// Haixing Hu
 pub struct ArcStatefulBiConsumer<T, U> {
-    function: Arc<Mutex<SendBiConsumerFn<T, U>>>,
+    function: Arc<Mutex<dyn FnMut(&T, &U) + Send>>,
     name: Option<String>,
 }
 
@@ -821,108 +812,12 @@ impl_consumer_debug_display!(ArcStatefulBiConsumer<T, U>);
 // =======================================================================
 
 /// Implements BiConsumer for all FnMut(&T, &U)
-impl<T, U, F> StatefulBiConsumer<T, U> for F
-where
-    F: FnMut(&T, &U),
-{
-    fn accept(&mut self, first: &T, second: &U) {
-        self(first, second)
-    }
-
-    fn into_box(self) -> BoxStatefulBiConsumer<T, U>
-    where
-        Self: 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxStatefulBiConsumer::new(self)
-    }
-
-    fn into_rc(self) -> RcStatefulBiConsumer<T, U>
-    where
-        Self: 'static,
-        T: 'static,
-        U: 'static,
-    {
-        RcStatefulBiConsumer::new(self)
-    }
-
-    fn into_arc(self) -> ArcStatefulBiConsumer<T, U>
-    where
-        Self: Send + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        ArcStatefulBiConsumer::new(self)
-    }
-
-    fn into_fn(self) -> impl FnMut(&T, &U)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        self
-    }
-
-    fn into_once(mut self) -> BoxBiConsumerOnce<T, U>
-    where
-        Self: 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiConsumerOnce::new(move |t, u| self(t, u))
-    }
-
-    fn to_box(&self) -> BoxStatefulBiConsumer<T, U>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let cloned = self.clone();
-        BoxStatefulBiConsumer::new(cloned)
-    }
-
-    fn to_rc(&self) -> RcStatefulBiConsumer<T, U>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let cloned = self.clone();
-        RcStatefulBiConsumer::new(cloned)
-    }
-
-    fn to_arc(&self) -> ArcStatefulBiConsumer<T, U>
-    where
-        Self: Clone + Send + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let cloned = self.clone();
-        ArcStatefulBiConsumer::new(cloned)
-    }
-
-    fn to_fn(&self) -> impl FnMut(&T, &U)
-    where
-        Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        self.clone()
-    }
-
-    fn to_once(&self) -> BoxBiConsumerOnce<T, U>
-    where
-        Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        let mut cloned = (*self).clone();
-        BoxBiConsumerOnce::new(move |t, u| cloned(t, u))
-    }
-}
+impl_closure_trait!(
+    StatefulBiConsumer<T, U>,
+    accept,
+    BoxBiConsumerOnce,
+    FnMut(first: &T, second: &U)
+);
 
 // =======================================================================
 // 6. Provide extension methods for closures
