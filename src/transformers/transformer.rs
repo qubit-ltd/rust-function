@@ -23,13 +23,13 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::predicate::{
@@ -38,19 +38,21 @@ use crate::predicates::predicate::{
     Predicate,
     RcPredicate,
 };
-use crate::transformers::macros::{
-    impl_box_conditional_transformer,
-    impl_box_transformer_methods,
-    impl_conditional_transformer_clone,
-    impl_conditional_transformer_debug_display,
-    impl_shared_conditional_transformer,
-    impl_shared_transformer_methods,
-    impl_transformer_clone,
-    impl_transformer_common_methods,
-    impl_transformer_constant_method,
-    impl_transformer_debug_display,
+use crate::transformers::{
+    macros::{
+        impl_box_conditional_transformer,
+        impl_box_transformer_methods,
+        impl_conditional_transformer_clone,
+        impl_conditional_transformer_debug_display,
+        impl_shared_conditional_transformer,
+        impl_shared_transformer_methods,
+        impl_transformer_clone,
+        impl_transformer_common_methods,
+        impl_transformer_constant_method,
+        impl_transformer_debug_display,
+    },
+    transformer_once::BoxTransformerOnce,
 };
-use crate::BoxTransformerOnce;
 
 // ============================================================================
 // Core Trait
@@ -597,56 +599,12 @@ impl<T, R> Transformer<T, R> for ArcTransformer<T, R> {
 /// # Author
 ///
 /// Haixing Hu
-impl<F, T, R> Transformer<T, R> for F
-where
-    F: Fn(T) -> R,
-    T: 'static,
-    R: 'static,
-{
-    fn apply(&self, input: T) -> R {
-        self(input)
-    }
-
-    fn into_box(self) -> BoxTransformer<T, R>
-    where
-        Self: Sized + 'static,
-    {
-        BoxTransformer::new(self)
-    }
-
-    fn into_rc(self) -> RcTransformer<T, R>
-    where
-        Self: Sized + 'static,
-    {
-        RcTransformer::new(self)
-    }
-
-    fn into_arc(self) -> ArcTransformer<T, R>
-    where
-        Self: Sized + Send + Sync + 'static,
-        T: Send + Sync + 'static,
-        R: Send + Sync + 'static,
-    {
-        ArcTransformer::new(self)
-    }
-
-    fn into_fn(self) -> impl Fn(T) -> R
-    where
-        Self: Sized + 'static,
-    {
-        self
-    }
-
-    // use the default implementation of to_box(), to_rc(), to_arc() from
-    // Transformer trait
-
-    fn to_fn(&self) -> impl Fn(T) -> R
-    where
-        Self: Clone + Sized + 'static,
-    {
-        self.clone()
-    }
-}
+impl_closure_trait!(
+    Transformer<T, R>,
+    apply,
+    BoxTransformerOnce,
+    Fn(input: T) -> R
+);
 
 // ============================================================================
 // FnTransformerOps - Extension trait for closure transformers

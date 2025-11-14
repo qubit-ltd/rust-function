@@ -31,6 +31,7 @@ use parking_lot::Mutex;
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::predicate::{
@@ -39,19 +40,21 @@ use crate::predicates::predicate::{
     Predicate,
     RcPredicate,
 };
-use crate::transformers::macros::{
-    impl_box_conditional_transformer,
-    impl_box_transformer_methods,
-    impl_conditional_transformer_clone,
-    impl_conditional_transformer_debug_display,
-    impl_shared_conditional_transformer,
-    impl_shared_transformer_methods,
-    impl_transformer_clone,
-    impl_transformer_common_methods,
-    impl_transformer_constant_method,
-    impl_transformer_debug_display,
+use crate::transformers::{
+    macros::{
+        impl_box_conditional_transformer,
+        impl_box_transformer_methods,
+        impl_conditional_transformer_clone,
+        impl_conditional_transformer_debug_display,
+        impl_shared_conditional_transformer,
+        impl_shared_transformer_methods,
+        impl_transformer_clone,
+        impl_transformer_common_methods,
+        impl_transformer_constant_method,
+        impl_transformer_debug_display,
+    },
+    transformer_once::BoxTransformerOnce,
 };
-use crate::BoxTransformerOnce;
 
 // ============================================================================
 // Core Trait
@@ -573,82 +576,13 @@ impl<T, R> StatefulTransformer<T, R> for ArcStatefulTransformer<T, R> {
 // Blanket implementation for standard FnMut trait
 // ============================================================================
 
-/// Implement StatefulTransformer<T, R> for any type that implements FnMut(T) -> R
-///
-/// This allows closures to be used directly with our StatefulTransformer trait
-/// without wrapping.
-///
-/// # Examples
-///
-/// ```rust
-/// use prism3_function::StatefulTransformer;
-///
-/// let mut counter = 0;
-/// let mut transformer = |x: i32| {
-///     counter += 1;
-///     x + counter
-/// };
-///
-/// assert_eq!(transformer.apply(10), 11);
-/// assert_eq!(transformer.apply(10), 12);
-/// ```
-///
-/// # Author
-///
-/// Haixing Hu
-impl<F, T, R> StatefulTransformer<T, R> for F
-where
-    F: FnMut(T) -> R,
-    T: 'static,
-    R: 'static,
-{
-    fn apply(&mut self, input: T) -> R {
-        self(input)
-    }
-
-    fn into_box(self) -> BoxStatefulTransformer<T, R>
-    where
-        Self: Sized + 'static,
-    {
-        BoxStatefulTransformer::new(self)
-    }
-
-    fn into_rc(self) -> RcStatefulTransformer<T, R>
-    where
-        Self: Sized + 'static,
-    {
-        RcStatefulTransformer::new(self)
-    }
-
-    fn into_arc(self) -> ArcStatefulTransformer<T, R>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-        R: Send + 'static,
-    {
-        ArcStatefulTransformer::new(self)
-    }
-
-    fn into_fn(self) -> impl FnMut(T) -> R
-    where
-        Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
-    {
-        self
-    }
-
-    // use the default implementation of to_box(), to_rc(), to_arc() from StatefulTransformer trait
-
-    fn to_fn(&self) -> impl FnMut(T) -> R
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
-}
+// Implement StatefulTransformer<T, R> for any type that implements FnMut(T) -> R
+impl_closure_trait!(
+    StatefulTransformer<T, R>,
+    apply,
+    BoxTransformerOnce,
+    FnMut(input: T) -> R
+);
 
 // ============================================================================
 // FnStatefulTransformerOps - Extension trait for closure transformers

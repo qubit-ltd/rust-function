@@ -20,14 +20,16 @@
 //! # Author
 //!
 //! Haixing Hu
-
-use crate::{
-    macros::box_conversions::{impl_box_once_conversions, impl_closure_once_trait},
-    predicates::bi_predicate::{
-        BiPredicate,
-        BoxBiPredicate,
-    },
-    transformers::macros::{
+use crate::macros::{
+    impl_box_once_conversions,
+    impl_closure_once_trait,
+};
+use crate::predicates::bi_predicate::{
+    BiPredicate,
+    BoxBiPredicate,
+};
+use crate::transformers::{
+    macros::{
         impl_box_conditional_transformer,
         impl_box_transformer_methods,
         impl_conditional_transformer_debug_display,
@@ -35,7 +37,7 @@ use crate::{
         impl_transformer_constant_method,
         impl_transformer_debug_display,
     },
-    transformers::transformer_once::TransformerOnce,
+    transformer_once::TransformerOnce,
 };
 
 // ============================================================================

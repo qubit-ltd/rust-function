@@ -22,7 +22,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -31,6 +30,7 @@ use parking_lot::Mutex;
 
 use crate::macros::{
     impl_arc_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::bi_predicate::{
@@ -39,20 +39,22 @@ use crate::predicates::bi_predicate::{
     BoxBiPredicate,
     RcBiPredicate,
 };
-use crate::transformers::macros::{
-    impl_box_conditional_transformer,
-    impl_box_transformer_methods,
-    impl_conditional_transformer_clone,
-    impl_conditional_transformer_debug_display,
-    impl_shared_conditional_transformer,
-    impl_shared_transformer_methods,
-    impl_transformer_clone,
-    impl_transformer_common_methods,
-    impl_transformer_constant_method,
-    impl_transformer_debug_display,
+use crate::transformers::{
+    bi_transformer_once::BoxBiTransformerOnce,
+    macros::{
+        impl_box_conditional_transformer,
+        impl_box_transformer_methods,
+        impl_conditional_transformer_clone,
+        impl_conditional_transformer_debug_display,
+        impl_shared_conditional_transformer,
+        impl_shared_transformer_methods,
+        impl_transformer_clone,
+        impl_transformer_common_methods,
+        impl_transformer_constant_method,
+        impl_transformer_debug_display,
+    },
+    stateful_transformer::StatefulTransformer,
 };
-use crate::transformers::stateful_transformer::StatefulTransformer;
-use crate::BoxBiTransformerOnce;
 
 // ============================================================================
 // Core Trait
@@ -539,61 +541,12 @@ impl<T, U, R> StatefulBiTransformer<T, U, R> for ArcStatefulBiTransformer<T, U, 
 /// # Author
 ///
 /// Haixing Hu
-impl<F, T, U, R> StatefulBiTransformer<T, U, R> for F
-where
-    F: FnMut(T, U) -> R,
-    T: 'static,
-    U: 'static,
-    R: 'static,
-{
-    fn apply(&mut self, first: T, second: U) -> R {
-        self(first, second)
-    }
-
-    fn into_box(self) -> BoxStatefulBiTransformer<T, U, R>
-    where
-        Self: Sized + 'static,
-    {
-        BoxStatefulBiTransformer::new(self)
-    }
-
-    fn into_rc(self) -> RcStatefulBiTransformer<T, U, R>
-    where
-        Self: Sized + 'static,
-    {
-        RcStatefulBiTransformer::new(self)
-    }
-
-    fn into_arc(self) -> ArcStatefulBiTransformer<T, U, R>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-        U: Send + 'static,
-        R: Send + 'static,
-    {
-        ArcStatefulBiTransformer::new(self)
-    }
-
-    fn into_fn(self) -> impl FnMut(T, U) -> R
-    where
-        Self: Sized + 'static,
-    {
-        self
-    }
-
-    // use the default implementation of to_box(), to_rc(), to_arc()
-    // from StatefulBiTransformer trait
-
-    fn to_fn(&self) -> impl FnMut(T, U) -> R
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
-        self.clone()
-    }
-}
+impl_closure_trait!(
+    StatefulBiTransformer<T, U, R>,
+    apply,
+    BoxBiTransformerOnce,
+    FnMut(first: T, second: U) -> R
+);
 
 // ============================================================================
 // FnStatefulBiTransformerOps - Extension trait for FnMut(T, U) -> R bi-transformers

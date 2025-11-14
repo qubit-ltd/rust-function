@@ -21,20 +21,21 @@
 //!
 //! Haixing Hu
 
-use crate::{
-    macros::box_conversions::{impl_box_once_conversions, impl_closure_once_trait},
-    predicates::predicate::{
-        BoxPredicate,
-        Predicate,
-    },
-    transformers::macros::{
-        impl_box_conditional_transformer,
-        impl_box_transformer_methods,
-        impl_conditional_transformer_debug_display,
-        impl_transformer_common_methods,
-        impl_transformer_constant_method,
-        impl_transformer_debug_display,
-    },
+use crate::macros::{
+    impl_box_once_conversions,
+    impl_closure_once_trait,
+};
+use crate::predicates::predicate::{
+    BoxPredicate,
+    Predicate,
+};
+use crate::transformers::macros::{
+    impl_box_conditional_transformer,
+    impl_box_transformer_methods,
+    impl_conditional_transformer_debug_display,
+    impl_transformer_common_methods,
+    impl_transformer_constant_method,
+    impl_transformer_debug_display,
 };
 
 // ============================================================================
