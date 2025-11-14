@@ -320,7 +320,8 @@ macro_rules! impl_rc_conversions {
         // into_once: consumes self, returns Once
         impl_rc_conversions!(
             @method_into into_once,
-            $rc_type<$($generics),*>, $once_type,
+            $rc_type<$($generics),*>,
+            $once_type,
             $call_mode,
             ($($arg : $arg_ty),*) $(-> $ret)?
         );
@@ -328,7 +329,8 @@ macro_rules! impl_rc_conversions {
         // to_once: borrows self, clones and returns Once
         impl_rc_conversions!(
             @method_to to_once,
-            $rc_type<$($generics),*>, $once_type,
+            $rc_type<$($generics),*>,
+            $once_type,
             $call_mode,
             ($($arg : $arg_ty),*) $(-> $ret)?
         );

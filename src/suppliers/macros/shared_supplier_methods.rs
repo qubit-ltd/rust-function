@@ -21,13 +21,13 @@
 //! * `$struct_name<$generics>` - The struct name with its generic parameters
 //!   - Single parameter: `ArcSupplier<T>`
 //! * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
-//! * `($extra_bounds)` - Extra trait bounds in parentheses ('static for Rc, Send + Sync + 'static for Arc)
+//! * `($extra_bounds)` - Extra trait bounds in parentheses ('static for both Rc and Arc)
 //!
 //! # All Macro Invocations
 //!
 //! | Supplier Type | Struct Signature | `$supplier_trait` | `($extra_bounds)` |
 //! |---------------|------------------|-------------------|------------------|
-//! | **ArcSupplier** | `ArcSupplier<T>` | Supplier | (Send + Sync + 'static) |
+//! | **ArcSupplier** | `ArcSupplier<T>` | Supplier | ('static) |
 //! | **RcSupplier** | `RcSupplier<T>` | Supplier | ('static) |
 //!
 //! # Examples
@@ -37,7 +37,7 @@
 //! impl_shared_supplier_methods!(
 //!     ArcSupplier<T>,
 //!     Supplier,
-//!     (Send + Sync + 'static)
+//!     ('static)
 //! );
 //!
 //! // Single-parameter with Rc
@@ -66,13 +66,13 @@
 /// * `$struct_name<$generics>` - The struct name with its generic parameters
 ///   - Single parameter: `ArcSupplier<T>`
 /// * `$supplier_trait` - Supplier trait name (e.g., Supplier, StatefulSupplier)
-/// * `$extra_bounds` - Extra trait bounds ('static for Rc, Send + Sync + 'static for Arc)
+/// * `$extra_bounds` - Extra trait bounds ('static for both Rc and Arc)
 ///
 /// # All Macro Invocations
 ///
 /// | Supplier Type | Struct Signature | `$supplier_trait` | `$extra_bounds` |
 /// |---------------|------------------|-------------------|----------------|
-/// | **ArcSupplier** | `ArcSupplier<T>` | Supplier | Send + Sync + 'static |
+/// | **ArcSupplier** | `ArcSupplier<T>` | Supplier | 'static |
 /// | **RcSupplier** | `RcSupplier<T>` | Supplier | 'static |
 ///
 /// # Examples
@@ -82,7 +82,7 @@
 /// impl_shared_supplier_methods!(
 ///     ArcSupplier<T>,
 ///     Supplier,
-///     Send + Sync + 'static
+///     'static
 /// );
 ///
 /// // Single-parameter with Rc
@@ -96,7 +96,119 @@
 ///
 /// Haixing Hu
 macro_rules! impl_shared_supplier_methods {
-    // Single generic parameter
+    // Special case for Arc: T only needs 'static, but zip's S parameter needs Send + Sync
+    (
+        $struct_name:ident < $t:ident >,
+        $supplier_trait:ident,
+        (arc)
+    ) => {
+        /// Maps the output using a transformation function.
+        ///
+        /// # Parameters
+        ///
+        /// * `mapper` - The transformation function to apply
+        ///
+        /// # Returns
+        ///
+        /// A new `$struct_name<U>` with the mapped output
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let source = $struct_name::new(|| 10);
+        /// let mapped = source.map(|x| x * 2);
+        /// // source is still usable
+        /// assert_eq!(mapped.get(), 20);
+        /// ```
+        #[allow(unused_mut)]
+        pub fn map<U, M>(&self, mapper: M) -> $struct_name<U>
+        where
+            M: Transformer<$t, U> + Send + Sync + 'static,
+            U: 'static,
+        {
+            let mut self_cloned = self.clone();
+            $struct_name::new(move || {
+                let value = self_cloned.get();
+                mapper.apply(value)
+            })
+        }
+
+        /// Filters output based on a predicate.
+        ///
+        /// # Parameters
+        ///
+        /// * `predicate` - The predicate to test the supplied value
+        ///
+        /// # Returns
+        ///
+        /// A new filtered `$struct_name<Option<$t>>`
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let source = $struct_name::new(|| 42);
+        /// let filtered = source.filter(|x| x % 2 == 0);
+        ///
+        /// assert_eq!(filtered.get(), Some(42));
+        /// ```
+        #[allow(unused_mut)]
+        pub fn filter<P>(&self, predicate: P) -> $struct_name<Option<$t>>
+        where
+            P: Predicate<$t> + Send + Sync + 'static,
+        {
+            let mut self_cloned = self.clone();
+            $struct_name::new(move || {
+                let value = self_cloned.get();
+                if predicate.test(&value) {
+                    Some(value)
+                } else {
+                    None
+                }
+            })
+        }
+
+        /// Combines this supplier with another, producing a tuple.
+        ///
+        /// # Parameters
+        ///
+        /// * `other` - The other supplier to combine with
+        ///
+        /// # Returns
+        ///
+        /// A new `$struct_name<($t, U)>`
+        ///
+        /// # Examples
+        ///
+        /// ```rust
+        /// use prism3_function::{$struct_name, $supplier_trait};
+        ///
+        /// let first = $struct_name::new(|| 42);
+        /// let second = $struct_name::new(|| "hello");
+        ///
+        /// let zipped = first.zip(second);
+        ///
+        /// assert_eq!(zipped.get(), (42, "hello"));
+        /// ```
+        #[allow(unused_mut)]
+        pub fn zip<U, S>(&self, mut other: S) -> $struct_name<($t, U)>
+        where
+            S: $supplier_trait<U> + Send + Sync + 'static,
+            U: 'static,
+        {
+            let mut self_cloned = self.clone();
+            $struct_name::new(move || {
+                let first = self_cloned.get();
+                let second = other.get();
+                (first, second)
+            })
+        }
+    };
+
+    // Generic case for other bounds (e.g., 'static for Rc)
     (
         $struct_name:ident < $t:ident >,
         $supplier_trait:ident,

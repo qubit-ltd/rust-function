@@ -157,7 +157,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::rc::Rc;
 use std::sync::Arc;
 
