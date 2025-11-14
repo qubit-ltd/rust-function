@@ -193,7 +193,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -203,21 +202,24 @@ use parking_lot::Mutex;
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
-use crate::mutators::macros::{
-    impl_box_conditional_mutator,
-    impl_box_mutator_methods,
-    impl_conditional_mutator_clone,
-    impl_conditional_mutator_conversions,
-    impl_conditional_mutator_debug_display,
-    impl_mutator_clone,
-    impl_mutator_common_methods,
-    impl_mutator_debug_display,
-    impl_shared_conditional_mutator,
-    impl_shared_mutator_methods,
+use crate::mutators::{
+    macros::{
+        impl_box_conditional_mutator,
+        impl_box_mutator_methods,
+        impl_conditional_mutator_clone,
+        impl_conditional_mutator_conversions,
+        impl_conditional_mutator_debug_display,
+        impl_mutator_clone,
+        impl_mutator_common_methods,
+        impl_mutator_debug_display,
+        impl_shared_conditional_mutator,
+        impl_shared_mutator_methods,
+    },
+    mutator_once::BoxMutatorOnce,
 };
-use crate::mutators::mutator_once::BoxMutatorOnce;
 use crate::predicates::predicate::{
     ArcPredicate,
     BoxPredicate,
@@ -856,81 +858,12 @@ impl_mutator_debug_display!(ArcStatefulMutator<T>);
 // 5. Implement Mutator trait for closures
 // ============================================================================
 
-impl<T, F> StatefulMutator<T> for F
-where
-    F: FnMut(&mut T),
-{
-    fn apply(&mut self, value: &mut T) {
-        self(value)
-    }
-
-    fn into_box(mut self) -> BoxStatefulMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxStatefulMutator::new(move |t| self.apply(t))
-    }
-
-    fn into_rc(mut self) -> RcStatefulMutator<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        RcStatefulMutator::new(move |t| self.apply(t))
-    }
-
-    fn into_arc(mut self) -> ArcStatefulMutator<T>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        ArcStatefulMutator::new(move |t| self.apply(t))
-    }
-
-    fn into_fn(self) -> impl FnMut(&mut T)
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        self
-    }
-
-    fn to_box(&self) -> BoxStatefulMutator<T>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        let mut cloned = self.clone();
-        BoxStatefulMutator::new(move |t| cloned.apply(t))
-    }
-
-    fn to_rc(&self) -> RcStatefulMutator<T>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        let mut cloned = self.clone();
-        RcStatefulMutator::new(move |t| cloned.apply(t))
-    }
-
-    fn to_arc(&self) -> ArcStatefulMutator<T>
-    where
-        Self: Sized + Clone + Send + 'static,
-        T: Send + 'static,
-    {
-        let mut cloned = self.clone();
-        ArcStatefulMutator::new(move |t| cloned.apply(t))
-    }
-
-    fn to_fn(&self) -> impl FnMut(&mut T)
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-    {
-        self.clone()
-    }
-}
+impl_closure_trait!(
+    StatefulMutator<T>,
+    apply,
+    BoxMutatorOnce,
+    FnMut(value: &mut T)
+);
 
 // ============================================================================
 // 6. Provide extension methods for closures

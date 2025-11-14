@@ -66,17 +66,20 @@
 //! # Author
 //!
 //! Haixing Hu
-
-use crate::{
-    macros::box_conversions::{impl_box_once_conversions, impl_closure_once_trait},
-    predicates::Predicate,
-    suppliers::macros::{
-        impl_box_supplier_methods,
-        impl_supplier_common_methods,
-        impl_supplier_debug_display,
-    },
-    transformers::Transformer,
+use crate::macros::{
+    impl_box_once_conversions,
+    impl_closure_once_trait,
 };
+use crate::predicates::predicate::{
+    BoxPredicate,
+    Predicate,
+};
+use crate::suppliers::macros::{
+    impl_box_supplier_methods,
+    impl_supplier_common_methods,
+    impl_supplier_debug_display,
+};
+use crate::transformers::transformer::Transformer;
 
 // ==========================================================================
 // SupplierOnce Trait

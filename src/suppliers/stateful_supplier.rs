@@ -116,7 +116,6 @@
 //! # Author
 //!
 //! Haixing Hu
-
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -126,18 +125,21 @@ use parking_lot::Mutex;
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::predicate::Predicate;
-use crate::suppliers::macros::{
-    impl_box_supplier_methods,
-    impl_shared_supplier_methods,
-    impl_supplier_clone,
-    impl_supplier_common_methods,
-    impl_supplier_debug_display,
+use crate::suppliers::{
+    macros::{
+        impl_box_supplier_methods,
+        impl_shared_supplier_methods,
+        impl_supplier_clone,
+        impl_supplier_common_methods,
+        impl_supplier_debug_display,
+    },
+    supplier_once::BoxSupplierOnce,
 };
 use crate::transformers::transformer::Transformer;
-use crate::BoxSupplierOnce;
 
 // ==========================================================================
 // Supplier Trait
@@ -297,7 +299,7 @@ pub trait StatefulSupplier<T> {
     fn into_arc(mut self) -> ArcStatefulSupplier<T>
     where
         Self: Sized + Send + 'static,
-        T: Send + 'static,
+        T: 'static,
     {
         ArcStatefulSupplier::new(move || self.get())
     }
@@ -338,7 +340,7 @@ pub trait StatefulSupplier<T> {
     /// ```
     fn into_fn(mut self) -> impl FnMut() -> T
     where
-        Self: Sized,
+        Self: Sized + 'static,
     {
         move || self.get()
     }
@@ -403,7 +405,7 @@ pub trait StatefulSupplier<T> {
     fn to_arc(&self) -> ArcStatefulSupplier<T>
     where
         Self: Clone + Sized + Send + 'static,
-        T: Send + 'static,
+        T: 'static,
     {
         self.clone().into_arc()
     }
@@ -415,7 +417,7 @@ pub trait StatefulSupplier<T> {
     /// avoid the additional clone.
     fn to_fn(&self) -> impl FnMut() -> T
     where
-        Self: Clone + Sized,
+        Self: Clone + Sized + 'static,
     {
         self.clone().into_fn()
     }
@@ -801,19 +803,63 @@ pub struct ArcStatefulSupplier<T> {
 
 impl<T> ArcStatefulSupplier<T>
 where
-    T: Send + 'static,
+    T: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(
-        ArcStatefulSupplier<T>,
+    // Generates: new(), new_with_name(), name(), set_name()
+    // Note: constant() is NOT generated here, implemented separately below
+    crate::macros::impl_common_new_methods!(
         (FnMut() -> T + Send + 'static),
-        |f| Arc::new(Mutex::new(f))
+        |f| Arc::new(Mutex::new(f)),
+        "supplier"
     );
 
+    crate::macros::impl_common_name_methods!("supplier");
+
     // Generates: map(), filter(), zip()
-    impl_shared_supplier_methods!(ArcStatefulSupplier<T>, StatefulSupplier, (Send + 'static));
+    impl_shared_supplier_methods!(ArcStatefulSupplier<T>, StatefulSupplier, (arc));
+}
+
+// Separate impl block for constant() and memoize() with stricter T: Send bound
+impl<T> ArcStatefulSupplier<T>
+where
+    T: Send + 'static,
+{
+    /// Creates a supplier that returns a constant value.
+    ///
+    /// Creates a supplier that always returns the same value. Useful for
+    /// default values or placeholder implementations.
+    ///
+    /// **Note:** This method requires `T: Send` because the constant value
+    /// is captured by a `FnMut` closure which will be stored in an `Arc<Mutex<...>>`.
+    ///
+    /// # Parameters
+    ///
+    /// * `value` - The constant value to return
+    ///
+    /// # Returns
+    ///
+    /// Returns a new supplier instance that returns the constant value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{ArcStatefulSupplier, StatefulSupplier};
+    ///
+    /// let mut supplier = ArcStatefulSupplier::constant(42);
+    /// assert_eq!(supplier.get(), 42);
+    /// assert_eq!(supplier.get(), 42); // Can be called multiple times
+    /// ```
+    pub fn constant(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self::new(move || value.clone())
+    }
 
     /// Creates a memoizing supplier.
+    ///
+    /// **Note:** This method requires `T: Send` because the cached value
+    /// needs to be shared across threads via `Arc<Mutex<...>>`.
     ///
     /// # Returns
     ///
@@ -822,13 +868,13 @@ where
     /// # Examples
     ///
     /// ```rust
-    /// use prism3_function::{ArcStatefulSupplier, Supplier};
+    /// use prism3_function::{ArcStatefulSupplier, StatefulSupplier};
     /// use std::sync::{Arc, Mutex};
     ///
     /// let call_count = Arc::new(Mutex::new(0));
     /// let call_count_clone = Arc::clone(&call_count);
     /// let source = ArcStatefulSupplier::new(move || {
-    ///     let mut c = call_count_clone.lock().unwrap();
+    ///     let mut c = call_count_clone.lock();
     ///     *c += 1;
     ///     42
     /// });
@@ -837,11 +883,11 @@ where
     /// let mut s = memoized;
     /// assert_eq!(s.get(), 42); // Calls underlying function
     /// assert_eq!(s.get(), 42); // Returns cached value
-    /// assert_eq!(*call_count.lock().unwrap(), 1);
+    /// assert_eq!(*call_count.lock(), 1);
     /// ```
     pub fn memoize(&self) -> ArcStatefulSupplier<T>
     where
-        T: Clone + 'static,
+        T: Clone,
     {
         let self_fn = Arc::clone(&self.function);
         let cache: Arc<Mutex<Option<T>>> = Arc::new(Mutex::new(None));
@@ -883,55 +929,16 @@ impl<T> StatefulSupplier<T> for ArcStatefulSupplier<T> {
 }
 
 // ==========================================================================
-// Implement Supplier for Closures
+// Implement StatefulSupplier for Closures
 // ==========================================================================
 
-impl<T, F> StatefulSupplier<T> for F
-where
-    F: FnMut() -> T,
-{
-    fn get(&mut self) -> T {
-        self()
-    }
-
-    fn into_box(self) -> BoxStatefulSupplier<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxStatefulSupplier::new(self)
-    }
-
-    fn into_rc(self) -> RcStatefulSupplier<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        RcStatefulSupplier::new(self)
-    }
-
-    fn into_arc(self) -> ArcStatefulSupplier<T>
-    where
-        Self: Sized + Send + 'static,
-        T: Send + 'static,
-    {
-        ArcStatefulSupplier::new(self)
-    }
-
-    fn into_fn(self) -> impl FnMut() -> T
-    where
-        Self: Sized,
-    {
-        self
-    }
-
-    fn to_fn(&self) -> impl FnMut() -> T
-    where
-        Self: Clone + Sized,
-    {
-        self.clone()
-    }
-}
+// Implement StatefulSupplier<T> for any type that implements FnMut() -> T
+impl_closure_trait!(
+    StatefulSupplier<T>,
+    get,
+    BoxSupplierOnce,
+    FnMut() -> T
+);
 
 // ==========================================================================
 // Extension Trait for Closure Operations

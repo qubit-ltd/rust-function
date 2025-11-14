@@ -138,20 +138,20 @@
 //! # Author
 //!
 //! Haixing Hu
-
-use crate::{
-    macros::box_conversions::{impl_box_once_conversions, impl_closure_once_trait},
-    mutators::macros::{
-        impl_box_conditional_mutator,
-        impl_box_mutator_methods,
-        impl_conditional_mutator_debug_display,
-        impl_mutator_common_methods,
-        impl_mutator_debug_display,
-    },
-    predicates::predicate::{
-        BoxPredicate,
-        Predicate,
-    },
+use crate::macros::{
+    impl_box_once_conversions,
+    impl_closure_once_trait,
+};
+use crate::mutators::macros::{
+    impl_box_conditional_mutator,
+    impl_box_mutator_methods,
+    impl_conditional_mutator_debug_display,
+    impl_mutator_common_methods,
+    impl_mutator_debug_display,
+};
+use crate::predicates::predicate::{
+    BoxPredicate,
+    Predicate,
 };
 
 // ============================================================================
@@ -404,18 +404,12 @@ where
     T: 'static,
 {
     // Generates: new(), new_with_name(), name(), set_name(), noop()
-    impl_mutator_common_methods!(
-        BoxMutatorOnce<T>,
-        (FnOnce(&mut T) + 'static),
-        |f| Box::new(f)
-    );
+    impl_mutator_common_methods!(BoxMutatorOnce<T>, (FnOnce(&mut T) + 'static), |f| Box::new(
+        f
+    ));
 
     // Generate box mutator methods (when, and_then, or_else, etc.)
-    impl_box_mutator_methods!(
-        BoxMutatorOnce<T>,
-        BoxConditionalMutatorOnce,
-        MutatorOnce
-    );
+    impl_box_mutator_methods!(BoxMutatorOnce<T>, BoxConditionalMutatorOnce, MutatorOnce);
 }
 
 impl<T> MutatorOnce<T> for BoxMutatorOnce<T> {

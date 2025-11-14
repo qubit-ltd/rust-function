@@ -169,7 +169,6 @@
 //! ## Author
 //!
 //! Haixing Hu
-
 use std::cmp::Ordering;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -177,12 +176,6 @@ use std::sync::Arc;
 // ==========================================================================
 // Type Aliases
 // ==========================================================================
-
-/// Type alias for comparator function signature.
-type ComparatorFn<T> = dyn Fn(&T, &T) -> Ordering;
-
-/// Type alias for thread-safe comparator function signature.
-type ThreadSafeComparatorFn<T> = dyn Fn(&T, &T) -> Ordering + Send + Sync;
 
 /// A trait for comparison operations.
 ///
@@ -377,7 +370,7 @@ where
 ///
 /// Haixing Hu
 pub struct BoxComparator<T> {
-    function: Box<ComparatorFn<T>>,
+    function: Box<dyn Fn(&T, &T) -> Ordering>,
 }
 
 impl<T: 'static> BoxComparator<T> {
@@ -569,7 +562,7 @@ impl<T> Comparator<T> for BoxComparator<T> {
 /// Haixing Hu
 #[derive(Clone)]
 pub struct ArcComparator<T> {
-    function: Arc<ThreadSafeComparatorFn<T>>,
+    function: Arc<dyn Fn(&T, &T) -> Ordering + Send + Sync>,
 }
 
 impl<T: 'static> ArcComparator<T> {
@@ -744,7 +737,7 @@ impl<T> Comparator<T> for ArcComparator<T> {
 /// Haixing Hu
 #[derive(Clone)]
 pub struct RcComparator<T> {
-    function: Rc<ComparatorFn<T>>,
+    function: Rc<dyn Fn(&T, &T) -> Ordering>,
 }
 
 impl<T: 'static> RcComparator<T> {

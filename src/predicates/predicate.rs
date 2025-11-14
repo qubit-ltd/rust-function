@@ -178,6 +178,7 @@ use std::sync::Arc;
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::macros::{
@@ -637,65 +638,11 @@ impl<T: 'static> Predicate<T> for ArcPredicate<T> {
 }
 
 // Blanket implementation for all closures that match Fn(&T) -> bool
-impl<T: 'static, F> Predicate<T> for F
-where
-    F: Fn(&T) -> bool + 'static,
-{
-    fn test(&self, value: &T) -> bool {
-        self(value)
-    }
-
-    fn into_box(self) -> BoxPredicate<T> {
-        BoxPredicate::new(self)
-    }
-
-    fn into_rc(self) -> RcPredicate<T> {
-        RcPredicate::new(self)
-    }
-
-    fn into_arc(self) -> ArcPredicate<T>
-    where
-        Self: Send + Sync,
-    {
-        ArcPredicate::new(self)
-    }
-
-    fn into_fn(self) -> impl Fn(&T) -> bool {
-        self
-    }
-
-    fn to_box(&self) -> BoxPredicate<T>
-    where
-        Self: Clone + 'static,
-    {
-        let self_fn = self.clone();
-        BoxPredicate::new(self_fn)
-    }
-
-    fn to_rc(&self) -> RcPredicate<T>
-    where
-        Self: Clone + 'static,
-    {
-        let self_fn = self.clone();
-        RcPredicate::new(self_fn)
-    }
-
-    fn to_arc(&self) -> ArcPredicate<T>
-    where
-        Self: Clone + Send + Sync + 'static,
-        T: 'static,
-    {
-        let self_fn = self.clone();
-        ArcPredicate::new(self_fn)
-    }
-
-    fn to_fn(&self) -> impl Fn(&T) -> bool
-    where
-        Self: Clone + 'static,
-    {
-        self.clone()
-    }
-}
+impl_closure_trait!(
+    Predicate<T>,
+    test,
+    Fn(value: &T) -> bool
+);
 
 /// Extension trait providing logical composition methods for closures.
 ///

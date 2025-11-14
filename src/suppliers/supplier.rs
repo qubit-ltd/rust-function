@@ -125,6 +125,7 @@ use std::sync::Arc;
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::predicate::Predicate;
@@ -308,7 +309,7 @@ pub trait Supplier<T> {
     fn into_arc(self) -> ArcSupplier<T>
     where
         Self: Sized + Send + Sync + 'static,
-        T: Send + Sync + 'static,
+        T: 'static,
     {
         ArcSupplier::new(move || self.get())
     }
@@ -335,7 +336,7 @@ pub trait Supplier<T> {
     /// ```
     fn into_fn(self) -> impl Fn() -> T
     where
-        Self: Sized,
+        Self: Sized + 'static,
     {
         move || self.get()
     }
@@ -444,7 +445,7 @@ pub trait Supplier<T> {
     fn to_arc(&self) -> ArcSupplier<T>
     where
         Self: Clone + Send + Sync + 'static,
-        T: Send + Sync + 'static,
+        T: 'static,
     {
         self.clone().into_arc()
     }
@@ -471,7 +472,7 @@ pub trait Supplier<T> {
     /// ```
     fn to_fn(&self) -> impl Fn() -> T
     where
-        Self: Clone,
+        Self: Clone + 'static,
     {
         self.clone().into_fn()
     }
@@ -653,15 +654,58 @@ pub struct ArcSupplier<T> {
 
 impl<T> ArcSupplier<T>
 where
-    T: Send + Sync + 'static,
+    T: 'static,
 {
-    // Generates: new(), new_with_name(), name(), set_name(), constant()
-    impl_supplier_common_methods!(ArcSupplier<T>, (Fn() -> T + Send + Sync + 'static), |f| {
-        Arc::new(f)
-    });
+    // Generates: new(), new_with_name(), name(), set_name()
+    // Note: constant() is NOT generated here, implemented separately below
+    crate::macros::impl_common_new_methods!(
+        (Fn() -> T + Send + Sync + 'static),
+        |f| Arc::new(f),
+        "supplier"
+    );
+
+    crate::macros::impl_common_name_methods!("supplier");
 
     // Generates: map(), filter(), zip()
-    impl_shared_supplier_methods!(ArcSupplier<T>, Supplier, (Send + Sync + 'static));
+    impl_shared_supplier_methods!(ArcSupplier<T>, Supplier, (arc));
+}
+
+// Separate impl block for constant() with stricter T: Sync bound
+impl<T> ArcSupplier<T>
+where
+    T: Send + Sync + 'static,
+{
+    /// Creates a supplier that returns a constant value.
+    ///
+    /// Creates a supplier that always returns the same value. Useful for
+    /// default values or placeholder implementations.
+    ///
+    /// **Note:** This method requires `T: Sync` because the constant value
+    /// is captured by a `Fn` closure which needs to be `Sync` for `Arc`.
+    ///
+    /// # Parameters
+    ///
+    /// * `value` - The constant value to return
+    ///
+    /// # Returns
+    ///
+    /// Returns a new supplier instance that returns the constant value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use prism3_function::{ArcSupplier, Supplier};
+    ///
+    /// let supplier = ArcSupplier::constant(42);
+    /// assert_eq!(supplier.get(), 42);
+    /// assert_eq!(supplier.get(), 42); // Can be called multiple times
+    /// ```
+    pub fn constant(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self::new(move || value.clone())
+    }
 }
 
 // Generates: Debug and Display implementations for ArcSupplier<T>
@@ -785,52 +829,13 @@ impl<T> Supplier<T> for RcSupplier<T> {
 // Implement Supplier for Closures
 // ======================================================================
 
-impl<T, F> Supplier<T> for F
-where
-    F: Fn() -> T,
-{
-    fn get(&self) -> T {
-        self()
-    }
-
-    fn into_box(self) -> BoxSupplier<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        BoxSupplier::new(self)
-    }
-
-    fn into_rc(self) -> RcSupplier<T>
-    where
-        Self: Sized + 'static,
-        T: 'static,
-    {
-        RcSupplier::new(self)
-    }
-
-    fn into_arc(self) -> ArcSupplier<T>
-    where
-        Self: Sized + Send + Sync + 'static,
-        T: Send + Sync + 'static,
-    {
-        ArcSupplier::new(self)
-    }
-
-    fn into_fn(self) -> impl Fn() -> T
-    where
-        Self: Sized,
-    {
-        self
-    }
-
-    fn to_fn(&self) -> impl Fn() -> T
-    where
-        Self: Clone,
-    {
-        self.clone()
-    }
-}
+// Implement Supplier<T> for any type that implements Fn() -> T
+impl_closure_trait!(
+    Supplier<T>,
+    get,
+    BoxSupplierOnce,
+    Fn() -> T
+);
 
 // ======================================================================
 // Note on Extension Traits for Closures

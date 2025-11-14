@@ -144,13 +144,13 @@
 //! ## Author
 //!
 //! Haixing Hu
-
 use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::macros::{
     impl_arc_conversions,
     impl_box_conversions,
+    impl_closure_trait,
     impl_rc_conversions,
 };
 use crate::predicates::macros::{
@@ -615,73 +615,11 @@ impl<T: 'static, U: 'static> BiPredicate<T, U> for ArcBiPredicate<T, U> {
 // Blanket implementation for all closures that match
 // Fn(&T, &U) -> bool. This provides optimal implementations for
 // closures by wrapping them directly into the target type.
-impl<T: 'static, U: 'static, F> BiPredicate<T, U> for F
-where
-    F: Fn(&T, &U) -> bool + 'static,
-{
-    fn test(&self, first: &T, second: &U) -> bool {
-        self(first, second)
-    }
-
-    // Optimal implementation for closures: wrap directly in Box
-    fn into_box(self) -> BoxBiPredicate<T, U> {
-        BoxBiPredicate::new(self)
-    }
-
-    // Optimal implementation for closures: wrap directly in Rc
-    fn into_rc(self) -> RcBiPredicate<T, U> {
-        RcBiPredicate::new(self)
-    }
-
-    // Optimal implementation for closures: wrap directly in Arc
-    fn into_arc(self) -> ArcBiPredicate<T, U>
-    where
-        Self: Send + Sync,
-    {
-        ArcBiPredicate::new(self)
-    }
-
-    // Optimal implementation for closures: return self (zero-cost)
-    fn into_fn(self) -> impl Fn(&T, &U) -> bool {
-        self
-    }
-
-    fn to_box(&self) -> BoxBiPredicate<T, U>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        BoxBiPredicate::new(self.clone())
-    }
-
-    fn to_rc(&self) -> RcBiPredicate<T, U>
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        RcBiPredicate::new(self.clone())
-    }
-
-    fn to_arc(&self) -> ArcBiPredicate<T, U>
-    where
-        Self: Sized + Clone + Send + Sync + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        ArcBiPredicate::new(self.clone())
-    }
-
-    fn to_fn(&self) -> impl Fn(&T, &U) -> bool
-    where
-        Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-    {
-        self.clone()
-    }
-}
+impl_closure_trait!(
+    BiPredicate<T, U>,
+    test,
+    Fn(first: &T, second: &U) -> bool
+);
 
 /// Extension trait providing logical composition methods for closures.
 ///
