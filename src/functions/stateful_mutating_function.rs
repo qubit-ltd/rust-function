@@ -679,11 +679,7 @@ pub struct BoxStatefulMutatingFunction<T, R> {
     name: Option<String>,
 }
 
-impl<T, R> BoxStatefulMutatingFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> BoxStatefulMutatingFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         BoxStatefulMutatingFunction<T, R>,
@@ -776,11 +772,7 @@ pub struct RcStatefulMutatingFunction<T, R> {
     name: Option<String>,
 }
 
-impl<T, R> RcStatefulMutatingFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> RcStatefulMutatingFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         RcStatefulMutatingFunction<T, R>,
@@ -876,11 +868,7 @@ pub struct ArcStatefulMutatingFunction<T, R> {
     name: Option<String>,
 }
 
-impl<T, R> ArcStatefulMutatingFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> ArcStatefulMutatingFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         ArcStatefulMutatingFunction<T, R>,

@@ -1901,7 +1901,7 @@ where
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
+pub trait FnTesterOps: Sized + Fn() -> bool {
     /// Returns a tester that represents the logical AND of this tester
     /// and another
     ///
@@ -1933,6 +1933,7 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     #[inline]
     fn and<T>(self, other: T) -> BoxTester
     where
+        Self: 'static,
         T: Tester + 'static,
     {
         BoxTester::new(move || self.test() && other.test())
@@ -1970,6 +1971,7 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     #[inline]
     fn or<T>(self, other: T) -> BoxTester
     where
+        Self: 'static,
         T: Tester + 'static,
     {
         BoxTester::new(move || self.test() || other.test())
@@ -1991,7 +1993,10 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     /// assert!(not_ready.test());
     /// ```
     #[inline]
-    fn not(self) -> BoxTester {
+    fn not(self) -> BoxTester
+    where
+        Self: 'static,
+    {
         BoxTester::new(move || !self.test())
     }
 
@@ -2027,6 +2032,7 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     #[inline]
     fn nand<T>(self, other: T) -> BoxTester
     where
+        Self: 'static,
         T: Tester + 'static,
     {
         BoxTester::new(move || !(self.test() && other.test()))
@@ -2063,6 +2069,7 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     #[inline]
     fn xor<T>(self, other: T) -> BoxTester
     where
+        Self: 'static,
         T: Tester + 'static,
     {
         BoxTester::new(move || self.test() ^ other.test())
@@ -2100,6 +2107,7 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
     #[inline]
     fn nor<T>(self, other: T) -> BoxTester
     where
+        Self: 'static,
         T: Tester + 'static,
     {
         BoxTester::new(move || !(self.test() || other.test()))
@@ -2107,4 +2115,4 @@ pub trait FnTesterOps: Sized + Fn() -> bool + 'static {
 }
 
 // Blanket implementation for all closures
-impl<F> FnTesterOps for F where F: Fn() -> bool + 'static {}
+impl<F> FnTesterOps for F where F: Fn() -> bool {}

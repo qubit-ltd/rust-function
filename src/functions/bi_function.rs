@@ -529,7 +529,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiFunctionOps<T, U, R>: Fn(&T, &U) -> R + Sized + 'static {
+pub trait FnBiFunctionOps<T, U, R>: Fn(&T, &U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-function that applies this bi-function first,
@@ -593,6 +593,7 @@ pub trait FnBiFunctionOps<T, U, R>: Fn(&T, &U) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiFunction<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::functions::function::Function<R, S> + 'static,
         T: 'static,
@@ -661,6 +662,7 @@ pub trait FnBiFunctionOps<T, U, R>: Fn(&T, &U) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiFunction<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -678,7 +680,7 @@ pub trait FnBiFunctionOps<T, U, R>: Fn(&T, &U) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, U, R, F> FnBiFunctionOps<T, U, R> for F where F: Fn(&T, &U) -> R + 'static {}
+impl<T, U, R, F> FnBiFunctionOps<T, U, R> for F where F: Fn(&T, &U) -> R {}
 
 // ============================================================================
 // Type Aliases for BinaryOperator (BiFunction<T, T, R>)

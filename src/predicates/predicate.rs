@@ -667,7 +667,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
+pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized {
     /// Returns a predicate that represents the logical AND of this predicate
     /// and another.
     ///
@@ -699,6 +699,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// ```
     fn and<P>(self, other: P) -> BoxPredicate<T>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -738,6 +739,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// ```
     fn or<P>(self, other: P) -> BoxPredicate<T>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -752,6 +754,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// A `BoxPredicate` representing the logical negation.
     fn not(self) -> BoxPredicate<T>
     where
+        Self: 'static,
         T: 'static,
     {
         BoxPredicate::new(move |value: &T| !self.test(value))
@@ -789,6 +792,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// ```
     fn nand<P>(self, other: P) -> BoxPredicate<T>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -827,6 +831,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// ```
     fn xor<P>(self, other: P) -> BoxPredicate<T>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -866,6 +871,7 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
     /// ```
     fn nor<P>(self, other: P) -> BoxPredicate<T>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -874,4 +880,4 @@ pub trait FnPredicateOps<T>: Fn(&T) -> bool + Sized + 'static {
 }
 
 // Blanket implementation for all closures
-impl<T, F> FnPredicateOps<T> for F where F: Fn(&T) -> bool + 'static {}
+impl<T, F> FnPredicateOps<T> for F where F: Fn(&T) -> bool {}

@@ -289,7 +289,7 @@ impl_closure_once_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiFunctionOnceOps<T, U, R>: FnOnce(&T, &U) -> R + Sized + 'static {
+pub trait FnBiFunctionOnceOps<T, U, R>: FnOnce(&T, &U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-function that applies this bi-function first,
@@ -331,6 +331,7 @@ pub trait FnBiFunctionOnceOps<T, U, R>: FnOnce(&T, &U) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiFunctionOnce<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::functions::function_once::FunctionOnce<R, S> + 'static,
         T: 'static,
@@ -399,6 +400,7 @@ pub trait FnBiFunctionOnceOps<T, U, R>: FnOnce(&T, &U) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiFunctionOnce<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -418,7 +420,7 @@ pub trait FnBiFunctionOnceOps<T, U, R>: FnOnce(&T, &U) -> R + Sized + 'static {
 /// Haixing Hu
 impl<T, U, R, F> FnBiFunctionOnceOps<T, U, R> for F
 where
-    F: FnOnce(&T, &U) -> R + 'static,
+    F: FnOnce(&T, &U) -> R,
 {
     // empty
 }

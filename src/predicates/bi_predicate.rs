@@ -644,7 +644,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
+pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized {
     /// Returns a bi-predicate that represents the logical AND of this
     /// bi-predicate and another.
     ///
@@ -666,6 +666,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical AND.
     fn and<P>(self, other: P) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -694,6 +695,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical OR.
     fn or<P>(self, other: P) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -709,6 +711,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical negation.
     fn not(self) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         T: 'static,
         U: 'static,
     {
@@ -739,6 +742,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical NAND.
     fn nand<P>(self, other: P) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -772,6 +776,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical XOR.
     fn xor<P>(self, other: P) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -803,6 +808,7 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
     /// A `BoxBiPredicate` representing the logical NOR.
     fn nor<P>(self, other: P) -> BoxBiPredicate<T, U>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -814,4 +820,4 @@ pub trait FnBiPredicateOps<T, U>: Fn(&T, &U) -> bool + Sized + 'static {
 }
 
 // Blanket implementation for all closures
-impl<T, U, F> FnBiPredicateOps<T, U> for F where F: Fn(&T, &U) -> bool + 'static {}
+impl<T, U, F> FnBiPredicateOps<T, U> for F where F: Fn(&T, &U) -> bool {}

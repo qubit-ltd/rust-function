@@ -564,7 +564,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized + 'static {
+pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-transformer that applies this bi-transformer first,
@@ -628,6 +628,7 @@ pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized + 'stati
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxStatefulBiTransformer<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: StatefulTransformer<R, S> + 'static,
         T: 'static,
@@ -696,6 +697,7 @@ pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized + 'stati
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalStatefulBiTransformer<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -752,7 +754,7 @@ pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized + 'stati
 /// # Author
 ///
 /// Haixing Hu
-impl<T, U, R, F> FnStatefulBiTransformerOps<T, U, R> for F where F: FnMut(T, U) -> R + 'static {}
+impl<T, U, R, F> FnStatefulBiTransformerOps<T, U, R> for F where F: FnMut(T, U) -> R {}
 
 // ============================================================================
 // BinaryOperator Trait - Marker trait for StatefulBiTransformer<T, T, T>
@@ -822,7 +824,6 @@ pub trait BinaryOperator<T>: StatefulBiTransformer<T, T, T> {}
 impl<F, T> BinaryOperator<T> for F
 where
     F: StatefulBiTransformer<T, T, T>,
-    T: 'static,
 {
     // empty
 }

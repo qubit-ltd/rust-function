@@ -115,18 +115,18 @@
 macro_rules! impl_function_constant_method {
     // Two generic parameters - Function
     ($struct_name:ident < $t:ident, $r:ident >, $($extra_bounds:tt)+) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: 'static,
-            $r: Clone + $($extra_bounds)+,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Creates a constant function
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", Function};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
             #[inline]
-            pub fn constant(value: $r) -> $struct_name<$t, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $r>
+            where
+                $t: 'static,
+                $r: Clone + $($extra_bounds)+,
+            {
                 $struct_name::new(move |_| value.clone())
             }
         }
@@ -134,19 +134,19 @@ macro_rules! impl_function_constant_method {
 
     // Three generic parameters - BiFunction (no extra bounds)
     ($struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: Clone + 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Creates a constant function
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", BiFunction};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, \"test\"), \"hello\");\n/// ```")]
             #[inline]
-            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
+            where
+                $t: 'static,
+                $u: 'static,
+                $r: Clone + 'static,
+            {
                 $struct_name::new(move |_, _| value.clone())
             }
         }
@@ -154,19 +154,19 @@ macro_rules! impl_function_constant_method {
 
     // Three generic parameters - BiFunction
     ($struct_name:ident < $t:ident, $u:ident, $r:ident >, $($extra_bounds:tt)+) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: Clone + $($extra_bounds)+,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Creates a constant function
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", BiFunction};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, \"test\"), \"hello\");\n/// ```")]
             #[inline]
-            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
+            where
+                $t: 'static,
+                $u: 'static,
+                $r: Clone + $($extra_bounds)+,
+            {
                 $struct_name::new(move |_, _| value.clone())
             }
         }

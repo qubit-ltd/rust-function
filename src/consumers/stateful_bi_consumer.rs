@@ -1072,11 +1072,7 @@ impl_shared_conditional_consumer!(
     Send + Sync + 'static
 );
 
-impl<T, U> StatefulBiConsumer<T, U> for ArcConditionalStatefulBiConsumer<T, U>
-where
-    T: Send + 'static,
-    U: Send + 'static,
-{
+impl<T, U> StatefulBiConsumer<T, U> for ArcConditionalStatefulBiConsumer<T, U> {
     fn accept(&mut self, first: &T, second: &U) {
         if self.predicate.test(first, second) {
             self.consumer.accept(first, second);

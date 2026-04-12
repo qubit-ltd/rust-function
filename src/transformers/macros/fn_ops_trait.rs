@@ -185,7 +185,7 @@ macro_rules! impl_fn_ops_trait {
         /// # Author
         ///
         /// Haixing Hu
-        pub trait $trait_name<T, R>: $($fn_signature)+ + Sized + 'static {
+        pub trait $trait_name<T, R>: $($fn_signature)+ + Sized {
             /// Chain composition - applies self first, then after
             ///
             /// Creates a new function that applies this function first, then
@@ -249,6 +249,7 @@ macro_rules! impl_fn_ops_trait {
             #[inline]
             fn and_then<S, F>(mut self, mut after: F) -> $box_type<T, S>
             where
+                Self: 'static,
                 S: 'static,
                 F: $chained_function_trait<R, S> + 'static,
                 T: 'static,
@@ -316,6 +317,7 @@ macro_rules! impl_fn_ops_trait {
             #[inline]
             fn when<P>(self, predicate: P) -> $conditional_type<T, R>
             where
+                Self: 'static,
                 P: Predicate<T> + 'static,
                 T: 'static,
                 R: 'static,
@@ -332,7 +334,7 @@ macro_rules! impl_fn_ops_trait {
         /// # Author
         ///
         /// Haixing Hu
-        impl<T, R, F> $trait_name<T, R> for F where F: $($fn_signature)+ + 'static {}
+        impl<T, R, F> $trait_name<T, R> for F where F: $($fn_signature)+ {}
     };
 }
 

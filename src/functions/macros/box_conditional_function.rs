@@ -90,11 +90,7 @@ macro_rules! impl_box_conditional_function {
         $box_function_type:ident,
         $else_function_trait:ident
     ) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: 'static,
-            $r: 'static,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Provides an alternative function for when the predicate is not satisfied
             ///
             /// Combines the current conditional function with an alternative function
@@ -126,6 +122,8 @@ macro_rules! impl_box_conditional_function {
             #[allow(unused_mut)]
             pub fn or_else<F>(self, mut else_function: F) -> $box_function_type<$t, $r>
             where
+                $t: 'static,
+                $r: 'static,
                 F: $else_function_trait<$t, $r> + 'static,
             {
                 let predicate = self.predicate;
@@ -147,12 +145,7 @@ macro_rules! impl_box_conditional_function {
         $box_function_type:ident,
         $else_function_trait:ident
     ) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Provides an alternative function for when the predicate is not satisfied
             ///
             /// Combines the current conditional bifunction with an alternative bifunction
@@ -184,6 +177,9 @@ macro_rules! impl_box_conditional_function {
             #[allow(unused_mut)]
             pub fn or_else<F>(self, mut else_function: F) -> $box_function_type<$t, $u, $r>
             where
+                $t: 'static,
+                $u: 'static,
+                $r: 'static,
                 F: $else_function_trait<$t, $u, $r> + 'static,
             {
                 let predicate = self.predicate;

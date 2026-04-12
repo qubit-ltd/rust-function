@@ -1154,10 +1154,7 @@ impl_shared_conditional_mutator!(
     Send + Sync + 'static
 );
 
-impl<T> StatefulMutator<T> for ArcConditionalStatefulMutator<T>
-where
-    T: Send + 'static,
-{
+impl<T> StatefulMutator<T> for ArcConditionalStatefulMutator<T> {
     fn apply(&mut self, value: &mut T) {
         if self.predicate.test(value) {
             self.mutator.apply(value);

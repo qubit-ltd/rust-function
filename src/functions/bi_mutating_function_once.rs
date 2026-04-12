@@ -327,7 +327,7 @@ impl_closure_once_trait!(
 ///
 /// Haixing Hu
 pub trait FnBiMutatingFunctionOnceOps<T, U, R>:
-    FnOnce(&mut T, &mut U) -> R + Sized + 'static
+    FnOnce(&mut T, &mut U) -> R + Sized
 {
     /// Chain composition - applies self first, then after
     ///
@@ -379,6 +379,7 @@ pub trait FnBiMutatingFunctionOnceOps<T, U, R>:
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiMutatingFunctionOnce<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::functions::function::Function<R, S> + 'static,
         T: 'static,
@@ -466,6 +467,7 @@ pub trait FnBiMutatingFunctionOnceOps<T, U, R>:
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiMutatingFunctionOnce<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -485,7 +487,7 @@ pub trait FnBiMutatingFunctionOnceOps<T, U, R>:
 /// Haixing Hu
 impl<T, U, R, F> FnBiMutatingFunctionOnceOps<T, U, R> for F
 where
-    F: FnOnce(&mut T, &mut U) -> R + 'static,
+    F: FnOnce(&mut T, &mut U) -> R,
 {
     // empty
 }

@@ -646,7 +646,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnStatefulTransformerOps<T, R>: FnMut(T) -> R + Sized + 'static {
+pub trait FnStatefulTransformerOps<T, R>: FnMut(T) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new transformer that applies this transformer first, then applies
@@ -693,6 +693,7 @@ pub trait FnStatefulTransformerOps<T, R>: FnMut(T) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxStatefulTransformer<T, S>
     where
+        Self: 'static,
         S: 'static,
         F: StatefulTransformer<R, S> + 'static,
         T: 'static,
@@ -735,6 +736,7 @@ pub trait FnStatefulTransformerOps<T, R>: FnMut(T) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalStatefulTransformer<T, R>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
         R: 'static,
@@ -751,7 +753,7 @@ pub trait FnStatefulTransformerOps<T, R>: FnMut(T) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, R, F> FnStatefulTransformerOps<T, R> for F where F: FnMut(T) -> R + 'static {}
+impl<T, R, F> FnStatefulTransformerOps<T, R> for F where F: FnMut(T) -> R {}
 
 // ============================================================================
 // BoxConditionalStatefulTransformer - Box-based Conditional StatefulTransformer

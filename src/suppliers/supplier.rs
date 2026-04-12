@@ -665,10 +665,7 @@ impl<T> ArcSupplier<T> {
 }
 
 // Separate impl block for constant() with stricter T: Sync bound
-impl<T> ArcSupplier<T>
-where
-    T: Send + Sync + 'static,
-{
+impl<T> ArcSupplier<T> {
     /// Creates a supplier that returns a constant value.
     ///
     /// Creates a supplier that always returns the same value. Useful for
@@ -696,7 +693,7 @@ where
     /// ```
     pub fn constant(value: T) -> Self
     where
-        T: Clone,
+        T: Clone + Send + Sync + 'static,
     {
         Self::new(move || value.clone())
     }

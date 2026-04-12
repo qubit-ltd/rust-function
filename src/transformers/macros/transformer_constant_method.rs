@@ -100,29 +100,7 @@
 macro_rules! impl_transformer_constant_method {
     // Single-parameter transformer (BoxTransformer, RcTransformer, BoxTransformerOnce)
     ($struct_name:ident < $t:ident, $r:ident >) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: 'static,
-            $r: Clone + 'static,
-        {
-            /// Creates a constant transformer
-            ///
-            /// # Examples
-            ///
-            #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", Transformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $r> {
-                $struct_name::new(move |_| value.clone())
-            }
-        }
-    };
-
-    // Thread-safe single-parameter transformer (ArcTransformer)
-    (thread_safe $struct_name:ident < $t:ident, $r:ident >) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: Send + Sync + 'static,
-            $r: Clone + 'static,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Creates a constant transformer
             ///
             /// # Examples
@@ -130,7 +108,26 @@ macro_rules! impl_transformer_constant_method {
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", Transformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
             pub fn constant(value: $r) -> $struct_name<$t, $r>
             where
-                $r: Send + Sync,
+                $t: 'static,
+                $r: Clone + 'static,
+            {
+                $struct_name::new(move |_| value.clone())
+            }
+        }
+    };
+
+    // Thread-safe single-parameter transformer (ArcTransformer)
+    (thread_safe $struct_name:ident < $t:ident, $r:ident >) => {
+        impl<$t, $r> $struct_name<$t, $r> {
+            /// Creates a constant transformer
+            ///
+            /// # Examples
+            ///
+            #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", Transformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
+            pub fn constant(value: $r) -> $struct_name<$t, $r>
+            where
+                $t: Send + Sync + 'static,
+                $r: Clone + Send + Sync + 'static,
             {
                 $struct_name::new(move |_| value.clone())
             }
@@ -139,31 +136,7 @@ macro_rules! impl_transformer_constant_method {
 
     // Two-parameter transformer (BoxBiTransformer, RcBiTransformer, BoxBiTransformerOnce)
     ($struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: Clone + 'static,
-        {
-            /// Creates a constant bi-transformer
-            ///
-            /// # Examples
-            ///
-            #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", BiTransformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, 456), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
-                $struct_name::new(move |_, _| value.clone())
-            }
-        }
-    };
-
-    // Thread-safe two-parameter transformer (ArcBiTransformer)
-    (thread_safe $struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: Send + Sync + 'static,
-            $u: Send + Sync + 'static,
-            $r: Clone + 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Creates a constant bi-transformer
             ///
             /// # Examples
@@ -171,7 +144,28 @@ macro_rules! impl_transformer_constant_method {
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", BiTransformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, 456), \"hello\");\n/// ```")]
             pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
             where
-                $r: Send + Sync,
+                $t: 'static,
+                $u: 'static,
+                $r: Clone + 'static,
+            {
+                $struct_name::new(move |_, _| value.clone())
+            }
+        }
+    };
+
+    // Thread-safe two-parameter transformer (ArcBiTransformer)
+    (thread_safe $struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
+            /// Creates a constant bi-transformer
+            ///
+            /// # Examples
+            ///
+            #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", BiTransformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, 456), \"hello\");\n/// ```")]
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
+            where
+                $t: Send + Sync + 'static,
+                $u: Send + Sync + 'static,
+                $r: Clone + Send + Sync + 'static,
             {
                 $struct_name::new(move |_, _| value.clone())
             }
@@ -180,17 +174,17 @@ macro_rules! impl_transformer_constant_method {
 
     // Stateful transformer (BoxStatefulTransformer, RcStatefulTransformer)
     (stateful $struct_name:ident < $t:ident, $r:ident >) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: 'static,
-            $r: Clone + 'static,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Creates a constant transformer
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", StatefulTransformer};\n///\n/// let mut constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $r>
+            where
+                $t: 'static,
+                $r: Clone + 'static,
+            {
                 $struct_name::new(move |_| value.clone())
             }
         }
@@ -198,17 +192,17 @@ macro_rules! impl_transformer_constant_method {
 
     // Thread-safe stateful transformer (ArcStatefulTransformer)
     (stateful thread_safe $struct_name:ident < $t:ident, $r:ident >) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: Send + Sync + 'static,
-            $r: Clone + Send + 'static,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Creates a constant transformer
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", StatefulTransformer};\n///\n/// let mut constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $r>
+            where
+                $t: Send + Sync + 'static,
+                $r: Clone + Send + 'static,
+            {
                 $struct_name::new(move |_| value.clone())
             }
         }
@@ -216,18 +210,18 @@ macro_rules! impl_transformer_constant_method {
 
     // Stateful bi-transformer (BoxStatefulBiTransformer, RcStatefulBiTransformer)
     (stateful $struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: Clone + 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Creates a constant bi-transformer
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", StatefulBiTransformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, 456), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
+            where
+                $t: 'static,
+                $u: 'static,
+                $r: Clone + 'static,
+            {
                 $struct_name::new(move |_, _| value.clone())
             }
         }
@@ -235,18 +229,18 @@ macro_rules! impl_transformer_constant_method {
 
     // Thread-safe stateful bi-transformer (ArcStatefulBiTransformer)
     (stateful thread_safe $struct_name:ident < $t:ident, $u:ident, $r:ident >) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: Send + Sync + 'static,
-            $u: Send + Sync + 'static,
-            $r: Clone + Send + 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Creates a constant bi-transformer
             ///
             /// # Examples
             ///
             #[doc = concat!("/// ```rust\n/// use qubit_function::{", stringify!($struct_name), ", StatefulBiTransformer};\n///\n/// let constant = ", stringify!($struct_name), "::constant(\"hello\");\n/// assert_eq!(constant.apply(123, 456), \"hello\");\n/// ```")]
-            pub fn constant(value: $r) -> $struct_name<$t, $u, $r> {
+            pub fn constant(value: $r) -> $struct_name<$t, $u, $r>
+            where
+                $t: Send + Sync + 'static,
+                $u: Send + Sync + 'static,
+                $r: Clone + Send + 'static,
+            {
                 $struct_name::new(move |_, _| value.clone())
             }
         }

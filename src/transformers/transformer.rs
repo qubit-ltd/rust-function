@@ -635,7 +635,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized + 'static {
+pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new transformer that applies this transformer first, then
@@ -697,6 +697,7 @@ pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxTransformer<T, S>
     where
+        Self: 'static,
         S: 'static,
         F: Transformer<R, S> + 'static,
         T: 'static,
@@ -766,6 +767,7 @@ pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized + 'static {
     /// ```
     fn compose<S, F>(self, before: F) -> BoxTransformer<S, R>
     where
+        Self: 'static,
         S: 'static,
         F: Transformer<S, T> + 'static,
         T: 'static,
@@ -829,6 +831,7 @@ pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalTransformer<T, R>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
         R: 'static,
@@ -845,7 +848,7 @@ pub trait FnTransformerOps<T, R>: Fn(T) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, R, F> FnTransformerOps<T, R> for F where F: Fn(T) -> R + 'static {}
+impl<T, R, F> FnTransformerOps<T, R> for F where F: Fn(T) -> R {}
 
 // ============================================================================
 // UnaryOperator Trait - Marker trait for Transformer<T, T>
@@ -916,7 +919,6 @@ pub trait UnaryOperator<T>: Transformer<T, T> {}
 impl<F, T> UnaryOperator<T> for F
 where
     F: Transformer<T, T>,
-    T: 'static,
 {
     // empty
 }

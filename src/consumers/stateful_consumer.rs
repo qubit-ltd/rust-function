@@ -1087,10 +1087,7 @@ impl_shared_conditional_consumer!(
     Send + Sync + 'static
 );
 
-impl<T> StatefulConsumer<T> for ArcConditionalStatefulConsumer<T>
-where
-    T: Send + 'static,
-{
+impl<T> StatefulConsumer<T> for ArcConditionalStatefulConsumer<T> {
     fn accept(&mut self, value: &T) {
         if self.predicate.test(value) {
             self.consumer.accept(value);

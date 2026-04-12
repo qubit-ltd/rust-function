@@ -108,16 +108,16 @@
 macro_rules! impl_function_identity_method {
     ($struct_name:ident < $t:ident , $r:ident >) => {
         // Note: The caller must ensure $t and $r are the same identifier
-        impl<$t> $struct_name<$t, $t>
-        where
-            $t: Clone + 'static,
-        {
+        impl<$t> $struct_name<$t, $t> {
             /// Creates an identity function
             ///
             /// # Examples
             #[doc = concat!("/// ```rust\n/// use qubit_function::", stringify!($struct_name), ";\n///\n/// let identity = ", stringify!($struct_name), "::<i32, i32>::identity();\n/// assert_eq!(identity.apply(&42), 42);\n/// ```")]
             #[inline]
-            pub fn identity() -> $struct_name<$t, $t> {
+            pub fn identity() -> $struct_name<$t, $t>
+            where
+                $t: Clone + 'static,
+            {
                 $struct_name::new(|x: &$t| x.clone())
             }
         }
@@ -126,16 +126,16 @@ macro_rules! impl_function_identity_method {
     // Special case for mutating functions that take &mut T
     ($struct_name:ident < $t:ident , $r:ident >, mutating) => {
         // Note: The caller must ensure $t and $r are the same identifier
-        impl<$t> $struct_name<$t, $t>
-        where
-            $t: Clone + 'static,
-        {
+        impl<$t> $struct_name<$t, $t> {
             /// Creates an identity function
             ///
             /// # Examples
             #[doc = concat!("/// ```rust\n/// use qubit_function::", stringify!($struct_name), ";\n///\n/// let mut identity = ", stringify!($struct_name), "::<i32, i32>::identity();\n/// let mut value = 42;\n/// assert_eq!(identity.apply(&mut value), 42);\n/// ```")]
             #[inline]
-            pub fn identity() -> $struct_name<$t, $t> {
+            pub fn identity() -> $struct_name<$t, $t>
+            where
+                $t: Clone + 'static,
+            {
                 $struct_name::new(|x: &mut $t| x.clone())
             }
         }

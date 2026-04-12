@@ -811,10 +811,7 @@ impl<T> ArcStatefulSupplier<T> {
 }
 
 // Separate impl block for constant() and memoize() with stricter T: Send bound
-impl<T> ArcStatefulSupplier<T>
-where
-    T: Send + 'static,
-{
+impl<T> ArcStatefulSupplier<T> {
     /// Creates a supplier that returns a constant value.
     ///
     /// Creates a supplier that always returns the same value. Useful for
@@ -842,7 +839,7 @@ where
     /// ```
     pub fn constant(value: T) -> Self
     where
-        T: Clone,
+        T: Clone + Send + 'static,
     {
         Self::new(move || value.clone())
     }
@@ -878,7 +875,7 @@ where
     /// ```
     pub fn memoize(&self) -> ArcStatefulSupplier<T>
     where
-        T: Clone,
+        T: Clone + Send + 'static,
     {
         let self_fn = Arc::clone(&self.function);
         let cache: Arc<Mutex<Option<T>>> = Arc::new(Mutex::new(None));
@@ -998,7 +995,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
+pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized {
     /// Maps the output using a transformation function.
     ///
     /// Consumes the closure and returns a new supplier that applies
@@ -1024,6 +1021,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn map<U, M>(self, mapper: M) -> BoxStatefulSupplier<U>
     where
+        Self: 'static,
         M: Transformer<T, U> + 'static,
         U: 'static,
         T: 'static,
@@ -1060,6 +1058,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn filter<P>(self, predicate: P) -> BoxStatefulSupplier<Option<T>>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
     {
@@ -1093,6 +1092,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn zip<S, U>(self, other: S) -> BoxStatefulSupplier<(T, U)>
     where
+        Self: 'static,
         S: StatefulSupplier<U> + 'static,
         U: 'static,
         T: 'static,
@@ -1125,6 +1125,7 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
     /// ```
     fn memoize(self) -> BoxStatefulSupplier<T>
     where
+        Self: 'static,
         T: Clone + 'static,
     {
         BoxStatefulSupplier::new(self).memoize()
@@ -1132,4 +1133,4 @@ pub trait FnStatefulSupplierOps<T>: FnMut() -> T + Sized + 'static {
 }
 
 // Implement the extension trait for all closures
-impl<T, F> FnStatefulSupplierOps<T> for F where F: FnMut() -> T + Sized + 'static {}
+impl<T, F> FnStatefulSupplierOps<T> for F where F: FnMut() -> T + Sized {}

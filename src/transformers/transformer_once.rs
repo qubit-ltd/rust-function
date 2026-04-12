@@ -320,7 +320,7 @@ impl_closure_once_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnTransformerOnceOps<T, R>: FnOnce(T) -> R + Sized + 'static {
+pub trait FnTransformerOnceOps<T, R>: FnOnce(T) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new transformer that applies this transformer first, then
@@ -363,6 +363,7 @@ pub trait FnTransformerOnceOps<T, R>: FnOnce(T) -> R + Sized + 'static {
     /// ```
     fn and_then<S, G>(self, after: G) -> BoxTransformerOnce<T, S>
     where
+        Self: 'static,
         S: 'static,
         G: TransformerOnce<R, S> + 'static,
         T: 'static,
@@ -429,6 +430,7 @@ pub trait FnTransformerOnceOps<T, R>: FnOnce(T) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalTransformerOnce<T, R>
     where
+        Self: 'static,
         P: Predicate<T> + 'static,
         T: 'static,
         R: 'static,
@@ -445,7 +447,7 @@ pub trait FnTransformerOnceOps<T, R>: FnOnce(T) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, R, F> FnTransformerOnceOps<T, R> for F where F: FnOnce(T) -> R + 'static {}
+impl<T, R, F> FnTransformerOnceOps<T, R> for F where F: FnOnce(T) -> R {}
 
 // ============================================================================
 // UnaryOperatorOnce Trait - Marker trait for TransformerOnce<T, T>
@@ -502,7 +504,6 @@ pub trait UnaryOperatorOnce<T>: TransformerOnce<T, T> {}
 impl<F, T> UnaryOperatorOnce<T> for F
 where
     F: TransformerOnce<T, T>,
-    T: 'static,
 {
     // empty
 }

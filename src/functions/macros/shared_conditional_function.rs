@@ -135,11 +135,7 @@ macro_rules! impl_shared_conditional_function {
         $else_function_trait:ident,
         $($extra_bounds:tt)+
     ) => {
-        impl<$t, $r> $struct_name<$t, $r>
-        where
-            $t: 'static,
-            $r: 'static,
-        {
+        impl<$t, $r> $struct_name<$t, $r> {
             /// Provides an alternative function for when the predicate is not satisfied
             ///
             /// Combines the current conditional function with an alternative function
@@ -171,6 +167,8 @@ macro_rules! impl_shared_conditional_function {
             #[allow(unused_mut)]
             pub fn or_else<F>(&self, mut else_function: F) -> $shared_function_type<$t, $r>
             where
+                $t: 'static,
+                $r: 'static,
                 F: $else_function_trait<$t, $r> + $($extra_bounds)+,
             {
                 let predicate = self.predicate.clone();
@@ -194,12 +192,7 @@ macro_rules! impl_shared_conditional_function {
         into_rc,
         'static
     ) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Provides an alternative bi-function for when the predicate is not satisfied
             ///
             /// Combines the current conditional bi-function with an alternative bi-function
@@ -231,6 +224,9 @@ macro_rules! impl_shared_conditional_function {
             #[allow(unused_mut)]
             pub fn or_else<F>(&self, mut else_function: F) -> $shared_function_type<$t, $u, $r>
             where
+                $t: 'static,
+                $u: 'static,
+                $r: 'static,
                 F: $else_function_trait<$t, $u, $r> + 'static,
             {
                 let predicate = self.predicate.clone();
@@ -254,12 +250,7 @@ macro_rules! impl_shared_conditional_function {
         into_arc,
         Send + Sync + 'static
     ) => {
-        impl<$t, $u, $r> $struct_name<$t, $u, $r>
-        where
-            $t: 'static,
-            $u: 'static,
-            $r: 'static,
-        {
+        impl<$t, $u, $r> $struct_name<$t, $u, $r> {
             /// Provides an alternative bi-function for when the predicate is not satisfied
             ///
             /// Combines the current conditional bi-function with an alternative bi-function
@@ -291,6 +282,9 @@ macro_rules! impl_shared_conditional_function {
             #[allow(unused_mut)]
             pub fn or_else<F>(&self, mut else_function: F) -> $shared_function_type<$t, $u, $r>
             where
+                $t: 'static,
+                $u: 'static,
+                $r: 'static,
                 F: $else_function_trait<$t, $u, $r> + Send + Sync + 'static,
             {
                 let predicate = self.predicate.clone();

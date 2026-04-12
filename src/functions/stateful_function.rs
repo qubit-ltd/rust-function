@@ -407,11 +407,7 @@ pub struct BoxStatefulFunction<T, R> {
     name: Option<String>,
 }
 
-impl<T, R> BoxStatefulFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> BoxStatefulFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         BoxStatefulFunction<T, R>,
@@ -437,7 +433,7 @@ impl_function_identity_method!(BoxStatefulFunction<T, T>);
 impl_function_debug_display!(BoxStatefulFunction<T, R>);
 
 // Implement StatefulFunction trait for BoxStatefulFunction<T, R>
-impl<T: 'static, R: 'static> StatefulFunction<T, R> for BoxStatefulFunction<T, R> {
+impl<T, R> StatefulFunction<T, R> for BoxStatefulFunction<T, R> {
     fn apply(&mut self, t: &T) -> R {
         (self.function)(t)
     }
@@ -480,11 +476,7 @@ pub struct RcStatefulFunction<T, R> {
 
 type RcStatefulFn<T, R> = Rc<RefCell<dyn FnMut(&T) -> R>>;
 
-impl<T, R> RcStatefulFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> RcStatefulFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         RcStatefulFunction<T, R>,
@@ -559,11 +551,7 @@ pub struct ArcStatefulFunction<T, R> {
 
 type ArcStatefulFn<T, R> = Arc<Mutex<dyn FnMut(&T) -> R + Send + 'static>>;
 
-impl<T, R> ArcStatefulFunction<T, R>
-where
-    T: 'static,
-    R: 'static,
-{
+impl<T, R> ArcStatefulFunction<T, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         ArcStatefulFunction<T, R>,
@@ -639,8 +627,6 @@ impl<T, R> StatefulFunction<T, R> for ArcStatefulFunction<T, R> {
 impl<F, T, R> StatefulFunction<T, R> for F
 where
     F: FnMut(&T) -> R,
-    T: 'static,
-    R: 'static,
 {
     fn apply(&mut self, t: &T) -> R {
         self(t)
@@ -649,6 +635,8 @@ where
     fn into_box(self) -> BoxStatefulFunction<T, R>
     where
         Self: Sized + 'static,
+        T: 'static,
+        R: 'static,
     {
         BoxStatefulFunction::new(self)
     }
@@ -656,6 +644,8 @@ where
     fn into_rc(self) -> RcStatefulFunction<T, R>
     where
         Self: Sized + 'static,
+        T: 'static,
+        R: 'static,
     {
         RcStatefulFunction::new(self)
     }
@@ -672,6 +662,8 @@ where
     fn into_fn(self) -> impl FnMut(&T) -> R
     where
         Self: Sized + 'static,
+        T: 'static,
+        R: 'static,
     {
         self
     }
@@ -679,6 +671,8 @@ where
     fn to_box(&self) -> BoxStatefulFunction<T, R>
     where
         Self: Sized + Clone + 'static,
+        T: 'static,
+        R: 'static,
     {
         self.clone().into_box()
     }
@@ -686,6 +680,8 @@ where
     fn to_rc(&self) -> RcStatefulFunction<T, R>
     where
         Self: Sized + Clone + 'static,
+        T: 'static,
+        R: 'static,
     {
         self.clone().into_rc()
     }
@@ -702,6 +698,8 @@ where
     fn to_fn(&self) -> impl FnMut(&T) -> R
     where
         Self: Sized + Clone + 'static,
+        T: 'static,
+        R: 'static,
     {
         self.clone()
     }
@@ -709,6 +707,8 @@ where
     fn into_once(self) -> BoxFunctionOnce<T, R>
     where
         Self: Sized + 'static,
+        T: 'static,
+        R: 'static,
     {
         BoxFunctionOnce::new(self)
     }
@@ -716,6 +716,8 @@ where
     fn to_once(&self) -> BoxFunctionOnce<T, R>
     where
         Self: Sized + Clone + 'static,
+        T: 'static,
+        R: 'static,
     {
         BoxFunctionOnce::new(self.clone())
     }

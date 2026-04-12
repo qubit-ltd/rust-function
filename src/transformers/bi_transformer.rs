@@ -502,9 +502,6 @@ impl<T, U, R> BiTransformer<T, U, R> for ArcBiTransformer<T, U, R> {
 impl<F, T, U, R> BiTransformer<T, U, R> for F
 where
     F: Fn(T, U) -> R,
-    T: 'static,
-    U: 'static,
-    R: 'static,
 {
     fn apply(&self, first: T, second: U) -> R {
         self(first, second)
@@ -606,7 +603,7 @@ where
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiTransformerOps<T, U, R>: Fn(T, U) -> R + Sized + 'static {
+pub trait FnBiTransformerOps<T, U, R>: Fn(T, U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-transformer that applies this bi-transformer first,
@@ -670,6 +667,7 @@ pub trait FnBiTransformerOps<T, U, R>: Fn(T, U) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiTransformer<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::transformers::transformer::Transformer<R, S> + 'static,
         T: 'static,
@@ -738,6 +736,7 @@ pub trait FnBiTransformerOps<T, U, R>: Fn(T, U) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiTransformer<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -755,7 +754,7 @@ pub trait FnBiTransformerOps<T, U, R>: Fn(T, U) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, U, R, F> FnBiTransformerOps<T, U, R> for F where F: Fn(T, U) -> R + 'static {}
+impl<T, U, R, F> FnBiTransformerOps<T, U, R> for F where F: Fn(T, U) -> R {}
 
 // ============================================================================
 // BinaryOperator Trait - Marker trait for BiTransformer<T, T, T>
@@ -825,7 +824,6 @@ pub trait BinaryOperator<T>: BiTransformer<T, T, T> {}
 impl<F, T> BinaryOperator<T> for F
 where
     F: BiTransformer<T, T, T>,
-    T: 'static,
 {
     // empty
 }

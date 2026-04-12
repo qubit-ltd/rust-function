@@ -302,12 +302,7 @@ pub struct BoxBiMutatingFunction<T, U, R> {
 }
 
 // Implement BoxBiMutatingFunction
-impl<T, U, R> BoxBiMutatingFunction<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: 'static,
-{
+impl<T, U, R> BoxBiMutatingFunction<T, U, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         BoxBiMutatingFunction<T, U, R>,
@@ -369,12 +364,7 @@ pub struct RcBiMutatingFunction<T, U, R> {
     name: Option<String>,
 }
 
-impl<T, U, R> RcBiMutatingFunction<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: 'static,
-{
+impl<T, U, R> RcBiMutatingFunction<T, U, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         RcBiMutatingFunction<T, U, R>,
@@ -441,12 +431,7 @@ pub struct ArcBiMutatingFunction<T, U, R> {
     name: Option<String>,
 }
 
-impl<T, U, R> ArcBiMutatingFunction<T, U, R>
-where
-    T: 'static,
-    U: 'static,
-    R: 'static,
-{
+impl<T, U, R> ArcBiMutatingFunction<T, U, R> {
     // Generates: new(), new_with_name(), new_with_optional_name(), name(), set_name()
     impl_function_common_methods!(
         ArcBiMutatingFunction<T, U, R>,
@@ -572,7 +557,7 @@ impl_closure_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiMutatingFunctionOps<T, U, R>: Fn(&mut T, &mut U) -> R + Sized + 'static {
+pub trait FnBiMutatingFunctionOps<T, U, R>: Fn(&mut T, &mut U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-mutating-function that applies this bi-mutating-function first,
@@ -650,6 +635,7 @@ pub trait FnBiMutatingFunctionOps<T, U, R>: Fn(&mut T, &mut U) -> R + Sized + 's
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiMutatingFunction<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::functions::function::Function<R, S> + 'static,
         T: 'static,
@@ -737,6 +723,7 @@ pub trait FnBiMutatingFunctionOps<T, U, R>: Fn(&mut T, &mut U) -> R + Sized + 's
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiMutatingFunction<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -754,7 +741,7 @@ pub trait FnBiMutatingFunctionOps<T, U, R>: Fn(&mut T, &mut U) -> R + Sized + 's
 /// # Author
 ///
 /// Haixing Hu
-impl<T, U, R, F> FnBiMutatingFunctionOps<T, U, R> for F where F: Fn(&mut T, &mut U) -> R + 'static {}
+impl<T, U, R, F> FnBiMutatingFunctionOps<T, U, R> for F where F: Fn(&mut T, &mut U) -> R {}
 
 // ============================================================================
 // Type Aliases for BinaryMutatingOperator (BiMutatingFunction<T, U, R> where T == U)

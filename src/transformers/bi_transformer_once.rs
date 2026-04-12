@@ -285,7 +285,7 @@ impl_closure_once_trait!(
 /// # Author
 ///
 /// Haixing Hu
-pub trait FnBiTransformerOnceOps<T, U, R>: FnOnce(T, U) -> R + Sized + 'static {
+pub trait FnBiTransformerOnceOps<T, U, R>: FnOnce(T, U) -> R + Sized {
     /// Chain composition - applies self first, then after
     ///
     /// Creates a new bi-transformer that applies this bi-transformer first,
@@ -327,6 +327,7 @@ pub trait FnBiTransformerOnceOps<T, U, R>: FnOnce(T, U) -> R + Sized + 'static {
     /// ```
     fn and_then<S, F>(self, after: F) -> BoxBiTransformerOnce<T, U, S>
     where
+        Self: 'static,
         S: 'static,
         F: crate::transformers::transformer_once::TransformerOnce<R, S> + 'static,
         T: 'static,
@@ -395,6 +396,7 @@ pub trait FnBiTransformerOnceOps<T, U, R>: FnOnce(T, U) -> R + Sized + 'static {
     /// ```
     fn when<P>(self, predicate: P) -> BoxConditionalBiTransformerOnce<T, U, R>
     where
+        Self: 'static,
         P: BiPredicate<T, U> + 'static,
         T: 'static,
         U: 'static,
@@ -412,7 +414,7 @@ pub trait FnBiTransformerOnceOps<T, U, R>: FnOnce(T, U) -> R + Sized + 'static {
 /// # Author
 ///
 /// Haixing Hu
-impl<T, U, R, F> FnBiTransformerOnceOps<T, U, R> for F where F: FnOnce(T, U) -> R + 'static {}
+impl<T, U, R, F> FnBiTransformerOnceOps<T, U, R> for F where F: FnOnce(T, U) -> R {}
 
 // ============================================================================
 // BinaryOperatorOnce Trait - Marker trait for BiTransformerOnce<T, T, T>
@@ -469,7 +471,6 @@ pub trait BinaryOperatorOnce<T>: BiTransformerOnce<T, T, T> {}
 impl<F, T> BinaryOperatorOnce<T> for F
 where
     F: BiTransformerOnce<T, T, T>,
-    T: 'static,
 {
     // empty
 }
