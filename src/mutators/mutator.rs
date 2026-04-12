@@ -463,7 +463,6 @@ pub trait Mutator<T> {
     fn into_fn(self) -> impl Fn(&mut T)
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move |t| self.apply(t)
     }
@@ -567,7 +566,6 @@ pub trait Mutator<T> {
     fn to_fn(&self) -> impl Fn(&mut T)
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }

@@ -387,8 +387,6 @@ macro_rules! impl_arc_conversions {
         // into_arc: consumes self, returns self (zero-cost)
         #[inline]
         fn into_arc(self) -> $arc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self
         }
@@ -427,8 +425,6 @@ macro_rules! impl_arc_conversions {
         // to_arc: borrows self, returns clone (cheap Arc clone)
         #[inline]
         fn to_arc(&self) -> $arc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self.clone()
         }
@@ -477,8 +473,6 @@ macro_rules! impl_arc_conversions {
         // into_arc: consumes self, returns self (zero-cost)
         #[inline]
         fn into_arc(self) -> $arc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self
         }
@@ -509,8 +503,6 @@ macro_rules! impl_arc_conversions {
         // to_arc: borrows self, returns clone (cheap Arc clone)
         #[inline]
         fn to_arc(&self) -> $arc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self.clone()
         }

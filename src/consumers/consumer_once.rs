@@ -189,7 +189,6 @@ pub trait ConsumerOnce<T> {
     fn into_fn(self) -> impl FnOnce(&T)
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move |t| self.accept(t)
     }
@@ -267,7 +266,6 @@ pub trait ConsumerOnce<T> {
     fn to_fn(&self) -> impl FnOnce(&T)
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }

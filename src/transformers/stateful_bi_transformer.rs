@@ -180,9 +180,6 @@ pub trait StatefulBiTransformer<T, U, R> {
     fn into_fn(self) -> impl FnMut(T, U) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         let mut trans = self;
         move |t, u| trans.apply(t, u)
@@ -259,9 +256,6 @@ pub trait StatefulBiTransformer<T, U, R> {
     fn to_fn(&self) -> impl FnMut(T, U) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }
@@ -353,12 +347,7 @@ impl<T, U, R> StatefulBiTransformer<T, U, R> for BoxStatefulBiTransformer<T, U, 
     // do NOT override BoxStatefulBiTransformer::into_arc() because BoxStatefulBiTransformer is not Send + Sync
     // and calling BoxStatefulBiTransformer::into_arc() will cause a compile error
 
-    fn into_fn(self) -> impl FnMut(T, U) -> R
-    where
-        T: 'static,
-        U: 'static,
-        R: 'static,
-    {
+    fn into_fn(self) -> impl FnMut(T, U) -> R {
         self.function
     }
 
@@ -737,9 +726,6 @@ pub trait FnStatefulBiTransformerOps<T, U, R>: FnMut(T, U) -> R + Sized {
     fn to_fn(&self) -> impl FnMut(T, U) -> R
     where
         Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         let mut cloned = self.clone();
         move |t, u| cloned(t, u)

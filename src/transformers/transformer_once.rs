@@ -116,8 +116,6 @@ pub trait TransformerOnce<T, R> {
     fn into_fn(self) -> impl FnOnce(T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         move |input: T| self.apply(input)
     }
@@ -182,8 +180,6 @@ pub trait TransformerOnce<T, R> {
     fn to_fn(&self) -> impl FnOnce(T) -> R
     where
         Self: Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

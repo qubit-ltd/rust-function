@@ -178,9 +178,6 @@ pub trait BiMutatingFunction<T, U, R> {
     fn into_fn(self) -> impl Fn(&mut T, &mut U) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         move |t, u| self.apply(t, u)
     }
@@ -251,9 +248,6 @@ pub trait BiMutatingFunction<T, U, R> {
     fn to_fn(&self) -> impl Fn(&mut T, &mut U) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

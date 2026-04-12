@@ -188,8 +188,6 @@ pub trait BiConsumerOnce<T, U> {
     fn into_fn(self) -> impl FnOnce(&T, &U)
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
     {
         move |t, u| self.accept(t, u)
     }
@@ -256,8 +254,6 @@ pub trait BiConsumerOnce<T, U> {
     fn to_fn(&self) -> impl FnOnce(&T, &U)
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
     {
         self.clone().into_fn()
     }

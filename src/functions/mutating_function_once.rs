@@ -302,8 +302,6 @@ pub trait MutatingFunctionOnce<T, R> {
     fn into_fn(self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         move |t| self.apply(t)
     }
@@ -334,8 +332,6 @@ pub trait MutatingFunctionOnce<T, R> {
     fn to_fn(&self) -> impl FnOnce(&mut T) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

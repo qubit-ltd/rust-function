@@ -206,7 +206,6 @@ pub trait Consumer<T> {
     fn into_fn(self) -> impl Fn(&T)
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move |t| self.accept(t)
     }
@@ -304,7 +303,6 @@ pub trait Consumer<T> {
     fn to_fn(&self) -> impl Fn(&T)
     where
         Self: Clone + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }

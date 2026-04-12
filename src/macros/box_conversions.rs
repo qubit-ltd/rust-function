@@ -70,8 +70,6 @@ macro_rules! impl_box_conversions {
     ) => {
         #[inline]
         fn into_box(self) -> $box_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self
         }
@@ -173,16 +171,12 @@ macro_rules! impl_box_once_conversions {
     ) => {
         #[inline]
         fn into_box(self) -> $box_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self
         }
 
         #[inline]
         fn into_fn(self) -> impl $fn_trait
-        where
-            $($generics: 'static),*
         {
             self.function
         }

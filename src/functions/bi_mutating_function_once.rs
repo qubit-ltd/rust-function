@@ -103,9 +103,6 @@ pub trait BiMutatingFunctionOnce<T, U, R> {
     fn into_fn(self) -> impl FnOnce(&mut T, &mut U) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         move |t: &mut T, u: &mut U| self.apply(t, u)
     }
@@ -173,9 +170,6 @@ pub trait BiMutatingFunctionOnce<T, U, R> {
     fn to_fn(&self) -> impl FnOnce(&mut T, &mut U) -> R
     where
         Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

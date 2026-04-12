@@ -205,7 +205,6 @@ pub trait SupplierOnce<T> {
     fn into_fn(self) -> impl FnOnce() -> T
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move || self.get()
     }
@@ -252,7 +251,6 @@ pub trait SupplierOnce<T> {
     fn to_fn(&self) -> impl FnOnce() -> T
     where
         Self: Clone + Sized + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }

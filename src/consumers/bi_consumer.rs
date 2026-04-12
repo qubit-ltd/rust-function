@@ -229,8 +229,6 @@ pub trait BiConsumer<T, U> {
     fn into_fn(self) -> impl Fn(&T, &U)
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
     {
         move |t, u| self.accept(t, u)
     }
@@ -372,8 +370,6 @@ pub trait BiConsumer<T, U> {
     fn to_fn(&self) -> impl Fn(&T, &U)
     where
         Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
     {
         self.clone().into_fn()
     }

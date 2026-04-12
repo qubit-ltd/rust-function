@@ -118,7 +118,6 @@ macro_rules! impl_closure_once_trait {
           fn into_box(self) -> $box_type<$($generics),*>
           where
               Self: Sized + 'static,
-              $($generics: 'static),*
           {
               $box_type::new(self)
           }

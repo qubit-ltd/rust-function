@@ -386,7 +386,6 @@ pub trait Predicate<T> {
     fn into_fn(self) -> impl Fn(&T) -> bool
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move |value: &T| self.test(value)
     }
@@ -458,7 +457,6 @@ pub trait Predicate<T> {
     fn to_fn(&self) -> impl Fn(&T) -> bool
     where
         Self: Clone + Sized + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }

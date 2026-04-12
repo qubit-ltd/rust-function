@@ -170,8 +170,6 @@ pub trait Transformer<T, R> {
     fn into_fn(self) -> impl Fn(T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         move |t: T| self.apply(t)
     }
@@ -342,8 +340,6 @@ pub trait Transformer<T, R> {
     fn to_fn(&self) -> impl Fn(T) -> R
     where
         Self: Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

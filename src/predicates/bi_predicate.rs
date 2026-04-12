@@ -384,8 +384,6 @@ pub trait BiPredicate<T, U> {
     fn into_fn(self) -> impl Fn(&T, &U) -> bool
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
     {
         move |first, second| self.test(first, second)
     }
@@ -420,8 +418,6 @@ pub trait BiPredicate<T, U> {
     fn to_fn(&self) -> impl Fn(&T, &U) -> bool
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        U: 'static,
     {
         self.clone().into_fn()
     }

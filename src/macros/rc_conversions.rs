@@ -273,8 +273,6 @@ macro_rules! impl_rc_conversions {
         // into_rc: consumes self, returns self (zero-cost)
         #[inline]
         fn into_rc(self) -> $rc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self
         }
@@ -297,8 +295,6 @@ macro_rules! impl_rc_conversions {
         // to_rc: borrows self, returns clone (cheap Rc clone)
         #[inline]
         fn to_rc(&self) -> $rc_type<$($generics),*>
-        where
-            $($generics: 'static),*
         {
             self.clone()
         }

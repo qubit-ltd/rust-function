@@ -251,8 +251,6 @@ pub trait StatefulFunction<T, R> {
     fn into_fn(mut self) -> impl FnMut(&T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         move |t| self.apply(t)
     }
@@ -341,8 +339,6 @@ pub trait StatefulFunction<T, R> {
     fn to_fn(&self) -> impl FnMut(&T) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }
@@ -662,8 +658,6 @@ where
     fn into_fn(self) -> impl FnMut(&T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         self
     }
@@ -698,8 +692,6 @@ where
     fn to_fn(&self) -> impl FnMut(&T) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone()
     }

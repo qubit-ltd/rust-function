@@ -101,9 +101,6 @@ pub trait BiTransformerOnce<T, U, R> {
     fn into_fn(self) -> impl FnOnce(T, U) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         move |t: T, u: U| self.apply(t, u)
     }
@@ -157,9 +154,6 @@ pub trait BiTransformerOnce<T, U, R> {
     fn to_fn(&self) -> impl FnOnce(T, U) -> R
     where
         Self: Clone + 'static,
-        T: 'static,
-        U: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

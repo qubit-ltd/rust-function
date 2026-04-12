@@ -252,8 +252,6 @@ pub trait StatefulTransformer<T, R> {
     fn into_fn(self) -> impl FnMut(T) -> R
     where
         Self: Sized + 'static,
-        T: 'static,
-        R: 'static,
     {
         let mut transformer = self;
         move |t| transformer.apply(t)
@@ -336,8 +334,6 @@ pub trait StatefulTransformer<T, R> {
     fn to_fn(&self) -> impl FnMut(T) -> R
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
-        R: 'static,
     {
         self.clone().into_fn()
     }

@@ -320,7 +320,6 @@ pub trait Comparator<T> {
     fn into_fn(self) -> impl Fn(&T, &T) -> Ordering
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         move |a: &T, b: &T| self.compare(a, b)
     }

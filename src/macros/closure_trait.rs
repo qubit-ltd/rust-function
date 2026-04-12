@@ -76,7 +76,6 @@ macro_rules! impl_closure_trait {
       fn into_once(self) -> $once_type<$($generics),*>
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           $once_type::new(self)
       }
@@ -88,7 +87,6 @@ macro_rules! impl_closure_trait {
       fn into_once(mut self) -> $once_type<$($generics),*>
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           $once_type::new(move |$($arg: $arg_ty),*| self($($arg),*))
       }
@@ -102,7 +100,6 @@ macro_rules! impl_closure_trait {
       fn to_once(&self) -> $once_type<$($generics),*>
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           $once_type::new(self.clone())
       }
@@ -114,7 +111,6 @@ macro_rules! impl_closure_trait {
       fn to_once(&self) -> $once_type<$($generics),*>
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           let mut cloned = self.clone();
           $once_type::new(move |$($arg: $arg_ty),*| cloned($($arg),*))
@@ -142,7 +138,6 @@ macro_rules! impl_closure_trait {
       fn into_box(self) -> paste::paste! { [<Box $trait_name>] < $($generics),* > }
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Box $trait_name>]::new(self) }
       }
@@ -151,7 +146,6 @@ macro_rules! impl_closure_trait {
       fn into_rc(self) -> paste::paste! { [<Rc $trait_name>] < $($generics),* > }
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Rc $trait_name>]::new(self) }
       }
@@ -169,7 +163,6 @@ macro_rules! impl_closure_trait {
       fn into_arc(self) -> paste::paste! { [<Arc $trait_name>] < $($generics),* > }
       where
           Self: Sized + Send + Sync + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Arc $trait_name>]::new(self) }
       }
@@ -180,7 +173,6 @@ macro_rules! impl_closure_trait {
       fn to_box(&self) -> paste::paste! { [<Box $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Box $trait_name>]::new(self.clone()) }
       }
@@ -189,7 +181,6 @@ macro_rules! impl_closure_trait {
       fn to_rc(&self) -> paste::paste! { [<Rc $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Rc $trait_name>]::new(self.clone()) }
       }
@@ -207,7 +198,6 @@ macro_rules! impl_closure_trait {
       fn to_arc(&self) -> paste::paste! { [<Arc $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + Send + Sync + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Arc $trait_name>]::new(self.clone()) }
       }
@@ -234,7 +224,6 @@ macro_rules! impl_closure_trait {
       fn into_box(self) -> paste::paste! { [<Box $trait_name>] < $($generics),* > }
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Box $trait_name>]::new(self) }
       }
@@ -243,7 +232,6 @@ macro_rules! impl_closure_trait {
       fn into_rc(self) -> paste::paste! { [<Rc $trait_name>] < $($generics),* > }
       where
           Self: Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Rc $trait_name>]::new(self) }
       }
@@ -261,7 +249,6 @@ macro_rules! impl_closure_trait {
       fn into_arc(self) -> paste::paste! { [<Arc $trait_name>] < $($generics),* > }
       where
           Self: Sized + Send + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Arc $trait_name>]::new(self) }
       }
@@ -272,7 +259,6 @@ macro_rules! impl_closure_trait {
       fn to_box(&self) -> paste::paste! { [<Box $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Box $trait_name>]::new(self.clone()) }
       }
@@ -281,7 +267,6 @@ macro_rules! impl_closure_trait {
       fn to_rc(&self) -> paste::paste! { [<Rc $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + 'static,
-          $($generics: 'static,)*
       {
           paste::paste! { [<Rc $trait_name>]::new(self.clone()) }
       }
@@ -299,7 +284,6 @@ macro_rules! impl_closure_trait {
       fn to_arc(&self) -> paste::paste! { [<Arc $trait_name>] < $($generics),* > }
       where
           Self: Clone + Sized + Send + 'static,
-          $($generics: 'static,)*
       {
           let cloned = self.clone();
           paste::paste! { [<Arc $trait_name>]::new(cloned) }

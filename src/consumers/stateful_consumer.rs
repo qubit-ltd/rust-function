@@ -247,7 +247,6 @@ pub trait StatefulConsumer<T> {
     fn into_fn(self) -> impl FnMut(&T)
     where
         Self: Sized + 'static,
-        T: 'static,
     {
         let mut consumer = self;
         move |t| consumer.accept(t)
@@ -452,7 +451,6 @@ pub trait StatefulConsumer<T> {
     fn to_fn(&self) -> impl FnMut(&T)
     where
         Self: Sized + Clone + 'static,
-        T: 'static,
     {
         self.clone().into_fn()
     }
